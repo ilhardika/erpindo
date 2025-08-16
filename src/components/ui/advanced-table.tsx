@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuCheckboxItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
@@ -75,10 +74,43 @@ function AdvancedDataTable<T extends Record<string, any>>({
     pageSize,
   });
 
-  // Get unique values for each column for filtering
+  // Get unique values for each column for filtering with cascading effect
   const getUniqueColumnValues = React.useCallback(
     (columnId: string) => {
-      const values = data
+      // Start with all data
+      let filteredData = data;
+
+      // Apply global filter first if exists
+      if (globalFilter) {
+        filteredData = filteredData.filter((row) =>
+          Object.values(row).some((value) =>
+            String(value || "")
+              .toLowerCase()
+              .includes(globalFilter.toLowerCase())
+          )
+        );
+      }
+
+      // Apply other column filters (excluding the current column's filter)
+      const otherFilters = columnFilters.filter(
+        (filter) => filter.id !== columnId
+      );
+
+      otherFilters.forEach((filter) => {
+        if (
+          filter.value &&
+          Array.isArray(filter.value) &&
+          filter.value.length > 0
+        ) {
+          filteredData = filteredData.filter((row) => {
+            const cellValue = String(row[filter.id] || "");
+            return (filter.value as string[]).includes(cellValue);
+          });
+        }
+      });
+
+      // Get unique values from the already filtered data
+      const values = filteredData
         .map((row) => {
           const value = row[columnId];
           return value != null ? String(value) : "";
@@ -87,9 +119,15 @@ function AdvancedDataTable<T extends Record<string, any>>({
           (value, index, arr) => arr.indexOf(value) === index && value !== ""
         )
         .sort();
+
+      // Debug log for cascading filter
+      console.log(
+        `Column ${columnId}: ${values.length} unique values from ${filteredData.length} filtered rows (original: ${data.length})`
+      );
+
       return values;
     },
-    [data]
+    [data, columnFilters, globalFilter]
   );
 
   // Column Filter Component
@@ -102,30 +140,59 @@ function AdvancedDataTable<T extends Record<string, any>>({
   }) => {
     const columnFilterValue = (column.getFilterValue() as string[]) || [];
     const [filterSearch, setFilterSearch] = React.useState("");
-    const uniqueValues = getUniqueColumnValues(column.id);
+    const [isOpen, setIsOpen] = React.useState(false);
+
+    // Use useMemo to re-compute uniqueValues when columnFilters change
+    const uniqueValues = React.useMemo(() => {
+      return getUniqueColumnValues(column.id);
+    }, [column.id, columnFilters, globalFilter]);
 
     const filteredValues = uniqueValues.filter((value) =>
       value.toLowerCase().includes(filterSearch.toLowerCase())
     );
 
+    const handleSelectAll = () => {
+      if (columnFilterValue.length === filteredValues.length) {
+        column.setFilterValue([]);
+      } else {
+        column.setFilterValue(filteredValues);
+      }
+    };
+
+    const isAllSelected =
+      columnFilterValue.length === filteredValues.length &&
+      filteredValues.length > 0;
+    const isIndeterminate =
+      columnFilterValue.length > 0 &&
+      columnFilterValue.length < filteredValues.length;
+
     return (
-      <DropdownMenu>
+      <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 flex items-center gap-1 hover:bg-muted/80"
+            className="h-8 flex items-center gap-1 hover:bg-muted/80 relative"
           >
             <Filter className="h-3 w-3" />
-            <ChevronDown className="h-3 w-3" />
             {columnFilterValue.length > 0 && (
-              <span className="ml-1 bg-primary text-primary-foreground rounded-full text-xs px-1.5 py-0.5 leading-none">
+              <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground rounded-full text-xs px-1.5 py-0.5 leading-none min-w-4 h-4 flex items-center justify-center">
                 {columnFilterValue.length}
               </span>
             )}
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-[200px]">
+        <DropdownMenuContent
+          align="start"
+          className="w-[220px]"
+          onCloseAutoFocus={(e) => e.preventDefault()}
+          onPointerDownOutside={(e) => {
+            // Allow clicking outside to close, but prevent auto-close on item clicks
+            if (!(e.target as Element)?.closest("[data-dropdown-item]")) {
+              setIsOpen(false);
+            }
+          }}
+        >
           <div className="p-2">
             <div className="relative">
               <Search className="absolute left-2 top-2.5 h-3 w-3 text-muted-foreground" />
@@ -134,54 +201,96 @@ function AdvancedDataTable<T extends Record<string, any>>({
                 value={filterSearch}
                 onChange={(e) => setFilterSearch(e.target.value)}
                 className="pl-7 h-8 text-xs"
+                onClick={(e) => e.stopPropagation()}
               />
             </div>
           </div>
           <DropdownMenuSeparator />
-          <div className="p-1">
-            <div className="text-xs text-muted-foreground px-2 py-1">
-              Select Multiple
-            </div>
-            {columnFilterValue.length > 0 && (
-              <div className="flex items-center px-2 py-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 px-2 text-xs text-blue-600 hover:text-blue-700"
-                  onClick={() => column.setFilterValue([])}
-                >
-                  Clear All
-                </Button>
+
+          {/* Select All Option */}
+          {filteredValues.length > 0 && (
+            <div className="px-2 py-1">
+              <div
+                className="flex items-center space-x-2 text-xs p-2 rounded hover:bg-muted/50 cursor-pointer"
+                data-dropdown-item
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleSelectAll();
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={isAllSelected}
+                  ref={(el) => {
+                    if (el) el.indeterminate = isIndeterminate;
+                  }}
+                  onChange={() => {}}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="font-medium text-slate-700 dark:text-slate-300">
+                  Select All ({filteredValues.length})
+                </span>
               </div>
-            )}
-            <div className="max-h-[200px] overflow-y-auto">
+            </div>
+          )}
+
+          <DropdownMenuSeparator />
+
+          <div className="px-2 py-1">
+            {columnFilterValue.length > 0 && <div className="pb-2"></div>}
+
+            <div className="max-h-[200px] overflow-y-auto space-y-1">
               {filteredValues.map((value) => {
                 const isSelected = columnFilterValue.includes(value);
                 return (
-                  <DropdownMenuCheckboxItem
+                  <div
                     key={value}
-                    className="text-xs"
-                    checked={isSelected}
-                    onCheckedChange={(checked) => {
-                      if (checked) {
-                        column.setFilterValue([...columnFilterValue, value]);
-                      } else {
+                    className="flex items-center space-x-2 text-xs p-2 rounded hover:bg-muted/50 cursor-pointer"
+                    data-dropdown-item
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (isSelected) {
                         column.setFilterValue(
                           columnFilterValue.filter((item) => item !== value)
                         );
+                      } else {
+                        column.setFilterValue([...columnFilterValue, value]);
                       }
                     }}
                   >
-                    {value}
-                  </DropdownMenuCheckboxItem>
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => {}}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="text-slate-700 dark:text-slate-300 truncate">
+                      {value}
+                    </span>
+                  </div>
                 );
               })}
               {filteredValues.length === 0 && (
                 <div className="px-2 py-2 text-xs text-muted-foreground">
-                  No options found
+                  {uniqueValues.length === 0
+                    ? "No data available"
+                    : "No options found"}
                 </div>
               )}
             </div>
+          </div>
+
+          {/* Close Button */}
+          <DropdownMenuSeparator />
+          <div className="p-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full h-8 text-xs"
+              onClick={() => setIsOpen(false)}
+            >
+              Tutup
+            </Button>
           </div>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -386,25 +495,10 @@ function AdvancedDataTable<T extends Record<string, any>>({
 
         {/* Enhanced Pagination */}
         {enablePagination && (
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-2">
-            <div className="text-sm text-muted-foreground">
-              Menampilkan {currentPageRowCount} dari {filteredRowCount} data
-              {filteredRowCount !== data.length &&
-                ` (difilter dari ${data.length} total)`}
-            </div>
-
+          <div className="flex justify-center items-center pt-2">
             <div className="flex items-center gap-2">
               <Button
-                variant="outline"
-                size="sm"
-                onClick={() => table.setPageIndex(0)}
-                disabled={!table.getCanPreviousPage()}
-                className="h-9 px-3"
-              >
-                ««
-              </Button>
-              <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
                 onClick={() => table.previousPage()}
                 disabled={!table.getCanPreviousPage()}
@@ -421,22 +515,13 @@ function AdvancedDataTable<T extends Record<string, any>>({
               </div>
 
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
                 onClick={() => table.nextPage()}
                 disabled={!table.getCanNextPage()}
                 className="h-9 px-3"
               >
                 <ChevronRight className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                disabled={!table.getCanNextPage()}
-                className="h-9 px-3"
-              >
-                »»
               </Button>
             </div>
           </div>
