@@ -1,54 +1,45 @@
-import React from 'react';
-import { Button } from '../ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
-import { UserRole } from '../../backend/enums';
-import { Settings, Hotel, UserRound } from 'lucide-react';
+import React from "react";
+import { Button } from "../ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../ui/card";
+import { UserRole } from "../../backend/enums";
 
 const QuickAccessButtons = ({ onQuickLogin }) => {
   const roles = [
     {
       role: UserRole.SUPERADMIN,
-      title: 'Superadmin',
-      description: 'Kelola semua perusahaan dan sistem',
-      icon: Settings,
-      variant: 'default'
+      title: "Superadmin",
     },
     {
       role: UserRole.COMPANY_OWNER,
-      title: 'Pemilik Perusahaan',
-      description: 'Kelola karyawan dan laporan perusahaan',
-      icon: Hotel,
-      variant: 'secondary'
+      title: "Pemilik Perusahaan",
     },
     {
       role: UserRole.EMPLOYEE,
-      title: 'Karyawan',
-      description: 'Akses modul sesuai hak akses',
-      icon: UserRound,
-      variant: 'outline'
-    }
+      title: "Karyawan",
+    },
   ];
 
   return (
     <Card className="w-full max-w-md mx-auto mt-6">
       <CardHeader className="text-center">
-        <CardTitle className="text-lg">Akses Cepat</CardTitle>
-        <CardDescription>
-          Pilih role untuk masuk langsung (Development Mode)
-        </CardDescription>
+        <CardTitle className="text-lg">Akses login</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        {roles.map(({ role, title, description, icon: Icon, variant }) => (
+        {roles.map(({ role, title }) => (
           <Button
             key={role}
-            variant={variant}
             className="w-full h-auto p-4 flex items-start space-x-3"
             onClick={() => onQuickLogin(role)}
+            variant="secondary"
           >
-            <Icon size={20} className="mt-0.5 shrink-0" />
             <div className="text-left">
               <div className="font-medium">{title}</div>
-              <div className="text-xs opacity-70">{description}</div>
             </div>
           </Button>
         ))}
