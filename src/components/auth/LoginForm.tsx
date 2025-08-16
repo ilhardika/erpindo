@@ -5,6 +5,8 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
 import { Mail, LockKeyhole, LogIn } from "lucide-react";
 import { UserRole } from "@/backend/types/enums";
 import { User } from "@/backend/types/schema";
@@ -15,6 +17,8 @@ interface LoginFormProps {
 }
 
 export function LoginForm({ onLoginSuccess }: LoginFormProps) {
+  const { login } = useAuth();
+  const router = useRouter();
   const [credentials, setCredentials] = useState({
     email: "",
     password: "",
@@ -55,7 +59,23 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
         return;
       }
 
-      onLoginSuccess(result.user);
+      // Store user in auth context and redirect
+      login(result.user);
+
+      // Redirect based on role
+      switch (result.user.role) {
+        case "superadmin":
+          router.push("/dashboard/superadmin");
+          break;
+        case "company_owner":
+          router.push("/dashboard/company");
+          break;
+        case "employee":
+          router.push("/dashboard/employee");
+          break;
+        default:
+          onLoginSuccess(result.user);
+      }
     } catch (err) {
       setError("Terjadi kesalahan saat login");
     } finally {

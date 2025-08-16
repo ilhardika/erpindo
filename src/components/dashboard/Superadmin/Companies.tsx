@@ -3,17 +3,26 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { DataTable, createColumns } from "@/components/ui/table";
-import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import {
-  Plus,
-  Building,
-  Calendar,
-  Users,
-  Phone,
-  Mail,
-  MapPin,
-} from "lucide-react";
+  AdvancedDataTable,
+  createAdvancedColumns,
+} from "@/components/ui/advanced-table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { Plus, MoreHorizontal, Eye, Edit, Trash2 } from "lucide-react";
 import { User } from "@/backend/types/schema";
 import { companies, CompanyTable } from "@/backend/tables/companies";
 import {
@@ -27,102 +36,110 @@ interface ManageCompaniesProps {
 }
 
 export function ManageCompanies({ user, onLogout }: ManageCompaniesProps) {
+  const [deleteCompanyId, setDeleteCompanyId] = React.useState<string | null>(
+    null
+  );
+
   // Define columns for companies table
-  const { column, customColumn } = createColumns<CompanyTable>();
+  const { column, customColumn } = createAdvancedColumns<CompanyTable>();
 
   const companiesColumns = [
     column("name", "Nama Perusahaan", {
-      render: (company) => (
-        <div className="space-y-1">
-          <span className="font-medium text-foreground">{company.name}</span>
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <Building className="h-3 w-3" />
-            {company.businessType}
-          </div>
-        </div>
-      ),
-      className: "min-w-[200px]",
+      render: (company) => <span className="font-medium">{company.name}</span>,
     }),
-    column("email", "Kontak", {
+    column("email", "Email", {
+      render: (company) => <span className="text-sm">{company.email}</span>,
+    }),
+    column("businessType", "Jenis Bisnis", {
       render: (company) => (
-        <div className="space-y-1">
-          <div className="flex items-center gap-1 text-sm">
-            <Mail className="h-3 w-3 text-muted-foreground" />
-            {company.email}
-          </div>
-          {company.phone && (
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Phone className="h-3 w-3" />
-              {company.phone}
-            </div>
-          )}
-        </div>
+        <span className="text-sm text-muted-foreground">
+          {company.businessType}
+        </span>
       ),
-      className: "min-w-[200px]",
     }),
     column("subscriptionPlan", "Paket", {
       render: (company) => (
-        <div className="space-y-1">
-          <Badge variant="outline" className="capitalize">
-            {company.subscriptionPlan}
+        <Badge variant="outline" className="capitalize">
+          {company.subscriptionPlan}
+        </Badge>
+      ),
+    }),
+    column("employeeCount", "Karyawan", {
+      render: (company) => (
+        <div className="text-center font-medium">{company.employeeCount}</div>
+      ),
+    }),
+    column("registrationDate", "Terdaftar", {
+      render: (company) => (
+        <span className="text-sm">
+          {new Date(company.registrationDate).toLocaleDateString("id-ID")}
+        </span>
+      ),
+    }),
+    column("status", "Status", {
+      render: (company) => (
+        <div className="flex flex-col gap-1">
+          <Badge
+            variant={company.status === "active" ? "default" : "secondary"}
+          >
+            {formatCompanyStatus(company.status)}
           </Badge>
-          <div className="text-xs text-muted-foreground">
-            Rp {company.monthlyFee.toLocaleString("id-ID")}/bulan
-          </div>
+          <Badge
+            variant={
+              company.paymentStatus === "paid" ? "default" : "destructive"
+            }
+            className="text-xs"
+          >
+            {formatPaymentStatus(company.paymentStatus)}
+          </Badge>
         </div>
       ),
     }),
-    customColumn("employeeCount", "Karyawan", (company) => (
-      <div className="text-center">
-        <div className="flex items-center gap-1 justify-center">
-          <Users className="h-3 w-3 text-muted-foreground" />
-          <span className="font-medium">{company.employeeCount}</span>
-        </div>
-        <p className="text-xs text-muted-foreground">karyawan</p>
-      </div>
-    )),
-    customColumn("registrationDate", "Terdaftar", (company) => (
-      <div className="space-y-1">
-        <div className="flex items-center gap-1">
-          <Calendar className="h-3 w-3 text-muted-foreground" />
-          <span className="text-sm">
-            {new Date(company.registrationDate).toLocaleDateString("id-ID")}
-          </span>
-        </div>
-      </div>
-    )),
-    customColumn("status", "Status", (company) => (
-      <div className="space-y-1">
-        <Badge variant={company.status === "active" ? "default" : "secondary"}>
-          {formatCompanyStatus(company.status)}
-        </Badge>
-        <Badge
-          variant={company.paymentStatus === "paid" ? "default" : "destructive"}
-          className="text-xs"
-        >
-          {formatPaymentStatus(company.paymentStatus)}
-        </Badge>
-      </div>
-    )),
     customColumn(
       "actions",
       "Aksi",
       (company) => (
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm">
-            Edit
-          </Button>
-          <Button variant="outline" size="sm">
-            Detail
-          </Button>
+        <div className="text-right">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem>
+                <Eye className="mr-2 h-4 w-4" />
+                Detail
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Edit className="mr-2 h-4 w-4" />
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="text-red-600"
+                onClick={() => setDeleteCompanyId(company.id)}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Hapus
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       ),
       {
         headerClassName: "text-right",
-        className: "text-right min-w-[120px]",
+        className: "text-right",
+        enableSorting: false,
+        enableFiltering: false,
       }
     ),
   ];
+
+  const handleDeleteCompany = () => {
+    // TODO: Implement delete company logic
+    console.log("Delete company:", deleteCompanyId);
+    setDeleteCompanyId(null);
+  };
 
   return (
     <DashboardLayout user={user} onLogout={onLogout}>
@@ -141,17 +158,40 @@ export function ManageCompanies({ user, onLogout }: ManageCompaniesProps) {
           </Button>
         </div>
 
-        {/* Companies DataTable in Card */}
-        <DataTable
+        {/* Advanced DataTable */}
+        <AdvancedDataTable
           title="Daftar Perusahaan"
           columns={companiesColumns}
           data={companies}
-          actions={
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>{companies.length} perusahaan terdaftar</span>
-            </div>
-          }
+          searchPlaceholder="Cari perusahaan..."
         />
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog
+          open={!!deleteCompanyId}
+          onOpenChange={(open) => !open && setDeleteCompanyId(null)}
+        >
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Konfirmasi Hapus</DialogTitle>
+              <DialogDescription>
+                Apakah Anda yakin ingin menghapus perusahaan ini? Tindakan ini
+                tidak dapat dibatalkan.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setDeleteCompanyId(null)}
+              >
+                Batal
+              </Button>
+              <Button variant="destructive" onClick={handleDeleteCompany}>
+                Hapus
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );

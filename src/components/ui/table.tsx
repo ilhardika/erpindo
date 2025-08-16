@@ -116,12 +116,27 @@ export {
 };
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  ColumnDef,
-  flexRender,
-  getCoreRowModel,
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuCheckboxItem,
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { 
+  ColumnDef, 
+  flexRender, 
+  getCoreRowModel, 
   useReactTable,
-} from "@tanstack/react-table";
+  getSortedRowModel,
+  SortingState,
+  getFilteredRowModel,
+  ColumnFiltersState,
+  getPaginationRowModel,
+  PaginationState,
+} from '@tanstack/react-table';
+import { Filter, ChevronLeft, ChevronRight, Search } from "lucide-react";
 
 // Reusable column and DataTable helpers used by dashboards
 interface Column<T> {
