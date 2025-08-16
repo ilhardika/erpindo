@@ -18,7 +18,6 @@ ERPindo is a multi-tenant SaaS ERP system built with React 19 + Vite, designed f
 - **State management**: Redux Toolkit + RTK Query (planned, currently mock data)
 - **UI**: shadcn/ui components + Tailwind CSS v4
 - **Routing**: React Router v7 with role-based route protection
-- **Language**: All UI text in Indonesian via `lang/id.js`
 
 ## Key Development Patterns
 
