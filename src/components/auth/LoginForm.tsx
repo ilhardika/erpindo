@@ -4,11 +4,10 @@ import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Mail, LockKeyhole, Users, LogIn } from 'lucide-react';
+import { Mail, LockKeyhole, LogIn } from 'lucide-react';
 import { UserRole } from '@/backend/types/enums';
-import { LoginCredentials, User } from '@/backend/types/schema';
+import { User } from '@/backend/types/schema';
 import { AuthService } from '@/backend/services/auth';
 import { formatUserRole } from '@/backend/utils/formatters';
 
@@ -17,10 +16,9 @@ interface LoginFormProps {
 }
 
 export function LoginForm({ onLoginSuccess }: LoginFormProps) {
-  const [credentials, setCredentials] = useState<LoginCredentials>({
+  const [credentials, setCredentials] = useState({
     email: '',
-    password: '',
-    role: UserRole.EMPLOYEE
+    password: ''
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -48,10 +46,10 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
     setIsLoading(true);
 
     try {
-      const result = await AuthService.login(credentials);
+      const result = await AuthService.login(credentials.email, credentials.password);
       
       if (!result) {
-        setError('Email, kata sandi, atau peran tidak valid');
+        setError('Email atau kata sandi tidak valid');
         return;
       }
 
@@ -73,8 +71,7 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
     const demo = demoCredentials[role];
     setCredentials({
       email: demo.email,
-      password: demo.password,
-      role
+      password: demo.password
     });
   };
 
@@ -134,33 +131,6 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label htmlFor="role" className="text-sm font-medium">
-                Pilih Peran
-              </label>
-              <div className="relative">
-                <Users className="absolute left-3 top-3 h-4 w-4 text-muted-foreground z-10" />
-                <Select
-                  value={credentials.role}
-                  onValueChange={(value: UserRole) => setCredentials({ ...credentials, role: value })}
-                >
-                  <SelectTrigger className="pl-10">
-                    <SelectValue placeholder="Pilih peran Anda" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={UserRole.EMPLOYEE}>
-                      {formatUserRole(UserRole.EMPLOYEE)}
-                    </SelectItem>
-                    <SelectItem value={UserRole.COMPANY_OWNER}>
-                      {formatUserRole(UserRole.COMPANY_OWNER)}
-                    </SelectItem>
-                    <SelectItem value={UserRole.SUPERADMIN}>
-                      {formatUserRole(UserRole.SUPERADMIN)}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
 
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? 'Sedang Masuk...' : 'Masuk ke Sistem'}

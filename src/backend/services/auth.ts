@@ -2,11 +2,9 @@ import { User, LoginCredentials } from '../types/schema';
 import { mockAuthData } from '../data/erpMockData';
 
 export class AuthService {
-  static async validateCredentials(credentials: LoginCredentials): Promise<User | null> {
-    const { email, password, role } = credentials;
-    
+  static async validateCredentials(email: string, password: string): Promise<User | null> {
     const demoUser = mockAuthData.demoCredentials.find(
-      user => user.email === email && user.password === password && user.role === role
+      user => user.email === email && user.password === password
     );
 
     if (!demoUser) {
@@ -25,8 +23,8 @@ export class AuthService {
     };
   }
 
-  static async login(credentials: LoginCredentials): Promise<{ user: User; token: string } | null> {
-    const user = await this.validateCredentials(credentials);
+  static async login(email: string, password: string): Promise<{ user: User; token: string } | null> {
+    const user = await this.validateCredentials(email, password);
     
     if (!user) {
       return null;

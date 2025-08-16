@@ -4,7 +4,8 @@ import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Building, Users, DollarSign, LogOut, LayoutGrid } from 'lucide-react';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { Building, Users, DollarSign } from 'lucide-react';
 import { User } from '@/backend/types/schema';
 import { mockCompaniesData } from '@/backend/data/erpMockData';
 import { formatCompanyStatus, formatPaymentStatus } from '@/backend/utils/formatters';
@@ -21,26 +22,13 @@ export function SuperadminDashboard({ user, onLogout }: SuperadminDashboardProps
   const totalEmployees = companies.reduce((sum, c) => sum + c.employeeCount, 0);
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <div className="p-2 bg-primary/10 rounded-lg">
-              <LayoutGrid className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold">Dashboard Superadmin</h1>
-              <p className="text-sm text-muted-foreground">Selamat datang, {user.name}</p>
-            </div>
-          </div>
-          <Button variant="outline" onClick={onLogout}>
-            <LogOut className="h-4 w-4 mr-2" />
-            Keluar
-          </Button>
+    <DashboardLayout user={user} onLogout={onLogout}>
+      <div className="p-6 space-y-6">
+        {/* Page Header */}
+        <div>
+          <h1 className="text-2xl font-bold">Dashboard Superadmin</h1>
+          <p className="text-muted-foreground">Selamat datang, {user.name}</p>
         </div>
-      </header>
-
-      <main className="container mx-auto px-4 py-6 space-y-6">
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card>
@@ -124,7 +112,7 @@ export function SuperadminDashboard({ user, onLogout }: SuperadminDashboardProps
             </div>
           </CardContent>
         </Card>
-      </main>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }
