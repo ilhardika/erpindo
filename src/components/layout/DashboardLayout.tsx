@@ -1,34 +1,34 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
-} from '@/components/ui/dropdown-menu';
-import { 
-  Menu, 
-  User, 
-  LogOut, 
-  Building, 
-  Users, 
-  ShoppingCart, 
-  TrendingUp, 
-  Package, 
-  Gift, 
-  UserCheck, 
-  DollarSign, 
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Menu,
+  User,
+  LogOut,
+  Building,
+  Users,
+  ShoppingCart,
+  TrendingUp,
+  Package,
+  Gift,
+  UserCheck,
+  DollarSign,
   Truck,
   ChevronDown,
-  ChevronRight
-} from 'lucide-react';
-import { User as UserType } from '@/backend/types/schema';
-import { UserRole } from '@/backend/types/enums';
-import { mockModuleDefinitions } from '@/backend/data/erpMockData';
+  ChevronRight,
+} from "lucide-react";
+import { User as UserType } from "@/backend/types/schema";
+import { UserRole } from "@/backend/types/enums";
+import { ModuleService } from "@/backend/services/modules";
 
 interface DashboardLayoutProps {
   user: UserType;
@@ -43,14 +43,18 @@ interface ModuleItem {
   subModules?: ModuleItem[];
 }
 
-export function DashboardLayout({ user, children, onLogout }: DashboardLayoutProps) {
+export function DashboardLayout({
+  user,
+  children,
+  onLogout,
+}: DashboardLayoutProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [expandedModules, setExpandedModules] = useState<string[]>([]);
 
   const toggleModule = (moduleKey: string) => {
-    setExpandedModules(prev => 
-      prev.includes(moduleKey) 
-        ? prev.filter(key => key !== moduleKey)
+    setExpandedModules((prev) =>
+      prev.includes(moduleKey)
+        ? prev.filter((key) => key !== moduleKey)
         : [...prev, moduleKey]
     );
   };
@@ -59,56 +63,77 @@ export function DashboardLayout({ user, children, onLogout }: DashboardLayoutPro
     switch (role) {
       case UserRole.SUPERADMIN:
         return [
-          { key: 'companies', name: 'Kelola Perusahaan', icon: Building },
-          { key: 'users', name: 'Kelola Pengguna', icon: Users },
-          { key: 'reports', name: 'Laporan Sistem', icon: TrendingUp },
+          { key: "companies", name: "Kelola Perusahaan", icon: Building },
+          { key: "users", name: "Kelola Pengguna", icon: Users },
+          { key: "reports", name: "Laporan Sistem", icon: TrendingUp },
         ];
-      
+
       case UserRole.COMPANY_OWNER:
         return [
-          { key: 'dashboard', name: 'Dashboard', icon: TrendingUp },
-          { key: 'employees', name: 'Kelola Karyawan', icon: Users },
-          { key: 'modules', name: 'Pengaturan Modul', icon: Package },
-          { key: 'reports', name: 'Laporan Perusahaan', icon: TrendingUp },
+          { key: "dashboard", name: "Dashboard", icon: TrendingUp },
+          { key: "employees", name: "Kelola Karyawan", icon: Users },
+          { key: "modules", name: "Pengaturan Modul", icon: Package },
+          { key: "reports", name: "Laporan Perusahaan", icon: TrendingUp },
         ];
-      
+
       case UserRole.EMPLOYEE:
         // Get available modules from user's permissions
         const availableModules: ModuleItem[] = [];
-        
+
+        // Get module definitions from new service
+        const moduleDefinitions = ModuleService.getModuleDefinitions();
+
         // Mock employee modules - in real app, this would come from user permissions
-        const employeeModules = ['pos', 'sales', 'inventory', 'customers'];
-        
-        employeeModules.forEach(moduleKey => {
-          const moduleConfig = mockModuleDefinitions[moduleKey as keyof typeof mockModuleDefinitions];
+        const employeeModules = ["pos", "sales", "inventory", "customers"];
+
+        employeeModules.forEach((moduleKey) => {
+          const moduleConfig = moduleDefinitions[moduleKey];
           if (moduleConfig) {
             let icon = Package;
             switch (moduleKey) {
-              case 'pos': icon = ShoppingCart; break;
-              case 'sales': icon = TrendingUp; break;
-              case 'inventory': icon = Package; break;
-              case 'customers': icon = Users; break;
-              case 'promotions': icon = Gift; break;
-              case 'hr': icon = UserCheck; break;
-              case 'finance': icon = DollarSign; break;
-              case 'vehicles': icon = Truck; break;
+              case "pos":
+                icon = ShoppingCart;
+                break;
+              case "sales":
+                icon = TrendingUp;
+                break;
+              case "inventory":
+                icon = Package;
+                break;
+              case "customers":
+                icon = Users;
+                break;
+              case "promotions":
+                icon = Gift;
+                break;
+              case "hr":
+                icon = UserCheck;
+                break;
+              case "finance":
+                icon = DollarSign;
+                break;
+              case "vehicles":
+                icon = Truck;
+                break;
             }
-            
+
             availableModules.push({
               key: moduleKey,
               name: moduleConfig.name,
               icon,
-              subModules: moduleConfig.features.map(feature => ({
-                key: `${moduleKey}-${feature.toLowerCase().replace(/\s+/g, '-')}`,
+              subModules: moduleConfig.features.map((feature) => ({
+                key: `${moduleKey}-${feature
+                  .toLowerCase()
+                  .replace(/\s+/g, "-")}`,
                 name: feature,
-                icon: Package
-              }))
+                icon: Package,
+              })),
             });
           }
         });
-        
+
         return availableModules;
-      
+
       default:
         return [];
     }
@@ -117,14 +142,18 @@ export function DashboardLayout({ user, children, onLogout }: DashboardLayoutPro
   const modules = getModulesForRole(user.role);
 
   const Sidebar = ({ isMobile = false }: { isMobile?: boolean }) => (
-    <div className={`${isMobile ? 'w-full' : 'w-64'} bg-card border-r h-full flex flex-col`}>
+    <div
+      className={`${
+        isMobile ? "w-full" : "w-64"
+      } bg-card border-r h-full flex flex-col`}
+    >
       {/* Mobile brand header */}
       {isMobile && (
         <div className="p-4 border-b">
           <h1 className="text-lg font-bold">ERP Indonesia</h1>
         </div>
       )}
-      
+
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-2">
         {modules.map((module) => (
@@ -136,13 +165,14 @@ export function DashboardLayout({ user, children, onLogout }: DashboardLayoutPro
             >
               <module.icon className="h-4 w-4 mr-3" />
               {module.name}
-              {module.subModules && (
-                expandedModules.includes(module.key) 
-                  ? <ChevronDown className="h-4 w-4 ml-auto" />
-                  : <ChevronRight className="h-4 w-4 ml-auto" />
-              )}
+              {module.subModules &&
+                (expandedModules.includes(module.key) ? (
+                  <ChevronDown className="h-4 w-4 ml-auto" />
+                ) : (
+                  <ChevronRight className="h-4 w-4 ml-auto" />
+                ))}
             </Button>
-            
+
             {/* Sub-modules */}
             {module.subModules && expandedModules.includes(module.key) && (
               <div className="ml-6 mt-2 space-y-1">
@@ -183,7 +213,7 @@ export function DashboardLayout({ user, children, onLogout }: DashboardLayoutPro
                 <Sidebar isMobile />
               </SheetContent>
             </Sheet>
-            
+
             {/* Brand name - hidden on mobile */}
             <h1 className="hidden md:block text-xl font-bold">ERP Indonesia</h1>
           </div>
@@ -219,9 +249,7 @@ export function DashboardLayout({ user, children, onLogout }: DashboardLayoutPro
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1">
-          {children}
-        </main>
+        <main className="flex-1">{children}</main>
       </div>
     </div>
   );

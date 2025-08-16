@@ -1,22 +1,23 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { 
-  ShoppingCart, 
-  TrendingUp, 
-  Package, 
-  Users, 
-  Gift, 
-  UserCheck, 
-  DollarSign, 
-  Truck
-} from 'lucide-react';
-import { User } from '@/backend/types/schema';
-import { mockEmployeesData, mockCompaniesData } from '@/backend/data/erpMockData';
+import React from "react";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import {
+  ShoppingCart,
+  TrendingUp,
+  Package,
+  Users,
+  Percent,
+  UserCheck,
+  DollarSign,
+  Truck,
+} from "lucide-react";
+import { User } from "@/backend/types/schema";
+import { DashboardService } from "@/backend/services/dashboard";
+import { useState, useEffect } from "react";
 
 interface EmployeeDashboardProps {
   user: User;
@@ -24,37 +25,49 @@ interface EmployeeDashboardProps {
 }
 
 export function EmployeeDashboard({ user, onLogout }: EmployeeDashboardProps) {
-  const employee = mockEmployeesData.find(e => e.email === user.email);
-  const company = mockCompaniesData.find(c => c.id === user.companyId);
+  const [dashboardData, setDashboardData] = useState<any>(null);
+
+  useEffect(() => {
+    const loadData = async () => {
+      const data = await DashboardService.getEmployeeDashboard(user);
+      setDashboardData(data);
+    };
+    loadData();
+  }, [user]);
+
+  if (!dashboardData) {
+    return <div>Loading...</div>;
+  }
+
+  const employee = dashboardData.employee;
+  const availableModules = dashboardData.availableModules || [];
 
   const moduleIcons = {
     pos: ShoppingCart,
     sales: TrendingUp,
     inventory: Package,
     customers: Users,
-    promotions: Gift,
+    promotions: Percent,
     hr: UserCheck,
     finance: DollarSign,
-    vehicles: Truck
+    vehicles: Truck,
   };
 
   const moduleNames = {
-    pos: 'POS (Kasir)',
-    sales: 'Penjualan & Pembelian',
-    inventory: 'Inventori/Gudang',
-    customers: 'Pelanggan & Supplier',
-    promotions: 'Promosi',
-    hr: 'HR/Manajemen Karyawan',
-    finance: 'Keuangan',
-    vehicles: 'Kendaraan'
+    pos: "POS (Kasir)",
+    sales: "Penjualan & Pembelian",
+    inventory: "Inventori/Gudang",
+    customers: "Pelanggan & Supplier",
+    promotions: "Promosi",
+    hr: "HR/Manajemen Karyawan",
+    finance: "Keuangan",
+    vehicles: "Kendaraan",
   };
 
-  const availableModules = employee?.modules || [];
-
   const recentActivities = [
-    'Transaksi POS #001 berhasil diproses',
-    'Stok produk ABC telah diperbarui',
-    'Laporan penjualan harian telah dibuat'
+    "Transaksi POS #001 berhasil diproses",
+    "Stok produk ABC telah diperbarui",
+    "Laporan penjualan harian telah dibuat",
   ];
 
   return (
@@ -65,9 +78,7 @@ export function EmployeeDashboard({ user, onLogout }: EmployeeDashboardProps) {
           <h1 className="text-2xl font-bold">Dashboard Karyawan</h1>
           <p className="text-muted-foreground">Selamat datang, {user.name}</p>
           {employee && (
-            <p className="text-sm text-muted-foreground">
-              {employee.position} • {company?.name}
-            </p>
+            <p className="text-sm text-muted-foreground">{employee.position}</p>
           )}
         </div>
         {/* Profile Card */}
@@ -97,13 +108,13 @@ export function EmployeeDashboard({ user, onLogout }: EmployeeDashboardProps) {
                 <div>
                   <p className="text-sm text-muted-foreground">Bergabung</p>
                   <p className="font-medium">
-                    {new Date(employee.joinDate).toLocaleDateString('id-ID')}
+                    {new Date(employee.joinDate).toLocaleDateString("id-ID")}
                   </p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Status</p>
-                  <Badge variant={employee.isActive ? 'default' : 'secondary'}>
-                    {employee.isActive ? 'Aktif' : 'Tidak Aktif'}
+                  <Badge variant={employee.isActive ? "default" : "secondary"}>
+                    {employee.isActive ? "Aktif" : "Tidak Aktif"}
                   </Badge>
                 </div>
               </div>
@@ -119,11 +130,16 @@ export function EmployeeDashboard({ user, onLogout }: EmployeeDashboardProps) {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {availableModules.map((module) => {
-                const IconComponent = moduleIcons[module as keyof typeof moduleIcons];
-                const moduleName = moduleNames[module as keyof typeof moduleNames];
-                
+                const IconComponent =
+                  moduleIcons[module as keyof typeof moduleIcons];
+                const moduleName =
+                  moduleNames[module as keyof typeof moduleNames];
+
                 return (
-                  <Card key={module} className="cursor-pointer hover:shadow-md transition-shadow">
+                  <Card
+                    key={module}
+                    className="cursor-pointer hover:shadow-md transition-shadow"
+                  >
                     <CardContent className="p-6">
                       <div className="flex items-center space-x-4">
                         {IconComponent && (
@@ -133,7 +149,9 @@ export function EmployeeDashboard({ user, onLogout }: EmployeeDashboardProps) {
                         )}
                         <div>
                           <h3 className="font-medium">{moduleName}</h3>
-                          <p className="text-sm text-muted-foreground">Akses tersedia</p>
+                          <p className="text-sm text-muted-foreground">
+                            Akses tersedia
+                          </p>
                         </div>
                       </div>
                     </CardContent>
@@ -152,7 +170,10 @@ export function EmployeeDashboard({ user, onLogout }: EmployeeDashboardProps) {
           <CardContent>
             <div className="space-y-3">
               {recentActivities.map((activity, index) => (
-                <div key={index} className="flex items-center space-x-3 p-3 bg-muted/50 rounded-lg">
+                <div
+                  key={index}
+                  className="flex items-center space-x-3 p-3 bg-muted/50 rounded-lg"
+                >
                   <div className="w-2 h-2 bg-primary rounded-full"></div>
                   <p className="text-sm">{activity}</p>
                 </div>
@@ -168,19 +189,31 @@ export function EmployeeDashboard({ user, onLogout }: EmployeeDashboardProps) {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <Button variant="outline" className="h-auto p-4 flex-col space-y-2">
+              <Button
+                variant="outline"
+                className="h-auto p-4 flex-col space-y-2"
+              >
                 <ShoppingCart className="h-6 w-6" />
                 <span className="text-sm">Buka POS</span>
               </Button>
-              <Button variant="outline" className="h-auto p-4 flex-col space-y-2">
+              <Button
+                variant="outline"
+                className="h-auto p-4 flex-col space-y-2"
+              >
                 <Package className="h-6 w-6" />
                 <span className="text-sm">Cek Stok</span>
               </Button>
-              <Button variant="outline" className="h-auto p-4 flex-col space-y-2">
+              <Button
+                variant="outline"
+                className="h-auto p-4 flex-col space-y-2"
+              >
                 <TrendingUp className="h-6 w-6" />
                 <span className="text-sm">Laporan</span>
               </Button>
-              <Button variant="outline" className="h-auto p-4 flex-col space-y-2">
+              <Button
+                variant="outline"
+                className="h-auto p-4 flex-col space-y-2"
+              >
                 <Users className="h-6 w-6" />
                 <span className="text-sm">Pelanggan</span>
               </Button>

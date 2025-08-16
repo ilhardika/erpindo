@@ -1,24 +1,45 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { Building, Users, DollarSign } from 'lucide-react';
-import { User } from '@/backend/types/schema';
-import { mockCompaniesData } from '@/backend/data/erpMockData';
-import { formatCompanyStatus, formatPaymentStatus } from '@/backend/utils/formatters';
+import React from "react";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { Building, Users, DollarSign } from "lucide-react";
+import { User } from "@/backend/types/schema";
+import { DashboardService } from "@/backend/services/dashboard";
+import {
+  formatCompanyStatus,
+  formatPaymentStatus,
+} from "@/backend/utils/formatters";
+import { useState, useEffect } from "react";
 
 interface SuperadminDashboardProps {
   user: User;
   onLogout: () => void;
 }
 
-export function SuperadminDashboard({ user, onLogout }: SuperadminDashboardProps) {
-  const companies = mockCompaniesData;
-  const totalCompanies = companies.length;
-  const activeCompanies = companies.filter(c => c.status === 'active').length;
+export function SuperadminDashboard({
+  user,
+  onLogout,
+}: SuperadminDashboardProps) {
+  const [dashboardData, setDashboardData] = useState<any>(null);
+
+  useEffect(() => {
+    const loadData = async () => {
+      const data = await DashboardService.getSuperadminDashboard();
+      setDashboardData(data);
+    };
+    loadData();
+  }, []);
+
+  if (!dashboardData) {
+    return <div>Loading...</div>;
+  }
+
+  const companies = dashboardData.companies;
+  const totalCompanies = dashboardData.totalUsers;
+  const activeCompanies = dashboardData.activeCompanies;
   const totalEmployees = companies.reduce((sum, c) => sum + c.employeeCount, 0);
 
   return (
@@ -33,7 +54,9 @@ export function SuperadminDashboard({ user, onLogout }: SuperadminDashboardProps
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Perusahaan</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Total Perusahaan
+              </CardTitle>
               <Building className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -46,7 +69,9 @@ export function SuperadminDashboard({ user, onLogout }: SuperadminDashboardProps
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Karyawan</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Total Karyawan
+              </CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -59,7 +84,9 @@ export function SuperadminDashboard({ user, onLogout }: SuperadminDashboardProps
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pendapatan Bulanan</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Pendapatan Bulanan
+              </CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -79,27 +106,47 @@ export function SuperadminDashboard({ user, onLogout }: SuperadminDashboardProps
           <CardContent>
             <div className="space-y-4">
               {companies.map((company) => (
-                <div key={company.id} className="flex items-center justify-between p-4 border rounded-lg">
+                <div
+                  key={company.id}
+                  className="flex items-center justify-between p-4 border rounded-lg"
+                >
                   <div className="flex-1">
                     <div className="flex items-center space-x-4">
                       <div>
                         <h3 className="font-medium">{company.name}</h3>
-                        <p className="text-sm text-muted-foreground">{company.owner} • {company.email}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {company.owner} • {company.email}
+                        </p>
                       </div>
                     </div>
                   </div>
                   <div className="flex items-center space-x-4">
                     <div className="text-right">
-                      <p className="text-sm font-medium">{company.employeeCount} karyawan</p>
+                      <p className="text-sm font-medium">
+                        {company.employeeCount} karyawan
+                      </p>
                       <p className="text-xs text-muted-foreground">
-                        Terdaftar {new Date(company.registrationDate).toLocaleDateString('id-ID')}
+                        Terdaftar{" "}
+                        {new Date(company.registrationDate).toLocaleDateString(
+                          "id-ID"
+                        )}
                       </p>
                     </div>
                     <div className="flex flex-col space-y-1">
-                      <Badge variant={company.status === 'active' ? 'default' : 'secondary'}>
+                      <Badge
+                        variant={
+                          company.status === "active" ? "default" : "secondary"
+                        }
+                      >
                         {formatCompanyStatus(company.status)}
                       </Badge>
-                      <Badge variant={company.paymentStatus === 'paid' ? 'default' : 'destructive'}>
+                      <Badge
+                        variant={
+                          company.paymentStatus === "paid"
+                            ? "default"
+                            : "destructive"
+                        }
+                      >
                         {formatPaymentStatus(company.paymentStatus)}
                       </Badge>
                     </div>
