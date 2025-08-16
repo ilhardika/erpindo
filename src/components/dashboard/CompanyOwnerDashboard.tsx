@@ -23,8 +23,12 @@ export function CompanyOwnerDashboard({
 
   useEffect(() => {
     const loadData = async () => {
-      const data = await DashboardService.getCompanyOwnerDashboard(user);
-      setDashboardData(data);
+      if (user.companyId) {
+        const data = await DashboardService.getCompanyOwnerDashboard(
+          user.companyId
+        );
+        setDashboardData(data);
+      }
     };
     loadData();
   }, [user]);

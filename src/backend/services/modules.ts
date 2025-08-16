@@ -1,8 +1,8 @@
-import { db } from "../tables";
+import { query } from "../tables";
 
 export class ModuleService {
   static getModuleDefinitions() {
-    return db.module.findAll().reduce((acc, module) => {
+    return query.modules.findAll().reduce((acc, module) => {
       acc[module.code] = {
         name: module.name,
         description: module.description,
@@ -13,14 +13,22 @@ export class ModuleService {
   }
 
   static getActiveModules() {
-    return db.module.findActive();
+    return query.modules.findActive();
   }
 
   static getModuleByCode(code: string) {
-    return db.module.findByCode(code);
+    return query.modules.findByCode(code);
   }
 
   static getAllModules() {
-    return db.module.findAll();
+    return query.modules.findAll();
+  }
+
+  static getModulesByName(searchName: string) {
+    return query.modules
+      .findAll()
+      .filter((module) =>
+        module.name.toLowerCase().includes(searchName.toLowerCase())
+      );
   }
 }

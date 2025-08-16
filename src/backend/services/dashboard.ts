@@ -1,149 +1,110 @@
 import {
-  SuperadminDashboardData,
-  CompanyOwnerDashboardData,
-  EmployeeDashboardData,
-  User,
-} from "../types/schema";
-import {
-  db,
-  getStatistics,
-  getFullCompanyData,
-  getFullEmployeeData,
+  getAllCompaniesWithStats,
+  getCompanyData,
+  getDashboardData,
+  query,
 } from "../tables";
-import { UserRole } from "../types/enums";
 
 export class DashboardService {
-  static async getSuperadminDashboard(): Promise<SuperadminDashboardData> {
-    const companies = db.company.findAll().map((company) => ({
-      ...company,
-      owner: company.ownerId, // Keep backward compatibility
-      email: company.email,
-    }));
-
-    const stats = getStatistics();
+  // Superadmin Dashboard - All companies overview
+  static getSuperadminDashboard() {
+    const companiesWithStats = getAllCompaniesWithStats();
 
     return {
-      companies,
-      totalRevenue: stats.totalRevenue,
-      activeCompanies: stats.activeCompanies,
-      totalUsers: stats.totalUsers,
+      companies: companiesWithStats.map(({ stats, ...company }) => ({
+        ...company,
+        employeeCount: stats.employees,
+        activeEmployees: stats.activeEmployees,
+        monthlyRevenue: stats.monthlyRevenue,
+        totalUsers: stats.activeUsers,
+      })),
+      totalRevenue: companiesWithStats.reduce(
+        (sum, c) => sum + c.stats.monthlyRevenue,
+        0
+      ),
+      activeCompanies: companiesWithStats.filter((c) => c.status === "active")
+        .length,
+      totalUsers: companiesWithStats.reduce(
+        (sum, c) => sum + c.stats.activeUsers,
+        0
+      ),
+      totalEmployees: companiesWithStats.reduce(
+        (sum, c) => sum + c.stats.employees,
+        0
+      ),
     };
   }
 
-  static async getCompanyOwnerDashboard(
-    user: User
-  ): Promise<CompanyOwnerDashboardData | null> {
-    if (!user.companyId) return null;
+  // Company Owner Dashboard - Single company management
+  static getCompanyOwnerDashboard(companyId: string) {
+    const companyData = getCompanyData(companyId);
+    const dashboardData = getDashboardData(companyId, "company_owner");
 
-    const fullCompanyData = getFullCompanyData(user.companyId);
-    if (!fullCompanyData) return null;
-
-    // Convert to expected format
-    const company = {
-      ...fullCompanyData,
-      owner: fullCompanyData.owner?.name || "",
-      email: fullCompanyData.email,
-    };
-
-    const employees = fullCompanyData.employees.map((emp) => ({
-      id: emp.id,
-      name: emp.user?.name || "",
-      email: emp.user?.email || "",
-      position: emp.position,
-      department: emp.department,
-      modules: db.employeeModule
-        .findByEmployeeId(emp.id)
-        .map((em) => em.moduleCode),
-      isActive: emp.isActive,
-      joinDate: emp.joinDate,
-      companyId: emp.companyId,
-    }));
-
-    // Calculate module usage
-    const moduleUsage: Record<string, number> = {};
-    employees.forEach((emp) => {
-      emp.modules.forEach((moduleCode) => {
-        moduleUsage[moduleCode] = (moduleUsage[moduleCode] || 0) + 1;
-      });
-    });
-
-    const recentActivities = [
-      "Karyawan baru Jane Smith bergabung sebagai Kasir",
-      "Modul POS diakses oleh 3 karyawan hari ini",
-      "Laporan penjualan bulan ini telah diupdate",
-      "Pembayaran langganan akan jatuh tempo dalam 15 hari",
-    ];
-
-    return {
-      company,
-      employees,
-      moduleUsage,
-      recentActivities,
-    };
-  }
-
-  static async getEmployeeDashboard(
-    user: User
-  ): Promise<EmployeeDashboardData | null> {
-    if (!user.companyId) return null;
-
-    const employee = db.employee.findByUserId(user.id);
-    if (!employee) return null;
-
-    const fullEmployeeData = getFullEmployeeData(employee.id);
-    if (!fullEmployeeData) return null;
-
-    // Convert to expected format
-    const employeeInfo = {
-      id: fullEmployeeData.id,
-      name: fullEmployeeData.user?.name || "",
-      email: fullEmployeeData.user?.email || "",
-      position: fullEmployeeData.position,
-      department: fullEmployeeData.department,
-      modules: fullEmployeeData.permissions.map((p) => p.moduleCode),
-      isActive: fullEmployeeData.isActive,
-      joinDate: fullEmployeeData.joinDate,
-      companyId: fullEmployeeData.companyId,
-    };
-
-    const availableModules = fullEmployeeData.permissions.map(
-      (p) => p.moduleCode
-    );
-
-    const recentTasks = [
-      "Selesaikan laporan penjualan harian",
-      "Update data inventory produk baru",
-      "Review dan approve purchase order",
-      "Konfirmasi delivery schedule",
-    ];
-
-    const notifications = [
-      "Anda memiliki 3 tugas yang belum selesai",
-      "Meeting tim penjualan dijadwalkan besok jam 10:00",
-      "Sistem akan maintenance pada hari Minggu",
-    ];
-
-    return {
-      employee: employeeInfo,
-      availableModules,
-      recentTasks,
-      notifications,
-    };
-  }
-
-  static async getDashboardDataByRole(user: User) {
-    switch (user.role) {
-      case UserRole.SUPERADMIN:
-        return this.getSuperadminDashboard();
-
-      case UserRole.COMPANY_OWNER:
-        return this.getCompanyOwnerDashboard(user);
-
-      case UserRole.EMPLOYEE:
-        return this.getEmployeeDashboard(user);
-
-      default:
-        throw new Error("Invalid user role");
+    if (!companyData.company) {
+      throw new Error("Company not found");
     }
+
+    // Get employee modules for the company
+    const employeeModules = query.employeeModules
+      ? query.employeeModules.findByCompany(companyId)
+      : [];
+
+    return {
+      company: companyData.company,
+      stats: dashboardData.stats,
+      employees: companyData.employees,
+      recentTransactions: dashboardData.recentTransactions,
+      lowStockItems: dashboardData.lowStockItems,
+      pendingLeaves: dashboardData.pendingLeaves,
+      todayAttendance: dashboardData.todayAttendance,
+
+      // Module usage based on employeeModules table
+      moduleUsage: {
+        pos: employeeModules.filter((em) => em.moduleCode === "pos").length,
+        inventory: employeeModules.filter((em) => em.moduleCode === "inventory")
+          .length,
+        hr: employeeModules.filter((em) => em.moduleCode === "hr").length,
+        sales: employeeModules.filter((em) => em.moduleCode === "sales").length,
+        finance: employeeModules.filter((em) => em.moduleCode === "finance")
+          .length,
+      },
+
+      recentActivities: [
+        "New employee registered",
+        "POS transaction completed",
+        "Inventory updated",
+        "Attendance marked",
+      ],
+    };
+  }
+
+  // Employee Dashboard - Individual employee view
+  static getEmployeeDashboard(employeeId: string) {
+    const dashboardData = getDashboardData("", "employee"); // Will be filtered by employee
+
+    // Get employee modules
+    const employeeModules = query.employeeModules
+      ? query.employeeModules.findByEmployee(employeeId)
+      : [];
+
+    return {
+      employee: {
+        id: employeeId,
+        name: "Sample Employee",
+        position: "Staff",
+        modules: employeeModules.map((em) => em.moduleCode),
+      },
+      availableModules: employeeModules.map((em) => em.moduleCode),
+      recentTasks: [
+        "Complete daily sales report",
+        "Update inventory count",
+        "Process customer returns",
+      ],
+      notifications: [
+        "New product added to inventory",
+        "Team meeting at 2 PM",
+        "Monthly report due tomorrow",
+      ],
+    };
   }
 }

@@ -250,6 +250,31 @@ export const query = {
         (a) => a.companyId === companyId && a.status === status
       ),
   },
+
+  modules: {
+    findAll: () => modules,
+    findById: (id: string) => modules.find((m) => m.id === id),
+    findByCode: (code: string) => modules.find((m) => m.code === code),
+    findActive: () => modules.filter((m) => m.isActive),
+  },
+
+  employeeModules: {
+    findAll: () => employeeModules,
+    findByEmployee: (employeeId: string) =>
+      employeeModules.filter((em) => em.employeeId === employeeId),
+    findByCompany: (companyId: string) => {
+      // Find employees in the company first, then their modules
+      const companyEmployees = employees.filter(
+        (e) => e.companyId === companyId
+      );
+      const employeeIds = companyEmployees.map((e) => e.id);
+      return employeeModules.filter((em) =>
+        employeeIds.includes(em.employeeId)
+      );
+    },
+    findByModule: (moduleCode: string) =>
+      employeeModules.filter((em) => em.moduleCode === moduleCode),
+  },
 };
 
 // Dashboard data helper

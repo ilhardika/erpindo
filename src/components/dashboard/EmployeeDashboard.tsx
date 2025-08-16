@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { User } from "@/backend/types/schema";
 import { DashboardService } from "@/backend/services/dashboard";
+import { employees } from "@/backend/tables/employees";
 import { useState, useEffect } from "react";
 
 interface EmployeeDashboardProps {
@@ -29,8 +30,12 @@ export function EmployeeDashboard({ user, onLogout }: EmployeeDashboardProps) {
 
   useEffect(() => {
     const loadData = async () => {
-      const data = await DashboardService.getEmployeeDashboard(user);
-      setDashboardData(data);
+      // Find employee by userId
+      const employee = employees.find((e) => e.userId === user.id);
+      if (employee) {
+        const data = await DashboardService.getEmployeeDashboard(employee.id);
+        setDashboardData(data);
+      }
     };
     loadData();
   }, [user]);

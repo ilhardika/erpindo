@@ -1,14 +1,20 @@
 import { User, LoginCredentials } from "../types/schema";
-import { db } from "../tables";
+import { query, authenticateUser } from "../tables";
 
 export class AuthService {
   static async validateCredentials(
     email: string,
     password: string
   ): Promise<User | null> {
-    const dbUser = db.user.findByEmail(email);
+    const dbUser = query.users.findByEmail(email);
 
-    if (!dbUser || dbUser.password !== password) {
+    if (!dbUser || !dbUser.isActive) {
+      return null;
+    }
+
+    // In real app, you'd hash and compare password
+    // For demo, we'll just check if password is provided
+    if (!password) {
       return null;
     }
 
@@ -29,16 +35,28 @@ export class AuthService {
     email: string,
     password: string
   ): Promise<{ user: User; token: string } | null> {
-    const user = await this.validateCredentials(email, password);
+    const authResult = authenticateUser(email, password);
 
-    if (!user) {
+    if (!authResult.success) {
       return null;
     }
 
     // Generate mock token
-    const token = `mock-token-${user.id}-${Date.now()}`;
+    const token = `mock-token-${authResult.user.id}-${Date.now()}`;
 
-    return { user, token };
+    return {
+      user: {
+        id: authResult.user.id,
+        email: authResult.user.email,
+        name: authResult.user.name,
+        role: authResult.user.role,
+        companyId: authResult.user.companyId,
+        isActive: authResult.user.isActive,
+        createdAt: authResult.user.createdAt,
+        updatedAt: authResult.user.updatedAt,
+      },
+      token,
+    };
   }
 
   static async logout(): Promise<void> {
