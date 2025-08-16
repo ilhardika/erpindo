@@ -2,7 +2,6 @@
 
 import React from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Building, Users, Settings } from "lucide-react";
@@ -154,61 +153,6 @@ export function CompanyOwnerDashboard({
                   </Badge>
                 </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Employee Management */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Kelola Karyawan</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {employees.map((employee) => (
-                <div
-                  key={employee.id}
-                  className="flex items-center justify-between p-4 border rounded-lg"
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-4">
-                      <div>
-                        <h3 className="font-medium">{employee.name}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {employee.position} • {employee.department}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {employee.email}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-4">
-                    <div className="flex flex-wrap gap-1">
-                      {employee.modules.map((module) => (
-                        <Badge
-                          key={module}
-                          variant="outline"
-                          className="text-xs"
-                        >
-                          {module}
-                        </Badge>
-                      ))}
-                    </div>
-                    <Badge
-                      variant={employee.isActive ? "default" : "secondary"}
-                    >
-                      {employee.isActive ? "Aktif" : "Tidak Aktif"}
-                    </Badge>
-                    <Button variant="outline" size="sm">
-                      Edit
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="mt-4">
-              <Button>Tambah Karyawan</Button>
             </div>
           </CardContent>
         </Card>

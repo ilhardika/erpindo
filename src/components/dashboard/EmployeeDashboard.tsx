@@ -70,9 +70,27 @@ export function EmployeeDashboard({ user, onLogout }: EmployeeDashboardProps) {
   };
 
   const recentActivities = [
-    "Transaksi POS #001 berhasil diproses",
-    "Stok produk ABC telah diperbarui",
-    "Laporan penjualan harian telah dibuat",
+    {
+      id: 1,
+      activity: "Transaksi POS #001 berhasil diproses",
+      module: "POS",
+      time: "2 jam lalu",
+      status: "success",
+    },
+    {
+      id: 2,
+      activity: "Stok produk ABC telah diperbarui",
+      module: "Inventory",
+      time: "3 jam lalu",
+      status: "info",
+    },
+    {
+      id: 3,
+      activity: "Laporan penjualan harian telah dibuat",
+      module: "Sales",
+      time: "5 jam lalu",
+      status: "success",
+    },
   ];
 
   return (
@@ -163,26 +181,6 @@ export function EmployeeDashboard({ user, onLogout }: EmployeeDashboardProps) {
                   </Card>
                 );
               })}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Recent Activities */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Aktivitas Terbaru</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {recentActivities.map((activity, index) => (
-                <div
-                  key={index}
-                  className="flex items-center space-x-3 p-3 bg-muted/50 rounded-lg"
-                >
-                  <div className="w-2 h-2 bg-primary rounded-full"></div>
-                  <p className="text-sm">{activity}</p>
-                </div>
-              ))}
             </div>
           </CardContent>
         </Card>

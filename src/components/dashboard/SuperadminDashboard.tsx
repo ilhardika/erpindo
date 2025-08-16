@@ -4,6 +4,7 @@ import React from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { DataTable, createColumns } from "@/components/ui/table";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Building, Users, DollarSign } from "lucide-react";
 import { User } from "@/backend/types/schema";
@@ -41,6 +42,51 @@ export function SuperadminDashboard({
   const totalCompanies = dashboardData.totalUsers;
   const activeCompanies = dashboardData.activeCompanies;
   const totalEmployees = companies.reduce((sum, c) => sum + c.employeeCount, 0);
+
+  // Define columns for companies table
+  const { column, customColumn } = createColumns<(typeof companies)[0]>();
+
+  const companiesColumns = [
+    column("name", "Nama Perusahaan", {
+      render: (company) => <span className="font-medium">{company.name}</span>,
+    }),
+    column("owner", "Pemilik"),
+    column("email", "Email"),
+    customColumn("employeeCount", "Karyawan", (company) => (
+      <div className="text-center">
+        <span className="font-medium">{company.employeeCount}</span>
+        <p className="text-xs text-muted-foreground">karyawan</p>
+      </div>
+    )),
+    customColumn("registrationDate", "Tanggal Daftar", (company) =>
+      new Date(company.registrationDate).toLocaleDateString("id-ID")
+    ),
+    customColumn("status", "Status", (company) => (
+      <Badge variant={company.status === "active" ? "default" : "secondary"}>
+        {formatCompanyStatus(company.status)}
+      </Badge>
+    )),
+    customColumn("paymentStatus", "Pembayaran", (company) => (
+      <Badge
+        variant={company.paymentStatus === "paid" ? "default" : "destructive"}
+      >
+        {formatPaymentStatus(company.paymentStatus)}
+      </Badge>
+    )),
+    customColumn(
+      "actions",
+      "Aksi",
+      () => (
+        <Button variant="outline" size="sm">
+          Kelola
+        </Button>
+      ),
+      {
+        headerClassName: "text-right",
+        className: "text-right",
+      }
+    ),
+  ];
 
   return (
     <DashboardLayout user={user} onLogout={onLogout}>
@@ -99,66 +145,11 @@ export function SuperadminDashboard({
         </div>
 
         {/* Companies Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Kelola Perusahaan</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {companies.map((company) => (
-                <div
-                  key={company.id}
-                  className="flex items-center justify-between p-4 border rounded-lg"
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-4">
-                      <div>
-                        <h3 className="font-medium">{company.name}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {company.owner} • {company.email}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-4">
-                    <div className="text-right">
-                      <p className="text-sm font-medium">
-                        {company.employeeCount} karyawan
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Terdaftar{" "}
-                        {new Date(company.registrationDate).toLocaleDateString(
-                          "id-ID"
-                        )}
-                      </p>
-                    </div>
-                    <div className="flex flex-col space-y-1">
-                      <Badge
-                        variant={
-                          company.status === "active" ? "default" : "secondary"
-                        }
-                      >
-                        {formatCompanyStatus(company.status)}
-                      </Badge>
-                      <Badge
-                        variant={
-                          company.paymentStatus === "paid"
-                            ? "default"
-                            : "destructive"
-                        }
-                      >
-                        {formatPaymentStatus(company.paymentStatus)}
-                      </Badge>
-                    </div>
-                    <Button variant="outline" size="sm">
-                      Kelola
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <DataTable
+          title="Kelola Perusahaan"
+          columns={companiesColumns}
+          data={companies}
+        />
       </div>
     </DashboardLayout>
   );

@@ -1,15 +1,14 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Mail, LockKeyhole, LogIn } from 'lucide-react';
-import { UserRole } from '@/backend/types/enums';
-import { User } from '@/backend/types/schema';
-import { AuthService } from '@/backend/services/auth';
-import { formatUserRole } from '@/backend/utils/formatters';
+import React, { useState } from "react";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Mail, LockKeyhole, LogIn } from "lucide-react";
+import { UserRole } from "@/backend/types/enums";
+import { User } from "@/backend/types/schema";
+import { AuthService } from "@/backend/services/auth";
 
 interface LoginFormProps {
   onLoginSuccess: (user: User) => void;
@@ -17,8 +16,8 @@ interface LoginFormProps {
 
 export function LoginForm({ onLoginSuccess }: LoginFormProps) {
   const [credentials, setCredentials] = useState({
-    email: '',
-    password: ''
+    email: "",
+    password: "",
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,45 +33,34 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
 
     // Validation
     if (!credentials.email || !credentials.password) {
-      setError('Email dan kata sandi harus diisi');
+      setError("Email dan kata sandi harus diisi");
       return;
     }
 
     if (!validateEmail(credentials.email)) {
-      setError('Format email tidak valid');
+      setError("Format email tidak valid");
       return;
     }
 
     setIsLoading(true);
 
     try {
-      const result = await AuthService.login(credentials.email, credentials.password);
-      
+      const result = await AuthService.login(
+        credentials.email,
+        credentials.password
+      );
+
       if (!result) {
-        setError('Email atau kata sandi tidak valid');
+        setError("Email atau kata sandi tidak valid");
         return;
       }
 
       onLoginSuccess(result.user);
     } catch (err) {
-      setError('Terjadi kesalahan saat login');
+      setError("Terjadi kesalahan saat login");
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const fillDemoCredentials = (role: UserRole) => {
-    const demoCredentials = {
-      [UserRole.SUPERADMIN]: { email: 'superadmin@erpindo.com', password: 'super123' },
-      [UserRole.COMPANY_OWNER]: { email: 'owner@company1.com', password: 'owner123' },
-      [UserRole.EMPLOYEE]: { email: 'employee@company1.com', password: 'emp123' }
-    };
-
-    const demo = demoCredentials[role];
-    setCredentials({
-      email: demo.email,
-      password: demo.password
-    });
   };
 
   return (
@@ -84,7 +72,9 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
               <LogIn className="h-6 w-6 text-primary" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold">Sistem ERP Indonesia</CardTitle>
+          <CardTitle className="text-2xl font-bold">
+            Sistem ERP Indonesia
+          </CardTitle>
           <p className="text-muted-foreground">Masuk ke akun Anda</p>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -106,7 +96,9 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
                   type="email"
                   placeholder="Masukkan email Anda"
                   value={credentials.email}
-                  onChange={(e) => setCredentials({ ...credentials, email: e.target.value })}
+                  onChange={(e) =>
+                    setCredentials({ ...credentials, email: e.target.value })
+                  }
                   className="pl-10"
                   required
                 />
@@ -124,16 +116,17 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
                   type="password"
                   placeholder="Masukkan kata sandi Anda"
                   value={credentials.password}
-                  onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
+                  onChange={(e) =>
+                    setCredentials({ ...credentials, password: e.target.value })
+                  }
                   className="pl-10"
                   required
                 />
               </div>
             </div>
 
-
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Sedang Masuk...' : 'Masuk ke Sistem'}
+              {isLoading ? "Sedang Masuk..." : "Masuk ke Sistem"}
             </Button>
           </form>
 
@@ -146,7 +139,13 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => fillDemoCredentials(UserRole.SUPERADMIN)}
+                onClick={() => {
+                  console.log("Superadmin button clicked");
+                  setCredentials({
+                    email: "superadmin@erpindo.com",
+                    password: "super123",
+                  });
+                }}
                 className="text-xs"
               >
                 Demo Superadmin
@@ -155,7 +154,13 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => fillDemoCredentials(UserRole.COMPANY_OWNER)}
+                onClick={() => {
+                  console.log("Owner button clicked");
+                  setCredentials({
+                    email: "owner@company1.com",
+                    password: "owner123",
+                  });
+                }}
                 className="text-xs"
               >
                 Demo Pemilik Perusahaan
@@ -164,7 +169,13 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => fillDemoCredentials(UserRole.EMPLOYEE)}
+                onClick={() => {
+                  console.log("Employee button clicked");
+                  setCredentials({
+                    email: "employee@company1.com",
+                    password: "emp123",
+                  });
+                }}
                 className="text-xs"
               >
                 Demo Karyawan
