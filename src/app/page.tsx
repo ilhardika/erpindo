@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { LoginForm } from '@/components/auth/LoginForm';
-import { SuperadminDashboard } from '@/components/dashboard/SuperadminDashboard';
-import { CompanyOwnerDashboard } from '@/components/dashboard/CompanyOwnerDashboard';
-import { EmployeeDashboard } from '@/components/dashboard/EmployeeDashboard';
-import { User } from '@/backend/types/schema';
-import { UserRole } from '@/backend/types/enums';
+import React, { useState } from "react";
+import { LoginForm } from "@/components/auth/LoginForm";
+import { SuperadminDashboard } from "@/components/dashboard/Superadmin/Dashboard";
+import { CompanyOwnerDashboard } from "@/components/dashboard/Owner/OwnerDashboard";
+import { EmployeeDashboard } from "@/components/dashboard/Employee/Dashboard";
+import { User } from "@/backend/types/schema";
+import { UserRole } from "@/backend/types/enums";
 
 export default function ERPLoginSystem() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -23,9 +23,13 @@ export default function ERPLoginSystem() {
   if (currentUser) {
     switch (currentUser.role) {
       case UserRole.SUPERADMIN:
-        return <SuperadminDashboard user={currentUser} onLogout={handleLogout} />;
+        return (
+          <SuperadminDashboard user={currentUser} onLogout={handleLogout} />
+        );
       case UserRole.COMPANY_OWNER:
-        return <CompanyOwnerDashboard user={currentUser} onLogout={handleLogout} />;
+        return (
+          <CompanyOwnerDashboard user={currentUser} onLogout={handleLogout} />
+        );
       case UserRole.EMPLOYEE:
         return <EmployeeDashboard user={currentUser} onLogout={handleLogout} />;
       default:

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, createColumns } from "@/components/ui/table";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { ManageCompanies } from "./Companies";
 import { Building, Users, DollarSign } from "lucide-react";
 import { User } from "@/backend/types/schema";
 import { DashboardService } from "@/backend/services/dashboard";
@@ -24,6 +25,9 @@ export function SuperadminDashboard({
   user,
   onLogout,
 }: SuperadminDashboardProps) {
+  const [currentPage, setCurrentPage] = useState<
+    "dashboard" | "companies" | "users" | "reports"
+  >("dashboard");
   const [dashboardData, setDashboardData] = useState<any>(null);
 
   useEffect(() => {
@@ -33,6 +37,18 @@ export function SuperadminDashboard({
     };
     loadData();
   }, []);
+
+  // Handle navigation from sidebar
+  const handleNavigation = (
+    page: "dashboard" | "companies" | "users" | "reports"
+  ) => {
+    setCurrentPage(page);
+  };
+
+  // Render different pages based on current selection
+  if (currentPage === "companies") {
+    return <ManageCompanies user={user} onLogout={onLogout} />;
+  }
 
   if (!dashboardData) {
     return <div>Loading...</div>;
@@ -89,7 +105,11 @@ export function SuperadminDashboard({
   ];
 
   return (
-    <DashboardLayout user={user} onLogout={onLogout}>
+    <DashboardLayout
+      user={user}
+      onLogout={onLogout}
+      onNavigate={handleNavigation}
+    >
       <div className="p-6 space-y-6">
         {/* Page Header */}
         <div>
@@ -143,13 +163,6 @@ export function SuperadminDashboard({
             </CardContent>
           </Card>
         </div>
-
-        {/* Companies Table */}
-        <DataTable
-          title="Kelola Perusahaan"
-          columns={companiesColumns}
-          data={companies}
-        />
       </div>
     </DashboardLayout>
   );

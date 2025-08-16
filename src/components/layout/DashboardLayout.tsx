@@ -34,6 +34,7 @@ interface DashboardLayoutProps {
   user: UserType;
   children: React.ReactNode;
   onLogout: () => void;
+  onNavigate?: (page: string) => void;
 }
 
 interface ModuleItem {
@@ -47,6 +48,7 @@ export function DashboardLayout({
   user,
   children,
   onLogout,
+  onNavigate,
 }: DashboardLayoutProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [expandedModules, setExpandedModules] = useState<string[]>([]);
@@ -63,6 +65,7 @@ export function DashboardLayout({
     switch (role) {
       case UserRole.SUPERADMIN:
         return [
+          { key: "dashboard", name: "Dashboard", icon: TrendingUp },
           { key: "companies", name: "Kelola Perusahaan", icon: Building },
           { key: "users", name: "Kelola Pengguna", icon: Users },
           { key: "reports", name: "Laporan Sistem", icon: TrendingUp },
@@ -161,7 +164,13 @@ export function DashboardLayout({
             <Button
               variant="ghost"
               className="w-full justify-start"
-              onClick={() => module.subModules && toggleModule(module.key)}
+              onClick={() => {
+                if (module.subModules) {
+                  toggleModule(module.key);
+                } else if (onNavigate) {
+                  onNavigate(module.key);
+                }
+              }}
             >
               <module.icon className="h-4 w-4 mr-3" />
               {module.name}
