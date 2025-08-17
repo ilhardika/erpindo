@@ -17,7 +17,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { UserRole } from "@/backend/tables/enums";
-import { employeeService } from "@/backend/services/hr";
+import {
+  employeeService,
+  CreateEmployeeWithUserData,
+} from "@/backend/services/hr";
 import { ModuleService } from "@/backend/services/hr";
 import { useAuth } from "@/contexts/AuthContext";
 import { User as AuthUser } from "@/backend/services/auth";
@@ -26,6 +29,7 @@ interface CreateEmployeeFormData {
   name: string;
   email: string;
   password: string;
+  phone?: string;
   position: string;
   department: string;
   salary: string;
@@ -40,6 +44,7 @@ export function CreateEmployee() {
     name: "",
     email: "",
     password: "",
+    phone: "",
     position: "",
     department: "",
     salary: "",
@@ -74,44 +79,23 @@ export function CreateEmployee() {
         return;
       }
 
-      // First create user account
-      const userData = {
+      // Use the new method to create employee with user account
+      const employeeWithUserData: CreateEmployeeWithUserData = {
+        name: formData.name,
         email: formData.email,
         password: formData.password,
-        name: formData.name,
-        role: "employee" as UserRole,
-        companyId: user.companyId,
-        position: formData.position,
-        isActive: true,
-        phone: "",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-
-      // Generate user ID
-      const userId = `user-${Date.now()}`;
-      const newUser = { ...userData, id: userId };
-
-      // Add user to users array (simplified for mock backend)
-      // In real app, this would be an API call
-      const { users } = await import("@/backend/tables/users");
-      users.push(newUser);
-
-      // Then create employee record
-      const employeeData = {
-        userId: userId,
+        phone: formData.phone || "",
         companyId: user.companyId,
         position: formData.position,
         department: formData.department,
-        moduleAccess: formData.moduleAccess,
-        joinDate: new Date().toISOString().split("T")[0],
         salary: formData.salary ? parseFloat(formData.salary) : undefined,
-        isActive: true,
+        moduleAccess: formData.moduleAccess,
       };
 
-      const newEmployee = employeeService.create(employeeData);
+      const result =
+        employeeService.createWithUserAccount(employeeWithUserData);
 
-      if (newEmployee) {
+      if (result) {
         router.push("/employees");
       } else {
         alert("Gagal membuat karyawan");
@@ -129,6 +113,7 @@ export function CreateEmployee() {
       name: "",
       email: "",
       password: "",
+      phone: "",
       position: "",
       department: "",
       salary: "",
@@ -198,6 +183,17 @@ export function CreateEmployee() {
                 value={formData.password}
                 onChange={(e) => handleInputChange("password", e.target.value)}
                 placeholder="Masukkan password"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="phone">Nomor Telepon</Label>
+              <Input
+                id="phone"
+                type="tel"
+                value={formData.phone}
+                onChange={(e) => handleInputChange("phone", e.target.value)}
+                placeholder="Masukkan nomor telepon (opsional)"
               />
             </div>
           </CardContent>

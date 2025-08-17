@@ -16,22 +16,20 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { UserRole } from "@/backend/tables/enums";
-import { employeeQuery, employeeService } from "@/backend/services/hr";
+import {
+  employeeQuery,
+  employeeService,
+  EmployeeWithUserData,
+} from "@/backend/services/hr";
 import { ModuleService } from "@/backend/services/hr";
-import { userQuery } from "@/backend/tables/users";
 import { useAuth } from "@/contexts/AuthContext";
 import { EmployeeTable } from "@/backend/tables/employees";
 import { UserTable } from "@/backend/tables/users";
 
-// Interface for employee with user data
-interface EmployeeWithUser extends EmployeeTable {
-  name: string;
-  email: string;
-}
-
 interface EditEmployeeFormData {
   name: string;
   email: string;
+  phone?: string;
   position: string;
   department: string;
   salary: string;
@@ -47,10 +45,11 @@ export function EditEmployee({ employeeId }: EditEmployeeProps) {
   const router = useRouter();
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
-  const [employee, setEmployee] = useState<EmployeeWithUser | null>(null);
+  const [employee, setEmployee] = useState<EmployeeWithUserData | null>(null);
   const [formData, setFormData] = useState<EditEmployeeFormData>({
     name: "",
     email: "",
+    phone: "",
     position: "",
     department: "",
     salary: "",
@@ -63,30 +62,32 @@ export function EditEmployee({ employeeId }: EditEmployeeProps) {
 
   // Load employee data on mount
   useEffect(() => {
-    const employeeData = employeeQuery.employees.findById(employeeId);
-    if (employeeData && employeeData.companyId === user?.companyId) {
-      // Join with user data
-      const userData = userQuery.users.findById(employeeData.userId);
-      const employeeWithUser: EmployeeWithUser = {
-        ...employeeData,
-        name: userData?.name || "",
-        email: userData?.email || "",
-      };
-      setEmployee(employeeWithUser);
+    if (user?.companyId) {
+      // Get employees with user data and find the specific one
+      const employeesWithUserData =
+        employeeQuery.employees.findByCompanyIdWithUserData(user.companyId);
+      const foundEmployee = employeesWithUserData.find(
+        (emp) => emp.id === employeeId
+      );
 
-      // Set form data
-      setFormData({
-        name: employeeWithUser.name,
-        email: employeeWithUser.email,
-        position: employeeWithUser.position,
-        department: employeeWithUser.department,
-        salary: employeeWithUser.salary?.toString() || "",
-        moduleAccess: employeeWithUser.moduleAccess,
-        isActive: employeeWithUser.isActive,
-      });
-    } else {
-      // Employee not found or not in same company
-      router.push("/employees");
+      if (foundEmployee) {
+        setEmployee(foundEmployee);
+
+        // Set form data
+        setFormData({
+          name: foundEmployee.name,
+          email: foundEmployee.email,
+          phone: foundEmployee.phone,
+          position: foundEmployee.position,
+          department: foundEmployee.department,
+          salary: foundEmployee.salary?.toString() || "",
+          moduleAccess: foundEmployee.moduleAccess,
+          isActive: foundEmployee.isActive,
+        });
+      } else {
+        // Employee not found or not in same company
+        router.push("/employees");
+      }
     }
   }, [employeeId, user?.companyId, router]);
 
@@ -112,25 +113,25 @@ export function EditEmployee({ employeeId }: EditEmployeeProps) {
     try {
       setIsLoading(true);
 
-      // Update user data
-      const userData = userQuery.users.findById(employee.userId);
-      if (userData) {
-        userData.name = formData.name;
-        userData.email = formData.email;
-        userData.position = formData.position;
-        userData.updatedAt = new Date().toISOString();
-      }
+      // Use the new method to update both employee and user data
+      const result = employeeService.updateWithUserData(
+        employee.id,
+        {
+          position: formData.position,
+          department: formData.department,
+          salary: formData.salary ? parseFloat(formData.salary) : undefined,
+          moduleAccess: formData.moduleAccess,
+          isActive: formData.isActive,
+        },
+        {
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          isActive: formData.isActive,
+        }
+      );
 
-      // Update employee data
-      const updatedEmployee = employeeService.update(employee.id, {
-        position: formData.position,
-        department: formData.department,
-        salary: formData.salary ? parseFloat(formData.salary) : undefined,
-        moduleAccess: formData.moduleAccess,
-        isActive: formData.isActive,
-      });
-
-      if (updatedEmployee) {
+      if (result.employee && result.user) {
         router.push(`/employees/${employee.id}`);
       } else {
         alert("Gagal memperbarui data karyawan");
@@ -212,6 +213,17 @@ export function EditEmployee({ employeeId }: EditEmployeeProps) {
                   placeholder="nama@email.com"
                 />
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="phone">Nomor Telepon</Label>
+              <Input
+                id="phone"
+                type="tel"
+                value={formData.phone}
+                onChange={(e) => handleInputChange("phone", e.target.value)}
+                placeholder="Masukkan nomor telepon (opsional)"
+              />
             </div>
           </CardContent>
         </Card>

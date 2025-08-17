@@ -32,15 +32,12 @@ import { User as UserType } from "@/backend/services/auth";
 import { EmployeeTable } from "@/backend/tables/employees";
 import { UserTable } from "@/backend/tables/users";
 import { UserRole } from "@/backend/tables/enums";
-import { employeeQuery, employeeService } from "@/backend/services/hr";
-import { userQuery } from "@/backend/tables/users";
+import {
+  employeeService,
+  employeeQuery,
+  EmployeeWithUserData,
+} from "@/backend/services/hr";
 import { useState, useEffect } from "react";
-
-// Interface for joined employee and user data
-interface EmployeeWithUser extends EmployeeTable {
-  name: string;
-  email: string;
-}
 
 interface ManageEmployeesProps {
   user: UserType;
@@ -50,31 +47,20 @@ interface ManageEmployeesProps {
 export function ManageEmployees({ user, onLogout }: ManageEmployeesProps) {
   const router = useRouter();
   const [deleteEmployeeId, setDeleteEmployeeId] = useState<string | null>(null);
-  const [employees, setEmployees] = useState<EmployeeWithUser[]>([]);
+  const [employees, setEmployees] = useState<EmployeeWithUserData[]>([]);
 
   // Load employees for current company with user data
   useEffect(() => {
     if (user.companyId) {
-      const companyEmployees = employeeQuery.employees.findByCompanyId(
-        user.companyId
+      setEmployees(
+        employeeQuery.employees.findByCompanyIdWithUserData(user.companyId)
       );
-      // Join employee data with user data
-      const employeesWithUser: EmployeeWithUser[] = companyEmployees.map(
-        (employee) => {
-          const userData = userQuery.users.findById(employee.userId);
-          return {
-            ...employee,
-            name: userData?.name || "",
-            email: userData?.email || "",
-          };
-        }
-      );
-      setEmployees(employeesWithUser);
     }
   }, [user.companyId]);
 
   // Define columns for employees table
-  const { column, customColumn } = createAdvancedColumns<EmployeeWithUser>();
+  const { column, customColumn } =
+    createAdvancedColumns<EmployeeWithUserData>();
 
   const employeesColumns = [
     column("name", "Nama", {
@@ -144,12 +130,6 @@ export function ManageEmployees({ user, onLogout }: ManageEmployeesProps) {
               Edit
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={() => router.push(`/employees/${employee.id}/modules`)}
-            >
-              <Settings className="mr-2 h-4 w-4" />
-              Atur Modul
-            </DropdownMenuItem>
-            <DropdownMenuItem
               onClick={() => setDeleteEmployeeId(employee.id)}
               className="text-red-600"
             >
@@ -167,21 +147,9 @@ export function ManageEmployees({ user, onLogout }: ManageEmployeesProps) {
       employeeService.delete(deleteEmployeeId);
       // Refresh employee list
       if (user.companyId) {
-        const companyEmployees = employeeQuery.employees.findByCompanyId(
-          user.companyId
+        setEmployees(
+          employeeQuery.employees.findByCompanyIdWithUserData(user.companyId)
         );
-        // Join employee data with user data
-        const employeesWithUser: EmployeeWithUser[] = companyEmployees.map(
-          (employee) => {
-            const userData = userQuery.users.findById(employee.userId);
-            return {
-              ...employee,
-              name: userData?.name || "",
-              email: userData?.email || "",
-            };
-          }
-        );
-        setEmployees(employeesWithUser);
       }
       setDeleteEmployeeId(null);
     }

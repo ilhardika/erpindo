@@ -15,18 +15,15 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { UserRole } from "@/backend/tables/enums";
-import { employeeQuery, employeeService } from "@/backend/services/hr";
+import {
+  employeeQuery,
+  employeeService,
+  EmployeeWithUserData,
+} from "@/backend/services/hr";
 import { ModuleService } from "@/backend/services/hr";
-import { userQuery } from "@/backend/tables/users";
 import { useAuth } from "@/contexts/AuthContext";
 import { EmployeeTable } from "@/backend/tables/employees";
 import { UserTable } from "@/backend/tables/users";
-
-// Interface for employee with user data
-interface EmployeeWithUser extends EmployeeTable {
-  name: string;
-  email: string;
-}
 
 interface ViewEmployeeProps {
   employeeId: string;
@@ -35,23 +32,24 @@ interface ViewEmployeeProps {
 export function ViewEmployee({ employeeId }: ViewEmployeeProps) {
   const router = useRouter();
   const { user } = useAuth();
-  const [employee, setEmployee] = useState<EmployeeWithUser | null>(null);
+  const [employee, setEmployee] = useState<EmployeeWithUserData | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   useEffect(() => {
-    // Load employee data
-    const employeeData = employeeQuery.employees.findById(employeeId);
-    if (employeeData && employeeData.companyId === user?.companyId) {
-      // Join with user data
-      const userData = userQuery.users.findById(employeeData.userId);
-      setEmployee({
-        ...employeeData,
-        name: userData?.name || "",
-        email: userData?.email || "",
-      });
-    } else {
-      // Employee not found or not in same company
-      router.push("/employees");
+    if (user?.companyId) {
+      // Get all employees with user data and find the specific one
+      const employeesWithUserData =
+        employeeQuery.employees.findByCompanyIdWithUserData(user.companyId);
+      const foundEmployee = employeesWithUserData.find(
+        (emp) => emp.id === employeeId
+      );
+
+      if (foundEmployee) {
+        setEmployee(foundEmployee);
+      } else {
+        // Employee not found or not in same company
+        router.push("/employees");
+      }
     }
   }, [employeeId, user?.companyId, router]);
 
@@ -114,6 +112,14 @@ export function ViewEmployee({ employeeId }: ViewEmployeeProps) {
                   </h4>
                   <p className="text-lg">{employee.email}</p>
                 </div>
+                {employee.phone && (
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground">
+                      Nomor Telepon
+                    </h4>
+                    <p className="text-lg">{employee.phone}</p>
+                  </div>
+                )}
                 <div>
                   <h4 className="text-sm font-medium text-muted-foreground">
                     Posisi

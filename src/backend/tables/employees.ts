@@ -4,6 +4,7 @@ export interface EmployeeTable {
   id: string;
   userId: string; // Foreign key to users table
   companyId: string; // Foreign key to companies table
+  employeeNumber?: string; // Optional employee ID (e.g., "TM-EMP-001")
   position: string;
   department: string;
   moduleAccess: string[]; // Array of module codes that employee can access

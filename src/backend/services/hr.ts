@@ -6,7 +6,7 @@
  */
 
 import { employees, EmployeeTable } from "../tables/employees";
-import { users, UserTable } from "../tables/users";
+import { users, UserTable, userQuery } from "../tables/users";
 import { attendance, shifts, leaves, payroll } from "../tables/attendance";
 import {
   getModuleById,
@@ -18,6 +18,36 @@ import {
 import { getPlanById } from "../tables/subscriptionPlans";
 import { UserRole } from "../tables/enums";
 import { query } from "../tables";
+
+// =============================================================================
+// TYPES & INTERFACES
+// =============================================================================
+
+// Extended employee interface with joined user data
+export interface EmployeeWithUserData extends EmployeeTable {
+  // User data fields
+  name: string;
+  email: string;
+  phone?: string;
+  userIsActive: boolean;
+}
+
+// Interface for creating new employee with user account
+export interface CreateEmployeeWithUserData {
+  // User account data
+  name: string;
+  email: string;
+  password: string;
+  phone?: string;
+  companyId: string;
+
+  // Employee HR data
+  employeeNumber?: string;
+  position: string;
+  department: string;
+  salary?: number;
+  moduleAccess?: string[];
+}
 
 // =============================================================================
 // EMPLOYEE MANAGEMENT
@@ -41,6 +71,30 @@ export const employeeQuery = {
         (emp) =>
           emp.companyId === companyId && emp.moduleAccess.includes(module)
       ),
+
+    // NEW: Get employees with joined user data
+    findByCompanyIdWithUserData: (
+      companyId: string
+    ): EmployeeWithUserData[] => {
+      const companyEmployees = employees.filter(
+        (emp) => emp.companyId === companyId
+      );
+
+      return companyEmployees.map((employee) => {
+        const user = userQuery.users.findById(employee.userId);
+        if (!user) {
+          throw new Error(`User not found for employee ${employee.id}`);
+        }
+
+        return {
+          ...employee,
+          name: user.name,
+          email: user.email,
+          phone: user.phone,
+          userIsActive: user.isActive,
+        };
+      });
+    },
   },
 };
 
@@ -59,6 +113,52 @@ export const employeeService = {
     return newEmployee;
   },
 
+  // NEW: Create employee with user account (for Company Owner use)
+  createWithUserAccount: (
+    data: CreateEmployeeWithUserData
+  ): { user: UserTable; employee: EmployeeTable } => {
+    // 1. Generate unique IDs
+    const timestamp = Date.now();
+    const userId = `user-employee-${timestamp}`;
+    const employeeId = `emp-${timestamp}`;
+
+    // 2. Create User account
+    const newUser: UserTable = {
+      id: userId,
+      email: data.email,
+      password: data.password,
+      name: data.name,
+      role: UserRole.EMPLOYEE,
+      companyId: data.companyId,
+      phone: data.phone,
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    // 3. Create Employee record
+    const newEmployee: EmployeeTable = {
+      id: employeeId,
+      userId: userId,
+      companyId: data.companyId,
+      employeeNumber: data.employeeNumber,
+      position: data.position,
+      department: data.department,
+      salary: data.salary,
+      joinDate: new Date().toISOString().split("T")[0], // YYYY-MM-DD format
+      moduleAccess: data.moduleAccess || [],
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    // 4. Save to mock database
+    users.push(newUser);
+    employees.push(newEmployee);
+
+    return { user: newUser, employee: newEmployee };
+  },
+
   update: (id: string, updates: Partial<EmployeeTable>) => {
     const empIndex = employees.findIndex((emp) => emp.id === id);
     if (empIndex === -1) return null;
@@ -69,6 +169,31 @@ export const employeeService = {
       updatedAt: new Date().toISOString(),
     };
     return employees[empIndex];
+  },
+
+  // NEW: Update employee with user data
+  updateWithUserData: (
+    employeeId: string,
+    employeeUpdates: Partial<EmployeeTable>,
+    userUpdates: Partial<
+      Pick<UserTable, "name" | "email" | "phone" | "isActive">
+    >
+  ): { user: UserTable | null; employee: EmployeeTable | null } => {
+    // Update employee
+    const employee = employeeService.update(employeeId, employeeUpdates);
+    if (!employee) return { user: null, employee: null };
+
+    // Update user
+    const userIndex = users.findIndex((u) => u.id === employee.userId);
+    if (userIndex === -1) return { user: null, employee };
+
+    users[userIndex] = {
+      ...users[userIndex],
+      ...userUpdates,
+      updatedAt: new Date().toISOString(),
+    };
+
+    return { user: users[userIndex], employee };
   },
 
   delete: (id: string) => {
