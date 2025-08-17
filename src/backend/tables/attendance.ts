@@ -1,23 +1,102 @@
-import {
-  attendanceData,
-  shiftsData,
-  leavesData,
-  payrollData,
-  type AttendanceData,
-  type ShiftData,
-  type LeaveData,
-  type PayrollData,
-} from "../data/attendance";
+// Define interfaces in tables layer
+export interface AttendanceTable {
+  id: string;
+  companyId: string; // Foreign key to companies table
+  employeeId: string; // Foreign key to employees table
+  attendanceDate: string; // YYYY-MM-DD format
+  shiftId?: string; // Foreign key to shifts table
+  checkIn?: string; // ISO timestamp
+  checkOut?: string; // ISO timestamp
+  breakStart?: string; // ISO timestamp
+  breakEnd?: string; // ISO timestamp
+  workHours: number; // Total work hours
+  overTimeHours: number; // Overtime hours
+  lateMinutes: number; // Late arrival in minutes
+  earlyLeaveMinutes: number; // Early leave in minutes
+  status:
+    | "present"
+    | "absent"
+    | "late"
+    | "half_day"
+    | "sick"
+    | "permission"
+    | "holiday";
+  location?: string; // Check-in location
+  notes?: string;
+  approvedBy?: string; // Employee ID who approved (for sick/permission)
+  createdAt: string;
+  updatedAt: string;
+}
 
-export interface AttendanceTable extends AttendanceData {}
+export interface ShiftTable {
+  id: string;
+  companyId: string; // Foreign key to companies table
+  shiftName: string;
+  startTime: string; // HH:MM format (24-hour)
+  endTime: string; // HH:MM format (24-hour)
+  breakDuration: number; // Break duration in minutes
+  totalHours: number; // Total work hours excluding break
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
 
-export interface ShiftTable extends ShiftData {}
+export interface LeaveTable {
+  id: string;
+  companyId: string; // Foreign key to companies table
+  employeeId: string; // Foreign key to employees table
+  leaveType: "annual" | "sick" | "maternity" | "emergency" | "unpaid";
+  startDate: string; // YYYY-MM-DD
+  endDate: string; // YYYY-MM-DD
+  totalDays: number;
+  reason: string;
+  status: "pending" | "approved" | "rejected";
+  appliedDate: string;
+  approvedBy?: string;
+  approvedDate?: string;
+  attachments?: string[];
+  createdAt: string;
+  updatedAt: string;
+}
 
-export interface LeaveTable extends LeaveData {}
+export interface PayrollTable {
+  id: string;
+  companyId: string; // Foreign key to companies table
+  employeeId: string; // Foreign key to employees table
+  payPeriod: string; // YYYY-MM format
+  workDays: number;
+  workHours: number;
+  overtimeHours: number;
+  basicSalary: number;
+  overtimeRate: number;
+  overtimeAmount: number;
+  allowances: number;
+  bonuses: number;
+  grossPay: number;
+  deductions: number;
+  netPay: number;
+  payDate?: string;
+  status: "draft" | "approved" | "paid";
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
-export interface PayrollTable extends PayrollData {}
+// Import data from data layer - these will be imported after we update data layer
+let shiftsData: ShiftTable[] = [];
+let attendanceData: AttendanceTable[] = [];
+let leavesData: LeaveTable[] = [];
+let payrollData: PayrollTable[] = [];
 
-// Import attendance data from data layer
+// We'll import these after updating the data layer
+import("../data/attendance").then((module) => {
+  shiftsData = module.shiftsData;
+  attendanceData = module.attendanceData;
+  leavesData = module.leavesData;
+  payrollData = module.payrollData;
+});
+
+// Export data with consistent naming
 export const shifts = shiftsData;
 export const attendance = attendanceData;
 export const leaves = leavesData;

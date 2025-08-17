@@ -1,303 +1,212 @@
-// Pure data storage for inventory-related entities
-// This file contains only data arrays without business logic
+import {
+  InventoryTable,
+  StockMovementTable,
+  StockAdjustmentTable,
+  StockAdjustmentItemTable,
+} from "../tables/inventory";
 
-export interface InventoryData {
-  id: string;
-  companyId: string; // Foreign key to companies table
-  productId: string; // Foreign key to products table
-  warehouseLocation?: string;
-  currentStock: number;
-  reservedStock: number; // Stock yang sudah di-reserve untuk order
-  availableStock: number; // currentStock - reservedStock
-  minimumStock: number;
-  maximumStock?: number;
-  reorderPoint: number;
-  averageCost: number; // Weighted average cost
-  lastStockMovement?: string;
-  lastPurchasePrice?: number;
-  lastSalePrice?: number;
-  stockValue: number; // currentStock * averageCost
-  isActive: boolean;
-  updatedAt: string;
-}
-
-export interface StockMovementData {
-  id: string;
-  companyId: string; // Foreign key to companies table
-  productId: string; // Foreign key to products table
-  movementType: "in" | "out" | "adjustment" | "transfer";
-  movementReason:
-    | "purchase"
-    | "sale"
-    | "return"
-    | "damaged"
-    | "expired"
-    | "manual_adjustment"
-    | "transfer_in"
-    | "transfer_out";
-  quantity: number; // Positive for IN, Negative for OUT
-  unitCost?: number; // For purchases and adjustments
-  referenceType?: "transaction" | "adjustment" | "transfer";
-  referenceId?: string; // ID of transaction, adjustment, or transfer
-  stockBefore: number;
-  stockAfter: number;
-  notes?: string;
-  employeeId?: string; // Employee who made the movement
-  movementDate: string;
-  createdAt: string;
-}
-
-export interface StockAdjustmentData {
-  id: string;
-  companyId: string; // Foreign key to companies table
-  adjustmentNumber: string;
-  adjustmentDate: string;
-  adjustmentType:
-    | "physical_count"
-    | "damage"
-    | "expiry"
-    | "loss"
-    | "found"
-    | "correction";
-  totalItems: number;
-  totalValue: number;
-  employeeId?: string; // Employee who did the adjustment
-  approvedBy?: string; // Manager who approved
-  status: "draft" | "approved" | "applied";
-  notes?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface StockAdjustmentItemData {
-  id: string;
-  adjustmentId: string; // Foreign key to stock_adjustments table
-  productId: string; // Foreign key to products table
-  systemStock: number; // Stock according to system
-  physicalStock: number; // Actual counted stock
-  difference: number; // physicalStock - systemStock
-  unitCost: number;
-  totalValue: number; // difference * unitCost
-  reason?: string;
-  createdAt: string;
-}
-
-// Inventory data - Current stock levels for all products
-export const inventoryData: InventoryData[] = [
-  // Inventory for Company 1 (PT. Teknologi Maju)
+// Inventory data - current stock levels for all products
+export const inventoryData: InventoryTable[] = [
+  // Company 1 - Toko Elektronik Maju
   {
     id: "inv-1-001",
     companyId: "company-1",
-    productId: "prod-1-001",
-    warehouseLocation: "Gudang Utama Lantai 2",
+    productId: "prod-1-001", // Laptop ASUS VivoBook
+    warehouseLocation: "Gudang Utama",
     currentStock: 25,
-    reservedStock: 5, // 5 laptops reserved for pending orders
+    reservedStock: 5,
     availableStock: 20,
     minimumStock: 10,
     maximumStock: 50,
     reorderPoint: 15,
-    averageCost: 14500000,
+    averageCost: 15000000,
     lastStockMovement: "2024-12-10T10:30:00.000Z",
-    lastPurchasePrice: 14000000,
-    lastSalePrice: 15000000,
-    stockValue: 362500000,
+    lastPurchasePrice: 14800000,
+    lastSalePrice: 15500000,
+    stockValue: 375000000,
     isActive: true,
     updatedAt: "2024-12-10T10:30:00.000Z",
   },
   {
     id: "inv-1-002",
     companyId: "company-1",
-    productId: "prod-1-002",
-    warehouseLocation: "Gudang Utama Lantai 1",
-    currentStock: 45,
+    productId: "prod-1-002", // PC Gaming Setup
+    warehouseLocation: "Gudang Utama",
+    currentStock: 8,
     reservedStock: 2,
-    availableStock: 43,
-    minimumStock: 20,
-    maximumStock: 100,
-    reorderPoint: 25,
-    averageCost: 1300000,
+    availableStock: 6,
+    minimumStock: 5,
+    maximumStock: 20,
+    reorderPoint: 8,
+    averageCost: 18500000,
     lastStockMovement: "2024-12-08T14:15:00.000Z",
-    lastPurchasePrice: 1200000,
-    lastSalePrice: 1500000,
-    stockValue: 58500000,
+    lastPurchasePrice: 18000000,
+    lastSalePrice: 19500000,
+    stockValue: 148000000,
     isActive: true,
     updatedAt: "2024-12-08T14:15:00.000Z",
   },
   {
     id: "inv-1-003",
     companyId: "company-1",
-    productId: "prod-1-003",
-    warehouseLocation: "Gudang Utama Lantai 1",
+    productId: "prod-1-003", // Mouse Wireless
+    warehouseLocation: "Gudang Utama",
     currentStock: 150,
-    reservedStock: 10,
-    availableStock: 140,
+    reservedStock: 20,
+    availableStock: 130,
     minimumStock: 50,
-    maximumStock: 300,
+    maximumStock: 200,
     reorderPoint: 75,
-    averageCost: 200000,
+    averageCost: 250000,
     lastStockMovement: "2024-12-10T10:30:00.000Z",
-    lastPurchasePrice: 180000,
-    lastSalePrice: 250000,
-    stockValue: 30000000,
+    lastPurchasePrice: 230000,
+    lastSalePrice: 280000,
+    stockValue: 37500000,
     isActive: true,
     updatedAt: "2024-12-10T10:30:00.000Z",
   },
   {
     id: "inv-1-004",
     companyId: "company-1",
-    productId: "prod-1-004",
-    warehouseLocation: "Gudang Utama Lantai 1",
-    currentStock: 30,
-    reservedStock: 1,
-    availableStock: 29,
-    minimumStock: 15,
-    maximumStock: 60,
-    reorderPoint: 20,
-    averageCost: 650000,
+    productId: "prod-1-004", // Keyboard Mechanical
+    warehouseLocation: "Gudang Utama",
+    currentStock: 45,
+    reservedStock: 8,
+    availableStock: 37,
+    minimumStock: 20,
+    maximumStock: 80,
+    reorderPoint: 30,
+    averageCost: 800000,
     lastStockMovement: "2024-12-08T14:15:00.000Z",
-    lastPurchasePrice: 600000,
-    lastSalePrice: 800000,
-    stockValue: 19500000,
+    lastPurchasePrice: 750000,
+    lastSalePrice: 850000,
+    stockValue: 36000000,
     isActive: true,
     updatedAt: "2024-12-08T14:15:00.000Z",
   },
 
-  // Inventory for Company 2 (CV. Dagang Sukses Mandiri)
+  // Company 2 - Toko Sembako Sejahtera
   {
     id: "inv-2-001",
     companyId: "company-2",
-    productId: "prod-2-001",
-    warehouseLocation: "Gudang Beras A",
-    currentStock: 500, // 500 karung beras 25kg
-    reservedStock: 75,
-    availableStock: 425,
-    minimumStock: 100,
+    productId: "prod-2-001", // Beras Premium
+    warehouseLocation: "Gudang Beras",
+    currentStock: 500,
+    reservedStock: 100,
+    availableStock: 400,
+    minimumStock: 200,
     maximumStock: 1000,
-    reorderPoint: 150,
-    averageCost: 14500,
+    reorderPoint: 300,
+    averageCost: 15000,
     lastStockMovement: "2024-12-12T08:30:00.000Z",
-    lastPurchasePrice: 14000,
-    lastSalePrice: 15000,
-    stockValue: 7250000,
+    lastPurchasePrice: 14500,
+    lastSalePrice: 16000,
+    stockValue: 7500000,
     isActive: true,
     updatedAt: "2024-12-12T08:30:00.000Z",
   },
   {
     id: "inv-2-002",
     companyId: "company-2",
-    productId: "prod-2-002",
-    warehouseLocation: "Gudang Minyak B",
-    currentStock: 200, // 200 botol minyak 1L
-    reservedStock: 25,
-    availableStock: 175,
+    productId: "prod-2-002", // Minyak Goreng
+    warehouseLocation: "Gudang Utama",
+    currentStock: 200,
+    reservedStock: 30,
+    availableStock: 170,
     minimumStock: 50,
-    maximumStock: 400,
-    reorderPoint: 75,
-    averageCost: 16500,
+    maximumStock: 300,
+    reorderPoint: 80,
+    averageCost: 18000,
     lastStockMovement: "2024-12-12T08:30:00.000Z",
-    lastPurchasePrice: 16000,
-    lastSalePrice: 18000,
-    stockValue: 3300000,
+    lastPurchasePrice: 17500,
+    lastSalePrice: 19000,
+    stockValue: 3600000,
     isActive: true,
     updatedAt: "2024-12-12T08:30:00.000Z",
   },
   {
     id: "inv-2-003",
     companyId: "company-2",
-    productId: "prod-2-003",
-    warehouseLocation: "Gudang Gula C",
-    currentStock: 100, // 100 karung gula 50kg
-    reservedStock: 10,
-    availableStock: 90,
-    minimumStock: 20,
-    maximumStock: 200,
-    reorderPoint: 30,
-    averageCost: 23000,
-    lastStockMovement: "2024-12-11T10:00:00.000Z",
-    lastPurchasePrice: 22500,
-    lastSalePrice: 25000,
-    stockValue: 2300000,
+    productId: "prod-2-003", // Gula Pasir
+    warehouseLocation: "Gudang Utama",
+    currentStock: 80,
+    reservedStock: 15,
+    availableStock: 65,
+    minimumStock: 30,
+    maximumStock: 150,
+    reorderPoint: 50,
+    averageCost: 16000,
+    lastStockMovement: "2024-12-11T16:20:00.000Z",
+    lastPurchasePrice: 15500,
+    lastSalePrice: 17000,
+    stockValue: 1280000,
     isActive: true,
-    updatedAt: "2024-12-11T10:00:00.000Z",
+    updatedAt: "2024-12-11T16:20:00.000Z",
   },
 
-  // Inventory for Company 5 (PT. Berkah Food & Beverage)
+  // Company 5 - Warung Gudeg Bu Sari
   {
     id: "inv-5-001",
     companyId: "company-5",
-    productId: "prod-5-001",
-    warehouseLocation: "Freezer Utama",
-    currentStock: 0, // Ready-to-serve food
-    reservedStock: 0,
-    availableStock: 0,
-    minimumStock: 0,
-    reorderPoint: 0,
-    averageCost: 15000, // Cost to prepare one portion
+    productId: "prod-5-001", // Nasi Gudeg
+    warehouseLocation: "Dapur",
+    currentStock: 50,
+    reservedStock: 10,
+    availableStock: 40,
+    minimumStock: 20,
+    maximumStock: 100,
+    reorderPoint: 30,
+    averageCost: 25000,
     lastStockMovement: "2024-12-12T12:15:00.000Z",
-    stockValue: 0,
+    lastPurchasePrice: 23000,
+    lastSalePrice: 28000,
+    stockValue: 1250000,
     isActive: true,
     updatedAt: "2024-12-12T12:15:00.000Z",
   },
   {
     id: "inv-5-002",
     companyId: "company-5",
-    productId: "prod-5-002",
-    warehouseLocation: "Freezer Utama",
-    currentStock: 0, // Ready-to-serve food
-    reservedStock: 0,
-    availableStock: 0,
-    minimumStock: 0,
-    reorderPoint: 0,
-    averageCost: 20000,
-    stockValue: 0,
-    isActive: true,
-    updatedAt: "2024-12-12T19:30:00.000Z",
-  },
-
-  // Inventory for Company 6 (CV. Cahaya Motor)
-  {
-    id: "inv-6-001",
-    companyId: "company-6",
-    productId: "prod-6-001",
-    warehouseLocation: "Gudang Oli",
-    currentStock: 48, // 48 botol oli
-    reservedStock: 2,
-    availableStock: 46,
-    minimumStock: 20,
-    maximumStock: 100,
-    reorderPoint: 30,
-    averageCost: 45000,
-    lastStockMovement: "2024-12-01T10:00:00.000Z",
-    lastPurchasePrice: 42000,
-    lastSalePrice: 55000,
-    stockValue: 2160000,
-    isActive: true,
-    updatedAt: "2024-12-01T10:00:00.000Z",
-  },
-  {
-    id: "inv-6-002",
-    companyId: "company-6",
-    productId: "prod-6-002",
-    warehouseLocation: "Gudang Spare Parts",
-    currentStock: 25, // 25 set kampas rem
-    reservedStock: 3,
-    availableStock: 22,
+    productId: "prod-5-002", // Ayam Bakar
+    warehouseLocation: "Dapur",
+    currentStock: 25,
+    reservedStock: 5,
+    availableStock: 20,
     minimumStock: 10,
     maximumStock: 50,
     reorderPoint: 15,
-    averageCost: 85000,
-    lastStockMovement: "2024-11-28T14:00:00.000Z",
-    lastPurchasePrice: 80000,
-    lastSalePrice: 110000,
-    stockValue: 2125000,
+    averageCost: 35000,
+    lastStockMovement: "2024-12-12T19:30:00.000Z",
+    lastPurchasePrice: 32000,
+    lastSalePrice: 38000,
+    stockValue: 875000,
     isActive: true,
-    updatedAt: "2024-11-28T14:00:00.000Z",
+    updatedAt: "2024-12-12T19:30:00.000Z",
+  },
+  {
+    id: "inv-5-003",
+    companyId: "company-5",
+    productId: "prod-5-003", // Es Teh Manis
+    warehouseLocation: "Bar Minuman",
+    currentStock: 100,
+    reservedStock: 20,
+    availableStock: 80,
+    minimumStock: 50,
+    maximumStock: 200,
+    reorderPoint: 75,
+    averageCost: 8000,
+    lastStockMovement: "2024-12-12T12:15:00.000Z",
+    lastPurchasePrice: 7500,
+    lastSalePrice: 9000,
+    stockValue: 800000,
+    isActive: true,
+    updatedAt: "2024-12-12T12:15:00.000Z",
   },
 ];
 
-// Stock Movement data - All inventory movements
-export const stockMovementData: StockMovementData[] = [
-  // Recent movements for Company 1
+// Stock Movement data - history of all inventory movements
+export const stockMovementData: StockMovementTable[] = [
+  // Company 1 stock movements
   {
     id: "mov-1-001",
     companyId: "company-1",
@@ -309,8 +218,9 @@ export const stockMovementData: StockMovementData[] = [
     referenceId: "trans-1-001",
     stockBefore: 30,
     stockAfter: 25,
+    notes: "Penjualan laptop ke PT. Solusi Digital",
     employeeId: "emp-1-002",
-    movementDate: "2024-12-10T10:30:00.000Z",
+    movementDate: "2024-12-10",
     createdAt: "2024-12-10T10:30:00.000Z",
   },
   {
@@ -324,8 +234,9 @@ export const stockMovementData: StockMovementData[] = [
     referenceId: "trans-1-001",
     stockBefore: 160,
     stockAfter: 150,
+    notes: "Penjualan mouse wireless",
     employeeId: "emp-1-002",
-    movementDate: "2024-12-10T10:30:00.000Z",
+    movementDate: "2024-12-10",
     createdAt: "2024-12-10T10:30:00.000Z",
   },
   {
@@ -337,10 +248,11 @@ export const stockMovementData: StockMovementData[] = [
     quantity: -1,
     referenceType: "transaction",
     referenceId: "trans-1-002",
-    stockBefore: 46,
-    stockAfter: 45,
+    stockBefore: 9,
+    stockAfter: 8,
+    notes: "Penjualan PC gaming setup",
     employeeId: "emp-1-001",
-    movementDate: "2024-12-08T14:15:00.000Z",
+    movementDate: "2024-12-08",
     createdAt: "2024-12-08T14:15:00.000Z",
   },
   {
@@ -352,10 +264,11 @@ export const stockMovementData: StockMovementData[] = [
     quantity: -1,
     referenceType: "transaction",
     referenceId: "trans-1-002",
-    stockBefore: 31,
-    stockAfter: 30,
+    stockBefore: 46,
+    stockAfter: 45,
+    notes: "Penjualan keyboard mechanical",
     employeeId: "emp-1-001",
-    movementDate: "2024-12-08T14:15:00.000Z",
+    movementDate: "2024-12-08",
     createdAt: "2024-12-08T14:15:00.000Z",
   },
   {
@@ -364,18 +277,19 @@ export const stockMovementData: StockMovementData[] = [
     productId: "prod-1-001",
     movementType: "in",
     movementReason: "purchase",
-    quantity: 10,
-    unitCost: 14000000,
+    quantity: 20,
+    unitCost: 14800000,
     referenceType: "transaction",
     referenceId: "trans-1-p001",
-    stockBefore: 20,
+    stockBefore: 10,
     stockAfter: 30,
+    notes: "Pembelian laptop dari supplier",
     employeeId: "emp-1-001",
-    movementDate: "2024-12-08T16:00:00.000Z",
-    createdAt: "2024-12-08T16:00:00.000Z",
+    movementDate: "2024-12-08",
+    createdAt: "2024-12-08T09:00:00.000Z",
   },
 
-  // Movements for Company 2
+  // Company 2 stock movements
   {
     id: "mov-2-001",
     companyId: "company-2",
@@ -387,8 +301,9 @@ export const stockMovementData: StockMovementData[] = [
     referenceId: "trans-2-001",
     stockBefore: 550,
     stockAfter: 500,
+    notes: "Penjualan beras ke warung",
     employeeId: "emp-2-001",
-    movementDate: "2024-12-12T08:30:00.000Z",
+    movementDate: "2024-12-12",
     createdAt: "2024-12-12T08:30:00.000Z",
   },
   {
@@ -402,8 +317,9 @@ export const stockMovementData: StockMovementData[] = [
     referenceId: "trans-2-001",
     stockBefore: 220,
     stockAfter: 200,
+    notes: "Penjualan minyak goreng",
     employeeId: "emp-2-001",
-    movementDate: "2024-12-12T08:30:00.000Z",
+    movementDate: "2024-12-12",
     createdAt: "2024-12-12T08:30:00.000Z",
   },
   {
@@ -413,123 +329,196 @@ export const stockMovementData: StockMovementData[] = [
     movementType: "in",
     movementReason: "purchase",
     quantity: 100,
-    unitCost: 14000,
+    unitCost: 14500,
     referenceType: "transaction",
     referenceId: "trans-2-p001",
     stockBefore: 450,
     stockAfter: 550,
+    notes: "Restok beras dari supplier",
     employeeId: "emp-2-001",
-    movementDate: "2024-12-06T16:00:00.000Z",
-    createdAt: "2024-12-06T16:00:00.000Z",
+    movementDate: "2024-12-06",
+    createdAt: "2024-12-06T07:00:00.000Z",
   },
 
-  // Movements for Company 6 (Motor workshop)
+  // Company 5 stock movements
   {
-    id: "mov-6-001",
-    companyId: "company-6",
-    productId: "prod-6-001",
+    id: "mov-5-001",
+    companyId: "company-5",
+    productId: "prod-5-001",
     movementType: "out",
     movementReason: "sale",
     quantity: -2,
     referenceType: "transaction",
-    referenceId: "trans-6-001",
-    stockBefore: 50,
-    stockAfter: 48,
-    notes: "Service rutin - ganti oli",
-    employeeId: "emp-6-001",
-    movementDate: "2024-12-01T10:00:00.000Z",
-    createdAt: "2024-12-01T10:00:00.000Z",
+    referenceId: "trans-5-001",
+    stockBefore: 52,
+    stockAfter: 50,
+    notes: "Penjualan nasi gudeg",
+    employeeId: "emp-5-001",
+    movementDate: "2024-12-12",
+    createdAt: "2024-12-12T12:15:00.000Z",
   },
   {
-    id: "mov-6-002",
-    companyId: "company-6",
-    productId: "prod-6-001",
-    movementType: "in",
-    movementReason: "purchase",
-    quantity: 24,
-    unitCost: 42000,
-    referenceId: "PO-6-001",
-    stockBefore: 26,
-    stockAfter: 50,
-    employeeId: "emp-6-001",
-    movementDate: "2024-11-25T09:00:00.000Z",
-    createdAt: "2024-11-25T09:00:00.000Z",
+    id: "mov-5-002",
+    companyId: "company-5",
+    productId: "prod-5-003",
+    movementType: "out",
+    movementReason: "sale",
+    quantity: -2,
+    referenceType: "transaction",
+    referenceId: "trans-5-001",
+    stockBefore: 102,
+    stockAfter: 100,
+    notes: "Penjualan es teh manis",
+    employeeId: "emp-5-001",
+    movementDate: "2024-12-12",
+    createdAt: "2024-12-12T12:15:00.000Z",
   },
 ];
 
-// Stock Adjustment data - For inventory corrections
-export const stockAdjustmentData: StockAdjustmentData[] = [
+// Stock Adjustment data - manual adjustments and stock opname
+export const stockAdjustmentData: StockAdjustmentTable[] = [
   {
     id: "adj-1-001",
     companyId: "company-1",
-    adjustmentNumber: "ADJ/2024/11/001",
-    adjustmentDate: "2024-11-30T00:00:00.000Z",
-    adjustmentType: "physical_count",
+    adjustmentNumber: "ADJ/2024/12/001",
+    adjustmentDate: "2024-12-01",
+    adjustmentType: "stock_opname",
     totalItems: 4,
-    totalValue: -1500000, // Net loss
-    employeeId: "emp-1-001",
-    approvedBy: "emp-1-manager",
-    status: "applied",
-    notes: "Monthly physical stock count",
-    createdAt: "2024-11-30T10:00:00.000Z",
-    updatedAt: "2024-11-30T15:30:00.000Z",
+    totalValue: -2500000,
+    reason: "Stock opname bulanan - ada selisih barang",
+    status: "approved",
+    createdBy: "emp-1-001",
+    approvedBy: "owner-1",
+    approvedDate: "2024-12-01T16:00:00.000Z",
+    notes: "Ditemukan beberapa produk rusak dan hilang",
+    createdAt: "2024-12-01T10:00:00.000Z",
+    updatedAt: "2024-12-01T16:00:00.000Z",
   },
   {
     id: "adj-2-001",
     companyId: "company-2",
-    adjustmentNumber: "ADJ/2024/12/001",
-    adjustmentDate: "2024-12-01T00:00:00.000Z",
-    adjustmentType: "damage",
+    adjustmentNumber: "ADJ/2024/11/001",
+    adjustmentDate: "2024-11-30",
+    adjustmentType: "expired",
     totalItems: 2,
-    totalValue: -750000,
-    employeeId: "emp-2-002",
-    approvedBy: "emp-2-001",
-    status: "applied",
-    notes: "Kerusakan karung beras karena tikus",
-    createdAt: "2024-12-01T08:00:00.000Z",
-    updatedAt: "2024-12-01T10:00:00.000Z",
+    totalValue: -800000,
+    reason: "Produk expired yang harus dibuang",
+    status: "approved",
+    createdBy: "emp-2-001",
+    approvedBy: "owner-2",
+    approvedDate: "2024-11-30T15:00:00.000Z",
+    notes: "Minyak goreng dan gula expired",
+    createdAt: "2024-11-30T09:00:00.000Z",
+    updatedAt: "2024-11-30T15:00:00.000Z",
+  },
+  {
+    id: "adj-5-001",
+    companyId: "company-5",
+    adjustmentNumber: "ADJ/2024/12/001",
+    adjustmentDate: "2024-12-05",
+    adjustmentType: "damaged",
+    totalItems: 1,
+    totalValue: -175000,
+    reason: "Bahan makanan rusak karena listrik mati",
+    status: "approved",
+    createdBy: "emp-5-001",
+    approvedBy: "owner-5",
+    approvedDate: "2024-12-05T18:00:00.000Z",
+    notes: "Ayam di freezer rusak karena listrik padam 6 jam",
+    createdAt: "2024-12-05T12:00:00.000Z",
+    updatedAt: "2024-12-05T18:00:00.000Z",
   },
 ];
 
-// Stock Adjustment Item data - Detail adjustments
-export const stockAdjustmentItemData: StockAdjustmentItemData[] = [
-  // Items for ADJ/2024/11/001 (Company 1)
+// Stock Adjustment Items data
+export const stockAdjustmentItemData: StockAdjustmentItemTable[] = [
+  // Items for adj-1-001 (Company 1 stock opname)
   {
     id: "adj-item-1-001",
     adjustmentId: "adj-1-001",
     productId: "prod-1-001",
-    systemStock: 22,
-    physicalStock: 20,
+    systemStock: 32,
+    physicalStock: 30,
     difference: -2,
-    unitCost: 14500000,
-    totalValue: -29000000,
-    reason: "Missing laptops - possible theft",
-    createdAt: "2024-11-30T10:00:00.000Z",
+    unitCost: 15000000,
+    totalValue: -30000000,
+    reason: "2 unit hilang, kemungkinan pencurian",
+    createdAt: "2024-12-01T10:00:00.000Z",
   },
   {
     id: "adj-item-1-002",
     adjustmentId: "adj-1-001",
     productId: "prod-1-003",
-    systemStock: 158,
+    systemStock: 165,
     physicalStock: 160,
-    difference: 2,
-    unitCost: 200000,
-    totalValue: 400000,
-    reason: "Found extra mice in storage",
-    createdAt: "2024-11-30T10:00:00.000Z",
+    difference: -5,
+    unitCost: 250000,
+    totalValue: -1250000,
+    reason: "5 unit mouse rusak, tidak bisa dipakai",
+    createdAt: "2024-12-01T10:00:00.000Z",
+  },
+  {
+    id: "adj-item-1-003",
+    adjustmentId: "adj-1-001",
+    productId: "prod-1-004",
+    systemStock: 48,
+    physicalStock: 46,
+    difference: -2,
+    unitCost: 800000,
+    totalValue: -1600000,
+    reason: "2 keyboard ada kerusakan switch",
+    createdAt: "2024-12-01T10:00:00.000Z",
+  },
+  {
+    id: "adj-item-1-004",
+    adjustmentId: "adj-1-001",
+    productId: "prod-1-002",
+    systemStock: 8,
+    physicalStock: 9,
+    difference: 1,
+    unitCost: 18500000,
+    totalValue: 18500000,
+    reason: "Ditemukan 1 unit PC yang belum tercatat",
+    createdAt: "2024-12-01T10:00:00.000Z",
   },
 
-  // Items for ADJ/2024/12/001 (Company 2)
+  // Items for adj-2-001 (Company 2 expired products)
   {
     id: "adj-item-2-001",
     adjustmentId: "adj-2-001",
-    productId: "prod-2-001",
-    systemStock: 452,
-    physicalStock: 450,
-    difference: -2,
-    unitCost: 14500,
-    totalValue: -29000,
-    reason: "Karung sobek, beras tumpah",
-    createdAt: "2024-12-01T08:00:00.000Z",
+    productId: "prod-2-002",
+    systemStock: 225,
+    physicalStock: 220,
+    difference: -5,
+    unitCost: 18000,
+    totalValue: -90000,
+    reason: "5 botol minyak goreng expired",
+    createdAt: "2024-11-30T09:00:00.000Z",
+  },
+  {
+    id: "adj-item-2-002",
+    adjustmentId: "adj-2-001",
+    productId: "prod-2-003",
+    systemStock: 85,
+    physicalStock: 80,
+    difference: -5,
+    unitCost: 16000,
+    totalValue: -80000,
+    reason: "5 kg gula pasir mengeras dan tidak layak jual",
+    createdAt: "2024-11-30T09:00:00.000Z",
+  },
+
+  // Items for adj-5-001 (Company 5 damaged food)
+  {
+    id: "adj-item-5-001",
+    adjustmentId: "adj-5-001",
+    productId: "prod-5-002",
+    systemStock: 30,
+    physicalStock: 25,
+    difference: -5,
+    unitCost: 35000,
+    totalValue: -175000,
+    reason: "5 porsi ayam busuk karena freezer mati",
+    createdAt: "2024-12-05T12:00:00.000Z",
   },
 ];

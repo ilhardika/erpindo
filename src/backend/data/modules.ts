@@ -1,16 +1,7 @@
-export interface ModuleData {
-  id: string;
-  code: string; // Unique module code (pos, sales, inventory, etc.)
-  name: string;
-  description: string;
-  features: string[];
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
+import { ModuleTable } from "../tables/modules";
 
 // Modules data - contains all available ERP modules
-export const modulesData: ModuleData[] = [
+export const modulesData: ModuleTable[] = [
   {
     id: "module-pos",
     code: "pos",

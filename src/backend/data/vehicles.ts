@@ -1,64 +1,11 @@
-export interface VehicleData {
-  id: string;
-  companyId: string; // Foreign key to companies table
-  vehicleCode: string;
-  licensePlate: string;
-  vehicleType: "car" | "motorcycle" | "truck" | "van" | "pickup";
-  brand: string;
-  model: string;
-  year: number;
-  color: string;
-  fuelType: "gasoline" | "diesel" | "electric" | "hybrid";
-  engineCapacity?: string; // e.g., "1500cc", "150cc"
-  driverId?: string; // Employee ID who drives this vehicle
-  status: "active" | "maintenance" | "inactive";
-  lastServiceDate?: string;
-  nextServiceDue?: string;
-  insuranceExpiry?: string;
-  registrationExpiry?: string; // STNK expiry
-  currentMileage: number; // in kilometers
-  notes?: string;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface VehicleServiceData {
-  id: string;
-  companyId: string; // Foreign key to companies table
-  vehicleId: string; // Foreign key to vehicles table
-  serviceDate: string;
-  serviceType: "routine" | "repair" | "emergency" | "inspection";
-  description: string;
-  mileage: number;
-  cost: number;
-  workshop?: string;
-  nextServiceDue?: string;
-  employeeId?: string; // Employee who arranged the service
-  notes?: string;
-  createdAt: string;
-}
-
-export interface VehicleUsageData {
-  id: string;
-  companyId: string; // Foreign key to companies table
-  vehicleId: string; // Foreign key to vehicles table
-  driverId: string; // Employee ID who used the vehicle
-  usageDate: string;
-  startTime: string;
-  endTime: string;
-  startMileage: number;
-  endMileage: number;
-  distance: number; // in kilometers
-  fuelUsed: number; // in liters
-  destination: string;
-  purpose: "delivery" | "service" | "personal" | "business";
-  notes?: string;
-  createdAt: string;
-}
+import {
+  VehicleTable,
+  VehicleServiceTable,
+  VehicleUsageTable,
+} from "../tables/vehicles";
 
 // Vehicles data
-export const vehiclesData: VehicleData[] = [
+export const vehiclesData: VehicleTable[] = [
   {
     id: "veh-2-001",
     companyId: "company-2",
@@ -250,7 +197,7 @@ export const vehiclesData: VehicleData[] = [
 ];
 
 // Vehicle Services data
-export const vehicleServicesData: VehicleServiceData[] = [
+export const vehicleServicesData: VehicleServiceTable[] = [
   {
     id: "svc-2-001",
     companyId: "company-2",
@@ -343,7 +290,7 @@ export const vehicleServicesData: VehicleServiceData[] = [
 ];
 
 // Vehicle Usage data
-export const vehicleUsagesData: VehicleUsageData[] = [
+export const vehicleUsagesData: VehicleUsageTable[] = [
   {
     id: "use-2-001",
     companyId: "company-2",

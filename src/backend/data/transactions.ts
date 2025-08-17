@@ -1,52 +1,11 @@
-export interface TransactionData {
-  id: string;
-  companyId: string; // Foreign key to companies table
-  transactionNumber: string; // Invoice/transaction number
-  transactionType: "sale" | "purchase" | "return_sale" | "return_purchase";
-  customerId?: string; // For sales transactions
-  supplierId?: string; // For purchase transactions
-  employeeId?: string; // Employee who handled the transaction
-  transactionDate: string;
-  dueDate?: string; // For credit transactions
-  subtotal: number;
-  taxAmount: number;
-  discountAmount: number;
-  totalAmount: number;
-  paymentStatus: "pending" | "partial" | "paid" | "overdue";
-  paymentMethod?: "cash" | "transfer" | "credit_card" | "debit_card" | "credit";
-  notes?: string;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface TransactionItemData {
-  id: string;
-  transactionId: string; // Foreign key to transactions table
-  productId: string; // Foreign key to products table
-  quantity: number;
-  unitPrice: number;
-  discount: number;
-  totalPrice: number;
-  notes?: string;
-  createdAt: string;
-}
-
-export interface PaymentData {
-  id: string;
-  companyId: string;
-  transactionId: string;
-  paymentNumber: string;
-  paymentDate: string;
-  paymentMethod: "cash" | "transfer" | "credit_card" | "debit_card" | "other";
-  amount: number;
-  notes?: string;
-  employeeId?: string;
-  createdAt: string;
-}
+import {
+  TransactionTable,
+  TransactionItemTable,
+  PaymentTable,
+} from "../tables/transactions";
 
 // Transactions data
-export const transactionsData: TransactionData[] = [
+export const transactionsData: TransactionTable[] = [
   {
     id: "trans-1-001",
     companyId: "company-1",
@@ -245,7 +204,7 @@ export const transactionsData: TransactionData[] = [
 ];
 
 // Transaction Items data
-export const transactionItemsData: TransactionItemData[] = [
+export const transactionItemsData: TransactionItemTable[] = [
   {
     id: "item-1-001-001",
     transactionId: "trans-1-001",
@@ -332,7 +291,7 @@ export const transactionItemsData: TransactionItemData[] = [
 ];
 
 // Payments data
-export const paymentsData: PaymentData[] = [
+export const paymentsData: PaymentTable[] = [
   {
     id: "pay-1-001",
     companyId: "company-1",

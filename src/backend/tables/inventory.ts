@@ -1,27 +1,86 @@
-// Import data from data layer
-import {
-  inventoryData,
-  stockMovementData,
-  stockAdjustmentData,
-  stockAdjustmentItemData,
-  type InventoryData,
-  type StockMovementData,
-  type StockAdjustmentData,
-  type StockAdjustmentItemData,
-} from "../data/inventory";
+// Define interfaces
+export interface InventoryTable {
+  id: string;
+  companyId: string; // Foreign key to companies table
+  productId: string; // Foreign key to products table
+  warehouseLocation?: string;
+  currentStock: number;
+  reservedStock: number; // Stock yang sudah di-reserve untuk order
+  availableStock: number; // currentStock - reservedStock
+  minimumStock: number;
+  maximumStock?: number;
+  reorderPoint: number;
+  averageCost: number; // Weighted average cost
+  lastStockMovement?: string;
+  lastPurchasePrice?: number;
+  lastSalePrice?: number;
+  stockValue: number; // currentStock * averageCost
+  isActive: boolean;
+  updatedAt: string;
+}
 
-// Type aliases for backwards compatibility
-export type InventoryTable = InventoryData;
-export type StockMovementTable = StockMovementData;
-export type StockAdjustmentTable = StockAdjustmentData;
-export type StockAdjustmentItemTable = StockAdjustmentItemData;
+export interface StockMovementTable {
+  id: string;
+  companyId: string; // Foreign key to companies table
+  productId: string; // Foreign key to products table
+  movementType: "in" | "out" | "adjustment" | "transfer";
+  movementReason:
+    | "purchase"
+    | "sale"
+    | "return"
+    | "damaged"
+    | "expired"
+    | "manual_adjustment"
+    | "transfer_in"
+    | "transfer_out";
+  quantity: number; // Positive for IN, Negative for OUT
+  unitCost?: number; // For purchases and adjustments
+  referenceType?: "transaction" | "adjustment" | "transfer";
+  referenceId?: string; // ID of transaction, adjustment, or transfer
+  stockBefore: number;
+  stockAfter: number;
+  notes?: string;
+  employeeId?: string; // Employee who made the movement
+  movementDate: string; // YYYY-MM-DD
+  createdAt: string;
+}
+
+export interface StockAdjustmentTable {
+  id: string;
+  companyId: string; // Foreign key to companies table
+  adjustmentNumber: string; // Manual adjustment reference number
+  adjustmentDate: string; // YYYY-MM-DD
+  adjustmentType: "stock_opname" | "damaged" | "expired" | "lost" | "found";
+  totalItems: number; // Number of different products adjusted
+  totalValue: number; // Total value of adjustments
+  reason: string;
+  status: "draft" | "approved" | "cancelled";
+  createdBy: string; // Employee ID
+  approvedBy?: string; // Employee ID
+  approvedDate?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface StockAdjustmentItemTable {
+  id: string;
+  adjustmentId: string; // Foreign key to stockAdjustments table
+  productId: string; // Foreign key to products table
+  systemStock: number; // Stock in system before adjustment
+  physicalStock: number; // Actual counted stock
+  difference: number; // physicalStock - systemStock
+  unitCost: number;
+  totalValue: number; // difference * unitCost
+  reason?: string;
+  createdAt: string;
+}
 
 // Data exports - importing from data layer
-export const inventory: InventoryTable[] = inventoryData;
-export const stockMovements: StockMovementTable[] = stockMovementData;
-export const stockAdjustments: StockAdjustmentTable[] = stockAdjustmentData;
-export const stockAdjustmentItems: StockAdjustmentItemTable[] =
-  stockAdjustmentItemData;
+export const inventory: InventoryTable[] = [];
+export const stockMovements: StockMovementTable[] = [];
+export const stockAdjustments: StockAdjustmentTable[] = [];
+export const stockAdjustmentItems: StockAdjustmentItemTable[] = [];
 
 // Helper functions for inventory
 export const getInventoryById = (id: string): InventoryTable | undefined => {

@@ -1,86 +1,13 @@
-export interface AttendanceData {
-  id: string;
-  companyId: string; // Foreign key to companies table
-  employeeId: string; // Foreign key to employees table
-  attendanceDate: string; // YYYY-MM-DD format
-  shiftId?: string; // Foreign key to shifts table
-  checkIn?: string; // ISO timestamp
-  checkOut?: string; // ISO timestamp
-  breakStart?: string; // ISO timestamp
-  breakEnd?: string; // ISO timestamp
-  workHours: number; // Total work hours
-  overTimeHours: number; // Overtime hours
-  lateMinutes: number; // Late arrival in minutes
-  earlyLeaveMinutes: number; // Early leave in minutes
-  status:
-    | "present"
-    | "absent"
-    | "late"
-    | "half_day"
-    | "sick"
-    | "permission"
-    | "holiday";
-  location?: string; // Check-in location
-  notes?: string;
-  approvedBy?: string; // Employee ID who approved (for sick/permission)
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface ShiftData {
-  id: string;
-  companyId: string; // Foreign key to companies table
-  shiftName: string;
-  startTime: string; // HH:MM format (24-hour)
-  endTime: string; // HH:MM format (24-hour)
-  breakDuration: number; // Break duration in minutes
-  totalHours: number; // Total work hours excluding break
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface LeaveData {
-  id: string;
-  companyId: string; // Foreign key to companies table
-  employeeId: string; // Foreign key to employees table
-  leaveType: "annual" | "sick" | "maternity" | "emergency" | "unpaid";
-  startDate: string; // YYYY-MM-DD
-  endDate: string; // YYYY-MM-DD
-  totalDays: number;
-  reason: string;
-  status: "pending" | "approved" | "rejected" | "cancelled";
-  appliedDate: string;
-  approvedBy?: string;
-  approvedDate?: string;
-  attachments?: string[];
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface PayrollData {
-  id: string;
-  companyId: string; // Foreign key to companies table
-  employeeId: string; // Foreign key to employees table
-  payPeriod: string; // YYYY-MM format
-  baseSalary: number;
-  overtimeAmount: number;
-  allowances: number; // Transport, meal, etc.
-  bonuses: number;
-  deductions: number; // Tax, insurance, etc.
-  grossPay: number; // Before deductions
-  netPay: number; // After deductions
-  workDays: number;
-  overtimeHours: number;
-  leaveDays: number;
-  status: "draft" | "approved" | "paid";
-  paidDate?: string;
-  createdAt: string;
-  updatedAt: string;
-}
+// Import interfaces from tables
+import {
+  AttendanceTable,
+  ShiftTable,
+  LeaveTable,
+  PayrollTable,
+} from "../tables/attendance";
 
 // Shifts data
-export const shiftsData: ShiftData[] = [
+export const shiftsData: ShiftTable[] = [
   {
     id: "shift-1-001",
     companyId: "company-1",
@@ -168,7 +95,7 @@ export const shiftsData: ShiftData[] = [
 ];
 
 // Attendance data
-export const attendanceData: AttendanceData[] = [
+export const attendanceData: AttendanceTable[] = [
   {
     id: "att-1-001",
     companyId: "company-1",
@@ -321,7 +248,7 @@ export const attendanceData: AttendanceData[] = [
 ];
 
 // Leave data
-export const leavesData: LeaveData[] = [
+export const leavesData: LeaveTable[] = [
   {
     id: "leave-1-001",
     companyId: "company-1",
@@ -372,13 +299,13 @@ export const leavesData: LeaveData[] = [
 ];
 
 // Payroll data
-export const payrollData: PayrollData[] = [
+export const payrollData: PayrollTable[] = [
   {
     id: "pay-1-001",
     companyId: "company-1",
     employeeId: "emp-1-001",
     payPeriod: "2024-11",
-    baseSalary: 15000000,
+    basicSalary: 15000000,
     overtimeAmount: 500000,
     allowances: 2000000,
     bonuses: 1000000,
@@ -398,7 +325,7 @@ export const payrollData: PayrollData[] = [
     companyId: "company-1",
     employeeId: "emp-1-002",
     payPeriod: "2024-11",
-    baseSalary: 12000000,
+    basicSalary: 12000000,
     overtimeAmount: 300000,
     allowances: 1800000,
     bonuses: 500000,
@@ -418,7 +345,7 @@ export const payrollData: PayrollData[] = [
     companyId: "company-2",
     employeeId: "emp-2-001",
     payPeriod: "2024-11",
-    baseSalary: 8000000,
+    basicSalary: 8000000,
     overtimeAmount: 400000,
     allowances: 1200000,
     bonuses: 0,
@@ -438,7 +365,7 @@ export const payrollData: PayrollData[] = [
     companyId: "company-2",
     employeeId: "emp-2-002",
     payPeriod: "2024-11",
-    baseSalary: 6000000,
+    basicSalary: 6000000,
     overtimeAmount: 200000,
     allowances: 1000000,
     bonuses: 0,
@@ -458,7 +385,7 @@ export const payrollData: PayrollData[] = [
     companyId: "company-5",
     employeeId: "emp-5-001",
     payPeriod: "2024-11",
-    baseSalary: 7500000,
+    basicSalary: 7500000,
     overtimeAmount: 600000,
     allowances: 1000000,
     bonuses: 250000,

@@ -7,11 +7,9 @@ import {
   type PaymentData,
 } from "../data/transactions";
 
-export interface TransactionTable extends TransactionData {}
-
-export interface TransactionItemTable extends TransactionItemData {}
-
-export interface PaymentTable extends PaymentData {}
+export type TransactionTable = TransactionData;
+export type TransactionItemTable = TransactionItemData;
+export type PaymentTable = PaymentData;
 
 // Import transactions data from data layer
 export const transactions = transactionsData;

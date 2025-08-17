@@ -7,11 +7,9 @@ import {
   type VehicleUsageData,
 } from "../data/vehicles";
 
-export interface VehicleTable extends VehicleData {}
-
-export interface VehicleServiceTable extends VehicleServiceData {}
-
-export interface VehicleUsageTable extends VehicleUsageData {}
+export type VehicleTable = VehicleData;
+export type VehicleServiceTable = VehicleServiceData;
+export type VehicleUsageTable = VehicleUsageData;
 
 // Import vehicles data from data layer
 export const vehicles = vehiclesData;
