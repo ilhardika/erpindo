@@ -93,7 +93,9 @@ export function ManageCompanies({ user, onLogout }: ManageCompaniesProps) {
                 <Eye className="mr-2 h-4 w-4" />
                 Detail
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => router.push(`/companies/${company.id}/edit`)}
+              >
                 <Edit className="mr-2 h-4 w-4" />
                 Edit
               </DropdownMenuItem>

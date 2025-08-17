@@ -86,16 +86,18 @@ export function FormLayout({
             <div className="space-y-4">{children}</div>
 
             {/* Footer with Action Buttons */}
-            <div className="flex items-center justify-between pt-6 border-t">
-              <div className="flex items-center gap-3">{formActions}</div>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-6 border-t">
+              <div className="flex flex-wrap items-center gap-3 order-2 sm:order-1">
+                {formActions}
+              </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 order-1 sm:order-2">
                 <Button
                   type="button"
                   variant={resetButtonVariant}
                   onClick={onReset}
                   disabled={isLoading}
-                  className="min-w-[80px]"
+                  className="min-w-[80px] w-full sm:w-auto"
                 >
                   <RotateCcw className="h-4 w-4 mr-2" />
                   {resetButtonText}
@@ -106,7 +108,7 @@ export function FormLayout({
                   variant={saveButtonVariant}
                   onClick={onSave}
                   disabled={isLoading}
-                  className="min-w-[100px]"
+                  className="min-w-[100px] w-full sm:w-auto"
                 >
                   {isLoading ? (
                     <>

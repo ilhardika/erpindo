@@ -95,7 +95,9 @@ export function ManageUsers({ user, onLogout }: ManageUsersProps) {
                 <Eye className="mr-2 h-4 w-4" />
                 Detail
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => router.push(`/users/${user.id}/edit`)}
+              >
                 <Edit className="mr-2 h-4 w-4" />
                 Edit
               </DropdownMenuItem>
