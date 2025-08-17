@@ -11,6 +11,7 @@ export * from "./dashboard"; // Analytics & reporting
 export * from "./hr"; // HR: Employees + Modules + Attendance + Payroll
 export * from "./business"; // Business: Products + Inventory + Sales + Customers
 export * from "./fleet"; // Fleet: Vehicles + Maintenance + Usage
+export * from "./pos"; // POS: Point of Sale operations
 
 // =============================================
 // DEPRECATED (Legacy) - Use new consolidated services above

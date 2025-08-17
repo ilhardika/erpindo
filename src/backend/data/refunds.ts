@@ -1,0 +1,40 @@
+export const refundsData = [
+  {
+    id: "refund-001",
+    originalTransactionId: "trans-001",
+    refundDate: "2024-08-17",
+    refundAmount: 50000,
+    reason: "Barang rusak",
+    employeeId: "emp-001",
+    companyId: "comp-001",
+    status: "approved" as const,
+    createdAt: "2024-08-17T10:00:00Z",
+    updatedAt: "2024-08-17T10:30:00Z",
+  },
+  {
+    id: "refund-002",
+    originalTransactionId: "trans-002",
+    refundDate: "2024-08-17",
+    refundAmount: 25000,
+    reason: "Customer tidak puas",
+    employeeId: "emp-002",
+    companyId: "comp-001",
+    status: "pending" as const,
+    createdAt: "2024-08-17T14:00:00Z",
+    updatedAt: "2024-08-17T14:00:00Z",
+  },
+  {
+    id: "refund-003",
+    originalTransactionId: "trans-003",
+    refundDate: "2024-08-16",
+    refundAmount: 75000,
+    reason: "Salah ukuran",
+    employeeId: "emp-001",
+    companyId: "comp-001",
+    status: "rejected" as const,
+    createdAt: "2024-08-16T16:00:00Z",
+    updatedAt: "2024-08-16T16:30:00Z",
+  },
+];
+
+export type Refund = (typeof refundsData)[0];
