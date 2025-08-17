@@ -85,6 +85,12 @@ export function DashboardLayout({
             path: "/users",
           },
           {
+            key: "management-plans",
+            name: "Management Plans",
+            icon: Package,
+            path: "/management-plans",
+          },
+          {
             key: "reports",
             name: "Laporan Sistem",
             icon: TrendingUp,
