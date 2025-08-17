@@ -103,59 +103,6 @@ export function CompanyOwnerDashboard({
             </CardContent>
           </Card>
         </div>
-
-        {/* Module Usage */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Penggunaan Modul</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              <div className="p-4 border rounded-lg">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">POS</span>
-                  <Badge variant="default">{moduleStats.pos} pengguna</Badge>
-                </div>
-              </div>
-              <div className="p-4 border rounded-lg">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Penjualan</span>
-                  <Badge variant="default">{moduleStats.sales} pengguna</Badge>
-                </div>
-              </div>
-              <div className="p-4 border rounded-lg">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Inventori</span>
-                  <Badge variant="default">
-                    {moduleStats.inventory} pengguna
-                  </Badge>
-                </div>
-              </div>
-              <div className="p-4 border rounded-lg">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Pembelian</span>
-                  <Badge variant="default">
-                    {moduleStats.purchasing} pengguna
-                  </Badge>
-                </div>
-              </div>
-              <div className="p-4 border rounded-lg">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">HR</span>
-                  <Badge variant="secondary">{moduleStats.hr} pengguna</Badge>
-                </div>
-              </div>
-              <div className="p-4 border rounded-lg">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Keuangan</span>
-                  <Badge variant="secondary">
-                    {moduleStats.finance} pengguna
-                  </Badge>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </DashboardLayout>
   );
