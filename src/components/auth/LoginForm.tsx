@@ -8,8 +8,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { Mail, LockKeyhole, LogIn } from "lucide-react";
-import { UserRole } from "@/backend/types/enums";
-import { User } from "@/backend/types/schema";
+import { UserRole } from "@/backend/tables";
+import { User } from "@/backend/services/auth";
 import { AuthService } from "@/backend/services/auth";
 
 interface LoginFormProps {

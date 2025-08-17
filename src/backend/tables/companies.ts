@@ -1,4 +1,4 @@
-import { CompanyStatus, PaymentStatus } from "../types/enums";
+import { CompanyStatus, PaymentStatus } from "./enums";
 import { companiesData } from "../data/companies";
 
 export interface CompanyTable {

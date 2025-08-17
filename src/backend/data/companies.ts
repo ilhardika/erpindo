@@ -1,5 +1,5 @@
 import { CompanyTable } from "../tables/companies";
-import { CompanyStatus, PaymentStatus } from "../types/enums";
+import { CompanyStatus, PaymentStatus } from "../tables/enums";
 
 // Companies data - contains all registered companies
 export const companiesData: CompanyTable[] = [

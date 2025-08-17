@@ -16,7 +16,7 @@ import {
   type ModuleTable,
 } from "../tables/modules";
 import { getPlanById } from "../tables/subscriptionPlans";
-import { UserRole } from "../types/enums";
+import { UserRole } from "../tables/enums";
 import { query } from "../tables";
 
 // =============================================================================

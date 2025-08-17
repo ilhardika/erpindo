@@ -11,6 +11,9 @@ export * from "./inventory";
 export * from "./attendance";
 export * from "./subscriptionPlans";
 
+// Export shared enums
+export * from "./enums";
+
 // Import reorganized data for easy access
 import { users } from "./users";
 import { companies } from "./companies";

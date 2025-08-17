@@ -1,5 +1,5 @@
 import { UserTable } from "../tables/users";
-import { UserRole } from "../types/enums";
+import { UserRole } from "../tables/enums";
 
 // Users data - contains all system users (superadmin, owners, employees)
 export const usersData: UserTable[] = [

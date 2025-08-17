@@ -27,8 +27,8 @@ import {
   ChevronDown,
   ChevronRight,
 } from "lucide-react";
-import { User as UserType } from "@/backend/types/schema";
-import { UserRole } from "@/backend/types/enums";
+import { User as UserType } from "@/backend/services/auth";
+import { UserRole } from "@/backend/tables";
 import { HRService } from "@/backend/services/hr";
 
 interface DashboardLayoutProps {

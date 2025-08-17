@@ -3,7 +3,7 @@ import {
   subscriptionPlans,
   SubscriptionPlan,
 } from "../tables/subscriptionPlans";
-import { CompanyStatus, PaymentStatus } from "../types/enums";
+import { CompanyStatus, PaymentStatus } from "../tables/enums";
 
 /**
  * Company Service - handles all company and subscription related business logic

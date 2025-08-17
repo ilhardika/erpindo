@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { User } from "@/backend/types/schema";
+import { User } from "@/backend/services/auth";
 
 interface AuthContextType {
   user: User | null;

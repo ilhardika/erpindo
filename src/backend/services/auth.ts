@@ -1,6 +1,8 @@
-import { User } from "../types/schema";
 import { UserTable } from "../tables/users";
 import { getAllTables } from "../tables";
+
+// Safe user type without password for frontend
+export type User = Omit<UserTable, "password">;
 
 export const authenticateUser = (
   email: string,

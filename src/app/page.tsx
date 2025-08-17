@@ -4,7 +4,7 @@ import React, { useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { LoginForm } from "@/components/auth/LoginForm";
-import { User } from "@/backend/types/schema";
+import { User } from "@/backend/services/auth";
 
 export default function HomePage() {
   const { user, isAuthenticated, isLoading, login } = useAuth();
