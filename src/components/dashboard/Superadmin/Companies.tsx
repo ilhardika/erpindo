@@ -3,10 +3,8 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  AdvancedDataTable,
-  createAdvancedColumns,
-} from "@/components/ui/advanced-table";
+import { createAdvancedColumns } from "@/components/ui/advanced-table";
+import { ModuleLayout } from "@/components/layout/ModuleLayout";
 import {
   Dialog,
   DialogContent,
@@ -21,8 +19,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { Plus, MoreHorizontal, Eye, Edit, Trash2 } from "lucide-react";
+import { MoreHorizontal, Eye, Edit, Trash2 } from "lucide-react";
 import { User } from "@/backend/types/schema";
 import { companies, CompanyTable } from "@/backend/tables/companies";
 import {
@@ -141,58 +138,49 @@ export function ManageCompanies({ user, onLogout }: ManageCompaniesProps) {
     setDeleteCompanyId(null);
   };
 
+  const handleAddCompany = () => {
+    // TODO: Implement add company logic
+    console.log("Add new company");
+  };
+
   return (
-    <DashboardLayout user={user} onLogout={onLogout}>
-      <div className="p-6 space-y-6">
-        {/* Page Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold">Kelola Perusahaan</h1>
-            <p className="text-muted-foreground">
-              Kelola semua perusahaan yang terdaftar di sistem ERP
-            </p>
-          </div>
-          <Button className="flex items-center gap-2 w-fit">
-            <Plus className="h-4 w-4" />
-            Tambah Perusahaan
-          </Button>
-        </div>
+    <>
+      <ModuleLayout
+        user={user}
+        onLogout={onLogout}
+        title="Kelola Perusahaan"
+        subtitle="Kelola semua perusahaan yang terdaftar di sistem ERP"
+        addButtonText="Tambah Perusahaan"
+        onAddClick={handleAddCompany}
+        columns={companiesColumns}
+        data={companies}
+        searchPlaceholder="Cari perusahaan..."
+        tableTitle="Daftar Perusahaan"
+      />
 
-        {/* Advanced DataTable */}
-        <AdvancedDataTable
-          title="Daftar Perusahaan"
-          columns={companiesColumns}
-          data={companies}
-          searchPlaceholder="Cari perusahaan..."
-        />
-
-        {/* Delete Confirmation Dialog */}
-        <Dialog
-          open={!!deleteCompanyId}
-          onOpenChange={(open) => !open && setDeleteCompanyId(null)}
-        >
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Konfirmasi Hapus</DialogTitle>
-              <DialogDescription>
-                Apakah Anda yakin ingin menghapus perusahaan ini? Tindakan ini
-                tidak dapat dibatalkan.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setDeleteCompanyId(null)}
-              >
-                Batal
-              </Button>
-              <Button variant="destructive" onClick={handleDeleteCompany}>
-                Hapus
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
-    </DashboardLayout>
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={!!deleteCompanyId}
+        onOpenChange={(open) => !open && setDeleteCompanyId(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Konfirmasi Hapus</DialogTitle>
+            <DialogDescription>
+              Apakah Anda yakin ingin menghapus perusahaan ini? Tindakan ini
+              tidak dapat dibatalkan.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteCompanyId(null)}>
+              Batal
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteCompany}>
+              Hapus
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
