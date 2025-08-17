@@ -145,46 +145,6 @@ export function EmployeeDashboard({ user, onLogout }: EmployeeDashboardProps) {
           </CardContent>
         </Card>
 
-        {/* Available Modules */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Modul yang Tersedia</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {availableModules.map((module) => {
-                const IconComponent =
-                  moduleIcons[module as keyof typeof moduleIcons];
-                const moduleName =
-                  moduleNames[module as keyof typeof moduleNames];
-
-                return (
-                  <Card
-                    key={module}
-                    className="cursor-pointer hover:shadow-md transition-shadow"
-                  >
-                    <CardContent className="p-6">
-                      <div className="flex items-center space-x-4">
-                        {IconComponent && (
-                          <div className="p-2 bg-primary/10 rounded-lg">
-                            <IconComponent className="h-6 w-6 text-primary" />
-                          </div>
-                        )}
-                        <div>
-                          <h3 className="font-medium">{moduleName}</h3>
-                          <p className="text-sm text-muted-foreground">
-                            Akses tersedia
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Quick Actions */}
         <Card>
           <CardHeader>

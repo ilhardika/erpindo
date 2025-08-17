@@ -409,8 +409,8 @@ export function DashboardLayout({
   const Sidebar = ({ isMobile = false }: { isMobile?: boolean }) => (
     <div
       className={`${
-        isMobile ? "w-full" : "w-64"
-      } bg-card border-r h-full flex flex-col`}
+        isMobile ? "w-full h-full" : "w-64 h-full"
+      } bg-card border-r flex flex-col`}
     >
       {/* Mobile brand header */}
       {isMobile && (
@@ -420,7 +420,7 @@ export function DashboardLayout({
       )}
 
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-2">
+      <nav className="flex-1 px-3 py-4 space-y-3 overflow-y-auto">
         {modules.map((module) => (
           <div key={module.key}>
             <Button
@@ -467,9 +467,9 @@ export function DashboardLayout({
   );
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="border-b bg-card">
+      <header className="border-b bg-card shrink-0">
         <div className="flex items-center justify-between px-4 py-3">
           {/* Left side - Mobile menu + Brand */}
           <div className="flex items-center space-x-4">
@@ -513,14 +513,14 @@ export function DashboardLayout({
         </div>
       </header>
 
-      <div className="flex">
+      <div className="flex flex-1 min-h-0">
         {/* Desktop Sidebar */}
         <aside className="hidden md:block">
           <Sidebar />
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 min-w-0">{children}</main>
+        <main className="flex-1 min-w-0 overflow-auto">{children}</main>
       </div>
     </div>
   );
