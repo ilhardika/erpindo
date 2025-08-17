@@ -24,20 +24,8 @@ export function ProtectedRoute({
       }
 
       if (allowedRoles && user && !allowedRoles.includes(user.role)) {
-        // Redirect to appropriate dashboard based on role
-        switch (user.role) {
-          case "superadmin":
-            router.push("/dashboard/superadmin");
-            break;
-          case "company_owner":
-            router.push("/dashboard/company");
-            break;
-          case "employee":
-            router.push("/dashboard/employee");
-            break;
-          default:
-            router.push("/");
-        }
+        // Redirect to dashboard for all authenticated users
+        router.push("/dashboard");
         return;
       }
     }

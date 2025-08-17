@@ -3,25 +3,28 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { EditPlan } from "@/components/dashboard/superadmin/management-plans/editPlan";
-import { useEffect } from "react";
+import { useEffect, use } from "react";
 
 interface EditPlanPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export default function EditPlanPage({ params }: EditPlanPageProps) {
-  const { user, logout } = useAuth();
+  const { user, logout, isLoading } = useAuth();
   const router = useRouter();
+  const resolvedParams = use(params);
 
   useEffect(() => {
-    if (!user) {
-      router.push("/");
-    } else if (user.role !== "superadmin") {
-      router.push("/dashboard");
+    if (!isLoading) {
+      if (!user) {
+        router.push("/");
+      } else if (user.role !== "superadmin") {
+        router.push("/dashboard");
+      }
     }
-  }, [user, router]);
+  }, [user, isLoading, router]);
 
   if (!user) {
     return (
@@ -47,5 +50,5 @@ export default function EditPlanPage({ params }: EditPlanPageProps) {
     );
   }
 
-  return <EditPlan user={user} onLogout={logout} planId={params.id} />;
+  return <EditPlan user={user} onLogout={logout} planId={resolvedParams.id} />;
 }

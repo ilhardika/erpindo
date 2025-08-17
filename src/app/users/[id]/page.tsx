@@ -3,23 +3,24 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { ViewUser } from "@/components/dashboard/superadmin/users/viewUser";
-import { useEffect } from "react";
+import { useEffect, use } from "react";
 
 interface UserDetailPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export default function UserDetailPage({ params }: UserDetailPageProps) {
-  const { user, logout } = useAuth();
+  const { user, logout, isLoading } = useAuth();
   const router = useRouter();
+  const resolvedParams = use(params);
 
   useEffect(() => {
-    if (!user) {
+    if (!isLoading && !user) {
       router.push("/");
     }
-  }, [user, router]);
+  }, [user, isLoading, router]);
 
   if (!user) {
     return (
@@ -32,5 +33,5 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
     );
   }
 
-  return <ViewUser user={user} onLogout={logout} userId={params.id} />;
+  return <ViewUser user={user} onLogout={logout} userId={resolvedParams.id} />;
 }

@@ -6,16 +6,18 @@ import { ManagePlans } from "@/components/dashboard/superadmin/management-plans"
 import { useEffect } from "react";
 
 export default function ManagementPlansPage() {
-  const { user, logout } = useAuth();
+  const { user, logout, isLoading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!user) {
-      router.push("/");
-    } else if (user.role !== "superadmin") {
-      router.push("/dashboard");
+    if (!isLoading) {
+      if (!user) {
+        router.push("/");
+      } else if (user.role !== "superadmin") {
+        router.push("/dashboard");
+      }
     }
-  }, [user, router]);
+  }, [user, isLoading, router]);
 
   if (!user) {
     return (
