@@ -26,6 +26,12 @@ import {
   Truck,
   ChevronDown,
   ChevronRight,
+  FileText,
+  Settings,
+  UserPlus,
+  BarChart3,
+  CreditCard,
+  Zap,
 } from "lucide-react";
 import { User as UserType } from "@/backend/services/auth";
 import { UserRole } from "@/backend/tables";
@@ -147,65 +153,251 @@ export function DashboardLayout({
             icon: TrendingUp,
             path: "/reports",
           },
+          {
+            key: "settings",
+            name: "Pengaturan",
+            icon: Package,
+            subModules: [
+              {
+                key: "company-settings",
+                name: "Pengaturan Perusahaan",
+                icon: Building,
+                path: "/settings/company",
+              },
+              {
+                key: "module-settings",
+                name: "Pengaturan Modul",
+                icon: Package,
+                path: "/settings/modules",
+              },
+            ],
+          },
         ];
 
       case UserRole.EMPLOYEE:
-        // Get available modules from user's permissions
-        const availableModules: ModuleItem[] = [];
-
-        // Get module definitions from new service
-        const moduleDefinitions = HRService.modules.getAllModules();
-
-        // Mock employee modules - in real app, this would come from user permissions
-        const employeeModules = ["pos", "sales", "inventory", "customers"];
-
-        employeeModules.forEach((moduleKey) => {
-          const moduleConfig = moduleDefinitions[moduleKey];
-          if (moduleConfig) {
-            let icon = Package;
-            switch (moduleKey) {
-              case "pos":
-                icon = ShoppingCart;
-                break;
-              case "sales":
-                icon = TrendingUp;
-                break;
-              case "inventory":
-                icon = Package;
-                break;
-              case "customers":
-                icon = Users;
-                break;
-              case "promotions":
-                icon = Gift;
-                break;
-              case "hr":
-                icon = UserCheck;
-                break;
-              case "finance":
-                icon = DollarSign;
-                break;
-              case "vehicles":
-                icon = Truck;
-                break;
-            }
-
-            availableModules.push({
-              key: moduleKey,
-              name: moduleConfig.name,
-              icon,
-              subModules: moduleConfig.features.map((feature) => ({
-                key: `${moduleKey}-${feature
-                  .toLowerCase()
-                  .replace(/\s+/g, "-")}`,
-                name: feature,
+        // ERP Modules based on blueprint - filtered by user's assigned permissions
+        const allErrModules: ModuleItem[] = [
+          {
+            key: "pos",
+            name: "POS (Kasir)",
+            icon: ShoppingCart,
+            path: "/pos",
+            subModules: [
+              {
+                key: "pos-transaction",
+                name: "Transaksi",
+                icon: ShoppingCart,
+                path: "/pos/transaction",
+              },
+              {
+                key: "pos-shift",
+                name: "Buka/Tutup Kasir",
+                icon: ShoppingCart,
+                path: "/pos/shift",
+              },
+              {
+                key: "pos-refund",
+                name: "Refund",
                 icon: Package,
-              })),
-            });
-          }
-        });
+                path: "/pos/refund",
+              },
+            ],
+          },
+          {
+            key: "sales",
+            name: "Sales & Purchasing",
+            icon: TrendingUp,
+            path: "/sales",
+            subModules: [
+              {
+                key: "sales-orders",
+                name: "Sales Orders",
+                icon: TrendingUp,
+                path: "/sales/orders",
+              },
+              {
+                key: "purchasing",
+                name: "Purchasing",
+                icon: Package,
+                path: "/sales/purchasing",
+              },
+              {
+                key: "sales-analysis",
+                name: "Analisis Penjualan",
+                icon: TrendingUp,
+                path: "/sales/analysis",
+              },
+            ],
+          },
+          {
+            key: "inventory",
+            name: "Inventory/Gudang",
+            icon: Package,
+            path: "/inventory",
+            subModules: [
+              {
+                key: "products",
+                name: "Produk & Stok",
+                icon: Package,
+                path: "/inventory/products",
+              },
+              {
+                key: "stock-transfer",
+                name: "Transfer Stok",
+                icon: Package,
+                path: "/inventory/transfer",
+              },
+              {
+                key: "stock-opname",
+                name: "Stock Opname",
+                icon: Package,
+                path: "/inventory/opname",
+              },
+            ],
+          },
+          {
+            key: "customers",
+            name: "Customers & Suppliers",
+            icon: Users,
+            path: "/customers",
+            subModules: [
+              {
+                key: "customer-management",
+                name: "Kelola Customer",
+                icon: Users,
+                path: "/customers/management",
+              },
+              {
+                key: "supplier-management",
+                name: "Kelola Supplier",
+                icon: Users,
+                path: "/customers/suppliers",
+              },
+              {
+                key: "customer-history",
+                name: "Riwayat Transaksi",
+                icon: Users,
+                path: "/customers/history",
+              },
+            ],
+          },
+          {
+            key: "promotions",
+            name: "Promosi",
+            icon: Gift,
+            path: "/promotions",
+            subModules: [
+              {
+                key: "discount-management",
+                name: "Kelola Diskon",
+                icon: Gift,
+                path: "/promotions/discounts",
+              },
+              {
+                key: "bundle-promo",
+                name: "Promo Bundling",
+                icon: Gift,
+                path: "/promotions/bundles",
+              },
+            ],
+          },
+          {
+            key: "hr",
+            name: "Karyawan ",
+            icon: UserCheck,
+            path: "/hr",
+            subModules: [
+              {
+                key: "attendance",
+                name: "Absensi",
+                icon: UserCheck,
+                path: "/hr/attendance",
+              },
+              {
+                key: "salary-slip",
+                name: "Slip Gaji",
+                icon: UserCheck,
+                path: "/hr/salary",
+              },
+            ],
+          },
+          {
+            key: "finance",
+            name: "Keuangan",
+            icon: DollarSign,
+            path: "/finance",
+            subModules: [
+              {
+                key: "cash-flow",
+                name: "Kas Masuk/Keluar",
+                icon: DollarSign,
+                path: "/finance/cash",
+              },
+              {
+                key: "journal",
+                name: "Jurnal Manual",
+                icon: DollarSign,
+                path: "/finance/journal",
+              },
+              {
+                key: "reports",
+                name: "Laporan Keuangan",
+                icon: DollarSign,
+                path: "/finance/reports",
+              },
+            ],
+          },
+          {
+            key: "vehicles",
+            name: "Kendaraan",
+            icon: Truck,
+            path: "/vehicles",
+            subModules: [
+              {
+                key: "vehicle-management",
+                name: "Kelola Kendaraan",
+                icon: Truck,
+                path: "/vehicles/management",
+              },
+              {
+                key: "vehicle-assignment",
+                name: "Assignment Kendaraan",
+                icon: Truck,
+                path: "/vehicles/assignment",
+              },
+            ],
+          },
+          {
+            key: "salesman",
+            name: "Salesman",
+            icon: Users,
+            path: "/salesman",
+            subModules: [
+              {
+                key: "commission",
+                name: "Komisi",
+                icon: Users,
+                path: "/salesman/commission",
+              },
+              {
+                key: "top-products",
+                name: "Top Produk",
+                icon: Users,
+                path: "/salesman/products",
+              },
+              {
+                key: "top-customers",
+                name: "Top Customer",
+                icon: Users,
+                path: "/salesman/customers",
+              },
+            ],
+          },
+        ];
 
-        return availableModules;
+        // TODO: In real implementation, filter based on employee's assigned modules
+        // For now, return all modules for demo purposes
+        return allErrModules;
 
       default:
         return [];
