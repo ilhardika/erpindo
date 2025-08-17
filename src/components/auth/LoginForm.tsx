@@ -177,7 +177,7 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
                 size="sm"
                 onClick={() => {
                   setCredentials({
-                    email: "jane.smith@teknologimaju.com",
+                    email: "supervisor@teknologimaju.com",
                     password: "emp123",
                   });
                 }}

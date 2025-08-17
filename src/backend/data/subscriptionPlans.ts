@@ -64,38 +64,4 @@ export const subscriptionPlansData: SubscriptionPlan[] = [
     createdAt: "2024-01-01T00:00:00.000Z",
     updatedAt: "2024-01-01T00:00:00.000Z",
   },
-  {
-    id: "plan-basic-yearly",
-    name: "basic",
-    displayName: "Basic Plan (Yearly)",
-    description: "Perfect for small businesses - Save 20% with yearly billing",
-    price: 4800000, // IDR 4,800,000 (20% discount from 6,000,000)
-    billingCycle: "yearly",
-    isActive: true,
-    maxEmployees: 5,
-    features: ["pos", "customers", "inventory"],
-    limitations: {
-      maxTransactionsPerMonth: 1000,
-      maxStorageGB: 5,
-    },
-    createdAt: "2024-01-01T00:00:00.000Z",
-    updatedAt: "2024-01-01T00:00:00.000Z",
-  },
-  {
-    id: "plan-premium-yearly",
-    name: "premium",
-    displayName: "Premium Plan (Yearly)",
-    description: "Advanced features for growing businesses - Save 20% yearly",
-    price: 24000000, // IDR 24,000,000 (20% discount from 30,000,000)
-    billingCycle: "yearly",
-    isActive: true,
-    maxEmployees: 25,
-    features: ["pos", "sales", "inventory", "customers", "hr", "finance"],
-    limitations: {
-      maxTransactionsPerMonth: 10000,
-      maxStorageGB: 50,
-    },
-    createdAt: "2024-01-01T00:00:00.000Z",
-    updatedAt: "2024-01-01T00:00:00.000Z",
-  },
 ];
