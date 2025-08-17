@@ -142,12 +142,6 @@ export function DashboardLayout({
             path: "/employees",
           },
           {
-            key: "modules",
-            name: "Pengaturan Modul",
-            icon: Package,
-            path: "/modules",
-          },
-          {
             key: "reports",
             name: "Laporan Perusahaan",
             icon: TrendingUp,
