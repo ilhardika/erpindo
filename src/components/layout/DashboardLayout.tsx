@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
@@ -34,7 +35,6 @@ interface DashboardLayoutProps {
   user: UserType;
   children: React.ReactNode;
   onLogout: () => void;
-  onNavigate?: (page: string) => void;
 }
 
 interface ModuleItem {
@@ -42,14 +42,15 @@ interface ModuleItem {
   name: string;
   icon: React.ComponentType<{ className?: string }>;
   subModules?: ModuleItem[];
+  path?: string; // Add path for navigation
 }
 
 export function DashboardLayout({
   user,
   children,
   onLogout,
-  onNavigate,
 }: DashboardLayoutProps) {
+  const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [expandedModules, setExpandedModules] = useState<string[]>([]);
 
@@ -65,18 +66,58 @@ export function DashboardLayout({
     switch (role) {
       case UserRole.SUPERADMIN:
         return [
-          { key: "dashboard", name: "Dashboard", icon: TrendingUp },
-          { key: "companies", name: "Kelola Perusahaan", icon: Building },
-          { key: "users", name: "Kelola Pengguna", icon: Users },
-          { key: "reports", name: "Laporan Sistem", icon: TrendingUp },
+          {
+            key: "dashboard",
+            name: "Dashboard",
+            icon: TrendingUp,
+            path: "/dashboard",
+          },
+          {
+            key: "companies",
+            name: "Kelola Perusahaan",
+            icon: Building,
+            path: "/companies",
+          },
+          {
+            key: "users",
+            name: "Kelola Pengguna",
+            icon: Users,
+            path: "/users",
+          },
+          {
+            key: "reports",
+            name: "Laporan Sistem",
+            icon: TrendingUp,
+            path: "/reports",
+          },
         ];
 
       case UserRole.COMPANY_OWNER:
         return [
-          { key: "dashboard", name: "Dashboard", icon: TrendingUp },
-          { key: "employees", name: "Kelola Karyawan", icon: Users },
-          { key: "modules", name: "Pengaturan Modul", icon: Package },
-          { key: "reports", name: "Laporan Perusahaan", icon: TrendingUp },
+          {
+            key: "dashboard",
+            name: "Dashboard",
+            icon: TrendingUp,
+            path: "/dashboard",
+          },
+          {
+            key: "employees",
+            name: "Kelola Karyawan",
+            icon: Users,
+            path: "/employees",
+          },
+          {
+            key: "modules",
+            name: "Pengaturan Modul",
+            icon: Package,
+            path: "/modules",
+          },
+          {
+            key: "reports",
+            name: "Laporan Perusahaan",
+            icon: TrendingUp,
+            path: "/reports",
+          },
         ];
 
       case UserRole.EMPLOYEE:
@@ -167,8 +208,8 @@ export function DashboardLayout({
               onClick={() => {
                 if (module.subModules) {
                   toggleModule(module.key);
-                } else if (onNavigate) {
-                  onNavigate(module.key);
+                } else if (module.path) {
+                  router.push(module.path);
                 }
               }}
             >

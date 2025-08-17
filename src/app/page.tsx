@@ -13,17 +13,8 @@ export default function HomePage() {
   // Redirect authenticated users to their dashboard
   useEffect(() => {
     if (!isLoading && isAuthenticated && user) {
-      switch (user.role) {
-        case "superadmin":
-          router.replace("/dashboard/superadmin");
-          break;
-        case "company_owner":
-          router.replace("/dashboard/company");
-          break;
-        case "employee":
-          router.replace("/dashboard/employee");
-          break;
-      }
+      // All roles redirect to /dashboard - content will be role-specific
+      router.replace("/dashboard");
     }
   }, [isAuthenticated, isLoading, user, router]);
 
@@ -32,17 +23,8 @@ export default function HomePage() {
     if (!isLoading && isAuthenticated) {
       const handlePopState = () => {
         if (user) {
-          switch (user.role) {
-            case "superadmin":
-              router.replace("/dashboard/superadmin");
-              break;
-            case "company_owner":
-              router.replace("/dashboard/company");
-              break;
-            case "employee":
-              router.replace("/dashboard/employee");
-              break;
-          }
+          // Redirect back to dashboard regardless of role
+          router.replace("/dashboard");
         }
       };
 

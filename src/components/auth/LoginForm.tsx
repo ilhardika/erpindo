@@ -62,20 +62,8 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
       // Store user in auth context and redirect
       login(result.user);
 
-      // Redirect based on role
-      switch (result.user.role) {
-        case "superadmin":
-          router.push("/dashboard/superadmin");
-          break;
-        case "company_owner":
-          router.push("/dashboard/company");
-          break;
-        case "employee":
-          router.push("/dashboard/employee");
-          break;
-        default:
-          onLoginSuccess(result.user);
-      }
+      // Redirect to dashboard - content will be role-specific
+      router.push("/dashboard");
     } catch (err) {
       setError("Terjadi kesalahan saat login");
     } finally {
@@ -177,7 +165,7 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
                 onClick={() => {
                   console.log("Owner button clicked");
                   setCredentials({
-                    email: "owner@company1.com",
+                    email: "owner@teknologimaju.com",
                     password: "owner123",
                   });
                 }}
@@ -192,7 +180,7 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
                 onClick={() => {
                   console.log("Employee button clicked");
                   setCredentials({
-                    email: "employee@company1.com",
+                    email: "jane.smith@teknologimaju.com",
                     password: "emp123",
                   });
                 }}
