@@ -173,6 +173,44 @@ export function ViewEmployee({ employeeId }: ViewEmployeeProps) {
             </CardContent>
           </Card>
 
+          {/* Account Management */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Manajemen Akun Login</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Pengaturan akun dan kredensial login karyawan
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h4 className="text-sm font-medium text-muted-foreground">
+                    Email Login
+                  </h4>
+                  <p className="text-lg font-mono bg-muted px-3 py-2 rounded">
+                    {employee.email}
+                  </p>
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium text-muted-foreground">
+                    Status Akun
+                  </h4>
+                  <Badge
+                    variant={employee.userIsActive ? "default" : "destructive"}
+                    className="text-sm"
+                  >
+                    {employee.userIsActive ? "Akun Aktif" : "Akun Diblokir"}
+                  </Badge>
+                </div>
+              </div>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <Button variant="outline" onClick={handleEdit}>
+                  Ubah Email & Password
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Module Access */}
           <Card>
             <CardHeader>

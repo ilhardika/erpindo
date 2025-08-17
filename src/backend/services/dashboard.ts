@@ -60,9 +60,10 @@ export class DashboardService {
       throw new Error(`Company not found: ${companyId}`);
     }
 
-    // Get data using table access
-    const employees = tables.employees.filter((e) => e.companyId === companyId);
-    const activeEmployees = employees.filter((e) => e.isActive);
+    // Get employees with user data using HR service
+    const employeesWithUserData =
+      HRService.queries.employees.findByCompanyIdWithUserData(companyId);
+    const activeEmployees = employeesWithUserData.filter((e) => e.isActive);
 
     // Get business data
     const products = tables.products.filter((p) => p.companyId === companyId);
@@ -93,7 +94,7 @@ export class DashboardService {
     return {
       company,
       stats: {
-        totalEmployees: employees.length,
+        totalEmployees: employeesWithUserData.length,
         activeEmployees: activeEmployees.length,
         totalProducts: products.length,
         totalCustomers: customers.length,
@@ -103,7 +104,7 @@ export class DashboardService {
             (l) => l.companyId === companyId && l.status === "pending"
           ).length || 0,
       },
-      employees: employees.slice(0, 5), // Recent employees
+      employees: employeesWithUserData, // Now includes user data with login access info
       recentTransactions,
       lowStockItems: lowStockItems.slice(0, 10),
       todayAttendance,

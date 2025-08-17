@@ -36,6 +36,7 @@ import {
   employeeService,
   employeeQuery,
   EmployeeWithUserData,
+  HRService,
 } from "@/backend/services/hr";
 import { useState, useEffect } from "react";
 

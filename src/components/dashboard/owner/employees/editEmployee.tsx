@@ -29,6 +29,7 @@ import { UserTable } from "@/backend/tables/users";
 interface EditEmployeeFormData {
   name: string;
   email: string;
+  password: string;
   phone?: string;
   position: string;
   department: string;
@@ -49,6 +50,7 @@ export function EditEmployee({ employeeId }: EditEmployeeProps) {
   const [formData, setFormData] = useState<EditEmployeeFormData>({
     name: "",
     email: "",
+    password: "",
     phone: "",
     position: "",
     department: "",
@@ -77,6 +79,7 @@ export function EditEmployee({ employeeId }: EditEmployeeProps) {
         setFormData({
           name: foundEmployee.name,
           email: foundEmployee.email,
+          password: "", // Leave empty for security, will be updated only if changed
           phone: foundEmployee.phone,
           position: foundEmployee.position,
           department: foundEmployee.department,
@@ -113,6 +116,21 @@ export function EditEmployee({ employeeId }: EditEmployeeProps) {
     try {
       setIsLoading(true);
 
+      // Prepare user updates object
+      const userUpdates: Partial<
+        Pick<UserTable, "name" | "email" | "phone" | "isActive" | "password">
+      > = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        isActive: formData.isActive,
+      };
+
+      // Only include password if it's not empty (user wants to change it)
+      if (formData.password.trim() !== "") {
+        userUpdates.password = formData.password;
+      }
+
       // Use the new method to update both employee and user data
       const result = employeeService.updateWithUserData(
         employee.id,
@@ -123,12 +141,7 @@ export function EditEmployee({ employeeId }: EditEmployeeProps) {
           moduleAccess: formData.moduleAccess,
           isActive: formData.isActive,
         },
-        {
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          isActive: formData.isActive,
-        }
+        userUpdates
       );
 
       if (result.employee && result.user) {
@@ -149,6 +162,8 @@ export function EditEmployee({ employeeId }: EditEmployeeProps) {
       setFormData({
         name: employee.name,
         email: employee.email,
+        password: "", // Reset to empty for security
+        phone: employee.phone,
         position: employee.position,
         department: employee.department,
         salary: employee.salary?.toString() || "",
@@ -190,7 +205,10 @@ export function EditEmployee({ employeeId }: EditEmployeeProps) {
         {/* Basic Information */}
         <Card>
           <CardHeader>
-            <CardTitle>Informasi Dasar</CardTitle>
+            <CardTitle>Informasi Dasar & Akun Login</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Perbarui informasi dasar karyawan dan kredensial login
+            </p>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -204,15 +222,35 @@ export function EditEmployee({ employeeId }: EditEmployeeProps) {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email">Email *</Label>
+                <Label htmlFor="email">Email Login *</Label>
                 <Input
                   id="email"
                   type="email"
                   value={formData.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
-                  placeholder="nama@email.com"
+                  placeholder="email@perusahaan.com"
                 />
+                <p className="text-xs text-muted-foreground">
+                  Email untuk login ke sistem
+                </p>
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password">
+                Password Baru (Kosongkan jika tidak diubah)
+              </Label>
+              <Input
+                id="password"
+                type="password"
+                value={formData.password}
+                onChange={(e) => handleInputChange("password", e.target.value)}
+                placeholder="Masukkan password baru (opsional)"
+              />
+              <p className="text-xs text-muted-foreground">
+                Kosongkan jika tidak ingin mengubah password. Jika diisi,
+                password lama akan diganti.
+              </p>
             </div>
 
             <div className="space-y-2">

@@ -176,7 +176,7 @@ export const employeeService = {
     employeeId: string,
     employeeUpdates: Partial<EmployeeTable>,
     userUpdates: Partial<
-      Pick<UserTable, "name" | "email" | "phone" | "isActive">
+      Pick<UserTable, "name" | "email" | "phone" | "isActive" | "password">
     >
   ): { user: UserTable | null; employee: EmployeeTable | null } => {
     // Update employee
@@ -206,6 +206,33 @@ export const employeeService = {
       updatedAt: new Date().toISOString(),
     };
     return true;
+  },
+
+  // NEW: Toggle login access for employee (for Company Owner use)
+  toggleLoginAccess: (
+    employeeId: string,
+    isActive: boolean
+  ): { user: UserTable | null; employee: EmployeeTable | null } => {
+    // Find employee
+    const employee = employees.find((emp) => emp.id === employeeId);
+    if (!employee) return { user: null, employee: null };
+
+    // Find and update user account
+    const userIndex = users.findIndex((u) => u.id === employee.userId);
+    if (userIndex === -1) return { user: null, employee };
+
+    // Update user isActive status
+    users[userIndex] = {
+      ...users[userIndex],
+      isActive: isActive,
+      updatedAt: new Date().toISOString(),
+    };
+
+    // Also update employee isActive to keep them in sync
+    employee.isActive = isActive;
+    employee.updatedAt = new Date().toISOString();
+
+    return { user: users[userIndex], employee };
   },
 
   // Employee-specific operations

@@ -150,7 +150,10 @@ export function CreateEmployee() {
         {/* Basic Information */}
         <Card>
           <CardHeader>
-            <CardTitle>Informasi Dasar</CardTitle>
+            <CardTitle>Informasi Dasar & Akun Login</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Buat akun login untuk karyawan dan atur informasi dasar
+            </p>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -164,26 +167,33 @@ export function CreateEmployee() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email">Email *</Label>
+                <Label htmlFor="email">Email Login *</Label>
                 <Input
                   id="email"
                   type="email"
                   value={formData.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
-                  placeholder="nama@email.com"
+                  placeholder="email@perusahaan.com"
                 />
+                <p className="text-xs text-muted-foreground">
+                  Email ini akan digunakan untuk login ke sistem
+                </p>
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password *</Label>
+              <Label htmlFor="password">Password Login *</Label>
               <Input
                 id="password"
                 type="password"
                 value={formData.password}
                 onChange={(e) => handleInputChange("password", e.target.value)}
-                placeholder="Masukkan password"
+                placeholder="Masukkan password yang kuat"
               />
+              <p className="text-xs text-muted-foreground">
+                Password minimal 6 karakter. Karyawan dapat mengubah password
+                setelah login pertama.
+              </p>
             </div>
 
             <div className="space-y-2">
