@@ -25,6 +25,7 @@ import { User } from "@/backend/types/schema";
 import {
   subscriptionPlans,
   SubscriptionPlan,
+  formatLimitation,
 } from "@/backend/tables/subscriptionPlans";
 
 interface ManagePlansProps {
@@ -79,7 +80,7 @@ export function ManagePlans({ user, onLogout }: ManagePlansProps) {
     column("maxEmployees", "Max Karyawan", {
       render: (plan) => (
         <Badge variant="outline" className="font-mono">
-          {plan.maxEmployees}
+          {formatLimitation(plan.maxEmployees)}
         </Badge>
       ),
     }),
@@ -186,12 +187,6 @@ export function ManagePlans({ user, onLogout }: ManagePlansProps) {
       columns={plansColumns}
       searchPlaceholder="Cari plan..."
       tableTitle="Daftar Subscription Plans"
-      headerActions={
-        <Button onClick={handleCreateNew}>
-          <Plus className="mr-2 h-4 w-4" />
-          Buat Plan Baru
-        </Button>
-      }
     >
       {/* Delete Confirmation Dialog */}
       <Dialog open={!!deletePlanId} onOpenChange={() => setDeletePlanId(null)}>

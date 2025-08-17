@@ -6,16 +6,12 @@ export interface SubscriptionPlan {
   price: number;
   billingCycle: "monthly" | "yearly";
   isActive: boolean;
-  maxEmployees: number;
+  maxEmployees: number; // -1 = unlimited
   maxCompanies?: number; // For superadmin plans
   features: string[]; // Module codes like "pos", "sales", etc.
-  additionalFeatures: string[];
   limitations: {
-    maxTransactionsPerMonth?: number;
-    maxStorageGB?: number;
-    maxUsers?: number;
-    customIntegrations?: boolean;
-    prioritySupport?: boolean;
+    maxTransactionsPerMonth: number; // -1 = unlimited
+    maxStorageGB: number; // -1 = unlimited
   };
   createdAt: string;
   updatedAt: string;
@@ -33,18 +29,9 @@ export const subscriptionPlans: SubscriptionPlan[] = [
     isActive: true,
     maxEmployees: 5,
     features: ["pos", "customers", "inventory"],
-    additionalFeatures: [
-      "Basic POS system",
-      "Customer management",
-      "Basic inventory tracking",
-      "Standard support",
-    ],
     limitations: {
       maxTransactionsPerMonth: 1000,
       maxStorageGB: 5,
-      maxUsers: 5,
-      customIntegrations: false,
-      prioritySupport: false,
     },
     createdAt: "2024-01-01T00:00:00.000Z",
     updatedAt: "2024-01-01T00:00:00.000Z",
@@ -59,20 +46,9 @@ export const subscriptionPlans: SubscriptionPlan[] = [
     isActive: true,
     maxEmployees: 25,
     features: ["pos", "sales", "inventory", "customers", "hr", "finance"],
-    additionalFeatures: [
-      "Advanced POS system",
-      "Sales & purchasing management",
-      "Complete inventory management",
-      "HR & employee management",
-      "Financial reporting",
-      "Priority support",
-    ],
     limitations: {
       maxTransactionsPerMonth: 10000,
       maxStorageGB: 50,
-      maxUsers: 25,
-      customIntegrations: true,
-      prioritySupport: true,
     },
     createdAt: "2024-01-01T00:00:00.000Z",
     updatedAt: "2024-01-01T00:00:00.000Z",
@@ -81,11 +57,12 @@ export const subscriptionPlans: SubscriptionPlan[] = [
     id: "plan-enterprise",
     name: "enterprise",
     displayName: "Enterprise Plan",
-    description: "Complete solution for large organizations",
+    description:
+      "Complete solution for large organizations with unlimited access",
     price: 5000000, // IDR 5,000,000
     billingCycle: "monthly",
     isActive: true,
-    maxEmployees: 100,
+    maxEmployees: -1, // Unlimited
     features: [
       "pos",
       "sales",
@@ -97,22 +74,9 @@ export const subscriptionPlans: SubscriptionPlan[] = [
       "vehicles",
       "salesman",
     ],
-    additionalFeatures: [
-      "All Premium features",
-      "Advanced promotions management",
-      "Vehicle fleet management",
-      "Salesman performance tracking",
-      "Advanced analytics & reporting",
-      "24/7 premium support",
-      "Custom integrations",
-      "White-label options",
-    ],
     limitations: {
-      maxTransactionsPerMonth: 100000,
-      maxStorageGB: 500,
-      maxUsers: 100,
-      customIntegrations: true,
-      prioritySupport: true,
+      maxTransactionsPerMonth: -1, // Unlimited
+      maxStorageGB: -1, // Unlimited
     },
     createdAt: "2024-01-01T00:00:00.000Z",
     updatedAt: "2024-01-01T00:00:00.000Z",
@@ -127,20 +91,9 @@ export const subscriptionPlans: SubscriptionPlan[] = [
     isActive: true,
     maxEmployees: 5,
     features: ["pos", "customers", "inventory"],
-    additionalFeatures: [
-      "All Basic features",
-      "2 months free (yearly billing)",
-      "Basic POS system",
-      "Customer management",
-      "Basic inventory tracking",
-      "Standard support",
-    ],
     limitations: {
       maxTransactionsPerMonth: 1000,
       maxStorageGB: 5,
-      maxUsers: 5,
-      customIntegrations: false,
-      prioritySupport: false,
     },
     createdAt: "2024-01-01T00:00:00.000Z",
     updatedAt: "2024-01-01T00:00:00.000Z",
@@ -155,22 +108,9 @@ export const subscriptionPlans: SubscriptionPlan[] = [
     isActive: true,
     maxEmployees: 25,
     features: ["pos", "sales", "inventory", "customers", "hr", "finance"],
-    additionalFeatures: [
-      "All Premium features",
-      "2 months free (yearly billing)",
-      "Advanced POS system",
-      "Sales & purchasing management",
-      "Complete inventory management",
-      "HR & employee management",
-      "Financial reporting",
-      "Priority support",
-    ],
     limitations: {
       maxTransactionsPerMonth: 10000,
       maxStorageGB: 50,
-      maxUsers: 25,
-      customIntegrations: true,
-      prioritySupport: true,
     },
     createdAt: "2024-01-01T00:00:00.000Z",
     updatedAt: "2024-01-01T00:00:00.000Z",
@@ -189,3 +129,17 @@ export const getPlansByBillingCycle = (cycle: "monthly" | "yearly") =>
 
 export const getPlansByFeature = (feature: string) =>
   subscriptionPlans.filter((plan) => plan.features.includes(feature));
+
+// Helper function to format limitations display
+export const formatLimitation = (value: number): string => {
+  if (value === -1) return "Unlimited";
+  return value.toLocaleString();
+};
+
+// Helper function to check if plan has feature
+export const planHasFeature = (
+  plan: SubscriptionPlan,
+  feature: string
+): boolean => {
+  return plan.features.includes(feature);
+};
