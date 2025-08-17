@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { createAdvancedColumns } from "@/components/ui/advanced-table";
@@ -33,6 +34,7 @@ interface ManageCompaniesProps {
 }
 
 export function ManageCompanies({ user, onLogout }: ManageCompaniesProps) {
+  const router = useRouter();
   const [deleteCompanyId, setDeleteCompanyId] = React.useState<string | null>(
     null
   );
@@ -121,7 +123,7 @@ export function ManageCompanies({ user, onLogout }: ManageCompaniesProps) {
   };
 
   const handleAddCompany = () => {
-    // TODO: Implement add company logic
+    router.push("/companies/create");
   };
 
   return (

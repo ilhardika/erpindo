@@ -1,7 +1,7 @@
 "use client";
 
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { ManageCompanies } from "@/components/dashboard/Superadmin/Companies";
+import { ManageCompanies } from "@/components/dashboard/superadmin/companies";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
 

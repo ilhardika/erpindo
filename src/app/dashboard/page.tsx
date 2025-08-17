@@ -1,9 +1,9 @@
 "use client";
 
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { SuperadminDashboard } from "@/components/dashboard/SuperadminDashboard";
-import { CompanyOwnerDashboard } from "@/components/dashboard/Owner/Dashboard";
-import { EmployeeDashboard } from "@/components/dashboard/Employee/Dashboard";
+import { SuperadminDashboard } from "@/components/dashboard/superadmin";
+import { CompanyOwnerDashboard } from "@/components/dashboard/owner";
+import { EmployeeDashboard } from "@/components/dashboard/employee";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function DashboardPage() {

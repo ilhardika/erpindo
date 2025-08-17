@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { createAdvancedColumns } from "@/components/ui/advanced-table";
@@ -29,6 +30,7 @@ interface ManageUsersProps {
 }
 
 export function ManageUsers({ user, onLogout }: ManageUsersProps) {
+  const router = useRouter();
   const [deleteUserId, setDeleteUserId] = React.useState<string | null>(null);
 
   // Define columns for users table
@@ -123,7 +125,7 @@ export function ManageUsers({ user, onLogout }: ManageUsersProps) {
   };
 
   const handleAddUser = () => {
-    // TODO: Implement add user logic
+    router.push("/users/create");
   };
 
   return (

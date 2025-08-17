@@ -1,7 +1,7 @@
 "use client";
 
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { ManageUsers } from "@/components/dashboard/Superadmin/Users";
+import { ManageUsers } from "@/components/dashboard/superadmin/users";
 import { useAuth } from "@/contexts/AuthContext";
 
 // Placeholder component for restricted access

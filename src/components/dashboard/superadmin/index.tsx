@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, createColumns } from "@/components/ui/table";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { ManageCompanies } from "./Companies";
+import { ManageCompanies } from "./companies";
 import { Building, Users, DollarSign } from "lucide-react";
 import { User } from "@/backend/types/schema";
 import { DashboardService } from "@/backend/services/dashboard";
