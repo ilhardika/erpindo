@@ -10,6 +10,8 @@ export * from "./transactions";
 export * from "./vehicles";
 export * from "./inventory";
 export * from "./attendance";
+export * from "./subscriptionPlans";
+export * from "./companySubscriptionIntegration";
 
 // Import all data for easy access
 import { users } from "./users";
@@ -28,6 +30,7 @@ import {
   stockAdjustmentItems,
 } from "./inventory";
 import { attendance, shifts, leaves, payroll } from "./attendance";
+import { subscriptionPlans } from "./subscriptionPlans";
 
 // Database-like helper for getting all data
 export const getAllTables = () => ({
