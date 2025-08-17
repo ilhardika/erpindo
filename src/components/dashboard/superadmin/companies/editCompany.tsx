@@ -138,7 +138,7 @@ export function EditCompany({ user, onLogout, companyId }: EditCompanyProps) {
         phone: company.phone || "",
         address: company.address || "",
         businessType: mappedBusinessType,
-        subscriptionPlan: company.subscriptionPlan,
+        subscriptionPlan: company.subscriptionPlanId,
         status: company.status,
         paymentStatus: company.paymentStatus,
       });
@@ -188,7 +188,7 @@ export function EditCompany({ user, onLogout, companyId }: EditCompanyProps) {
         phone: company.phone || "",
         address: company.address || "",
         businessType: mapBusinessTypeToSelectValue(company.businessType),
-        subscriptionPlan: company.subscriptionPlan,
+        subscriptionPlan: company.subscriptionPlanId,
         status: company.status,
         paymentStatus: company.paymentStatus,
       });

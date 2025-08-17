@@ -21,8 +21,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, Eye, Edit, Trash2 } from "lucide-react";
-import { User } from "@/backend/types/schema";
+import { User } from "@/backend/services/auth";
 import { companies, CompanyTable } from "@/backend/tables/companies";
+import { subscriptionPlans } from "@/backend/tables/subscriptionPlans";
 import {
   formatCompanyStatus,
   formatPaymentStatus,
@@ -49,12 +50,17 @@ export function ManageCompanies({ user, onLogout }: ManageCompaniesProps) {
     column("email", "Email", {
       render: (company) => <span className="text-sm">{company.email}</span>,
     }),
-    column("subscriptionPlan", "Paket", {
-      render: (company) => (
-        <Badge variant="outline" className="capitalize">
-          {company.subscriptionPlan}
-        </Badge>
-      ),
+    column("subscriptionPlanId", "Paket", {
+      render: (company) => {
+        const plan = subscriptionPlans.find(
+          (p) => p.id === company.subscriptionPlanId
+        );
+        return (
+          <Badge variant="outline" className="capitalize">
+            {plan?.displayName || company.subscriptionPlanId}
+          </Badge>
+        );
+      },
     }),
     column("employeeCount", "Karyawan", {
       render: (company) => (
