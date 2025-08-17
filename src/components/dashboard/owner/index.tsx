@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Building, Users, Settings } from "lucide-react";
-import { User } from "@/backend/types/schema";
+import { User } from "@/backend/services/auth";
 import { DashboardService } from "@/backend/services/dashboard";
 import { useState, useEffect } from "react";
 

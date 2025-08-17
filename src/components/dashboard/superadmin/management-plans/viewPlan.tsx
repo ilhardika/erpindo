@@ -11,7 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { ViewLayout } from "@/components/layout/ViewLayout";
-import { User } from "@/backend/types/schema";
+import { User } from "@/backend/services/auth";
 import { modules } from "@/backend/tables/modules";
 import {
   subscriptionPlans,
@@ -116,13 +116,12 @@ export function ViewPlan({ user, onLogout, planId }: ViewPlanProps) {
 
   return (
     <ViewLayout
-      user={user}
-      onLogout={onLogout}
       title="Detail Plan"
       subtitle={plan.displayName}
       onEdit={handleEdit}
       onDelete={handleDelete}
       onBack={handleBack}
+      requiredRole="superadmin"
     >
       <div className="space-y-6">
         {/* Status dan Info Umum */}

@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { FormLayout } from "@/components/layout/FormLayout";
-import { User } from "@/backend/types/schema";
+import { User } from "@/backend/services/auth";
 import { Eye, EyeOff } from "lucide-react";
 
 interface CreateUserProps {
@@ -110,8 +110,6 @@ export function CreateUser({ user, onLogout }: CreateUserProps) {
 
   return (
     <FormLayout
-      user={user}
-      onLogout={onLogout}
       title="Tambah User Baru"
       subtitle="Tambahkan user baru ke dalam sistem"
       onBack={handleBack}
@@ -121,6 +119,7 @@ export function CreateUser({ user, onLogout }: CreateUserProps) {
       saveButtonText="Simpan User"
       resetButtonText="Reset Form"
       formActions={formActions}
+      requiredRole="superadmin"
     >
       {/* User Basic Information */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

@@ -4,6 +4,7 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import { ViewLayout } from "@/components/layout/ViewLayout";
 import { User } from "@/backend/services/auth";
+import { UserRole } from "@/backend/tables";
 import { companies } from "@/backend/tables/companies";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -36,12 +37,10 @@ import {
 } from "lucide-react";
 
 interface ViewCompanyProps {
-  user: User;
-  onLogout: () => void;
   companyId: string;
 }
 
-export function ViewCompany({ user, onLogout, companyId }: ViewCompanyProps) {
+export function ViewCompany({ companyId }: ViewCompanyProps) {
   const router = useRouter();
 
   // Get company data
@@ -127,13 +126,12 @@ export function ViewCompany({ user, onLogout, companyId }: ViewCompanyProps) {
 
   return (
     <ViewLayout
-      user={user}
-      onLogout={onLogout}
       title={company.name}
       subtitle="Detail informasi perusahaan yang terdaftar"
       onBack={handleBack}
       onEdit={handleEdit}
       onDelete={handleDelete}
+      requiredRole={UserRole.SUPERADMIN}
     >
       {/* Company Basic Information */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -189,9 +187,7 @@ export function ViewCompany({ user, onLogout, companyId }: ViewCompanyProps) {
             Paket Langganan
           </label>
           <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded border">
-            {subscriptionPlan
-              ? subscriptionPlan.displayName
-              : "Plan tidak ditemukan"}
+            {subscriptionPlan ? subscriptionPlan.name : "Plan tidak ditemukan"}
           </p>
         </div>
 

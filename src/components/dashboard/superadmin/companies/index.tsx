@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, Eye, Edit, Trash2 } from "lucide-react";
 import { User } from "@/backend/services/auth";
+import { UserRole } from "@/backend/tables";
 import { companies, CompanyTable } from "@/backend/tables/companies";
 import { subscriptionPlans } from "@/backend/tables/subscriptionPlans";
 import {
@@ -29,12 +30,9 @@ import {
   formatPaymentStatus,
 } from "@/backend/utils/formatters";
 
-interface ManageCompaniesProps {
-  user: User;
-  onLogout: () => void;
-}
+interface ManageCompaniesProps {}
 
-export function ManageCompanies({ user, onLogout }: ManageCompaniesProps) {
+export function ManageCompanies({}: ManageCompaniesProps) {
   const router = useRouter();
   const [deleteCompanyId, setDeleteCompanyId] = React.useState<string | null>(
     null
@@ -139,8 +137,6 @@ export function ManageCompanies({ user, onLogout }: ManageCompaniesProps) {
   return (
     <>
       <ModuleLayout
-        user={user}
-        onLogout={onLogout}
         title="Kelola Perusahaan"
         subtitle="Kelola semua perusahaan yang terdaftar di sistem ERP"
         addButtonText="Tambah Perusahaan"
@@ -149,6 +145,7 @@ export function ManageCompanies({ user, onLogout }: ManageCompaniesProps) {
         data={companies}
         searchPlaceholder="Cari perusahaan..."
         tableTitle="Daftar Perusahaan"
+        requiredRole={UserRole.SUPERADMIN}
       />
 
       {/* Delete Confirmation Dialog */}

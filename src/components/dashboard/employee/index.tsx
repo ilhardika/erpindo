@@ -15,7 +15,7 @@ import {
   DollarSign,
   Truck,
 } from "lucide-react";
-import { User } from "@/backend/types/schema";
+import { User } from "@/backend/services/auth";
 import { DashboardService } from "@/backend/services/dashboard";
 import { employees } from "@/backend/tables/employees";
 import { useState, useEffect } from "react";

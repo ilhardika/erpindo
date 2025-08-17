@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,11 +9,11 @@ import {
 } from "@/components/ui/advanced-table";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Plus } from "lucide-react";
-import { User } from "@/backend/types/schema";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
+import { UserRole } from "@/backend/tables";
 
 interface ModuleLayoutProps<T> {
-  user: User;
-  onLogout: () => void;
   title: string;
   subtitle: string;
   addButtonText: string;
@@ -26,11 +26,10 @@ interface ModuleLayoutProps<T> {
   children?: React.ReactNode; // For custom content above or below table
   headerActions?: React.ReactNode; // For additional actions in header
   tableActions?: React.ReactNode; // For actions above the table
+  requiredRole?: UserRole;
 }
 
 export function ModuleLayout<T extends Record<string, any>>({
-  user,
-  onLogout,
   title,
   subtitle,
   addButtonText,
@@ -43,9 +42,42 @@ export function ModuleLayout<T extends Record<string, any>>({
   children,
   headerActions,
   tableActions,
+  requiredRole,
 }: ModuleLayoutProps<T>) {
+  const { user, isLoading, logout } = useAuth();
+  const router = useRouter();
+
+  // Handle authentication check
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push("/");
+      return;
+    }
+
+    if (user && requiredRole && user.role !== requiredRole) {
+      router.push("/dashboard");
+      return;
+    }
+  }, [user, isLoading, requiredRole, router]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        Loading...
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
+
+  if (requiredRole && user.role !== requiredRole) {
+    return null;
+  }
+
   return (
-    <DashboardLayout user={user} onLogout={onLogout}>
+    <DashboardLayout requiredRole={requiredRole}>
       <div className="p-6 space-y-6">
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -92,8 +124,6 @@ export function ModuleLayout<T extends Record<string, any>>({
 
 // Export helper for common use cases
 export interface QuickModuleProps<T> {
-  user: User;
-  onLogout: () => void;
   title: string;
   subtitle: string;
   addButtonText: string;
@@ -101,6 +131,7 @@ export interface QuickModuleProps<T> {
   data: T[];
   searchPlaceholder?: string;
   onAddClick?: () => void;
+  requiredRole?: UserRole;
 }
 
 // Quick setup function for standard modules
@@ -109,8 +140,6 @@ export function createQuickModule<T extends Record<string, any>>(
 ) {
   return (
     <ModuleLayout
-      user={props.user}
-      onLogout={props.onLogout}
       title={props.title}
       subtitle={props.subtitle}
       addButtonText={props.addButtonText}
@@ -120,6 +149,7 @@ export function createQuickModule<T extends Record<string, any>>(
         props.searchPlaceholder || `Cari ${props.title.toLowerCase()}...`
       }
       onAddClick={props.onAddClick}
+      requiredRole={props.requiredRole}
     />
   );
 }

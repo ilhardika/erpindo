@@ -13,7 +13,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { FormLayout } from "@/components/layout/FormLayout";
-import { User } from "@/backend/types/schema";
+import { User } from "@/backend/services/auth";
+import { UserRole } from "@/backend/tables";
 import { companies } from "@/backend/tables/companies";
 
 interface EditCompanyProps {
@@ -211,8 +212,6 @@ export function EditCompany({ user, onLogout, companyId }: EditCompanyProps) {
 
   return (
     <FormLayout
-      user={user}
-      onLogout={onLogout}
       title={`Edit ${company.name}`}
       subtitle="Edit informasi perusahaan yang terdaftar"
       onBack={handleBack}
@@ -221,6 +220,7 @@ export function EditCompany({ user, onLogout, companyId }: EditCompanyProps) {
       isLoading={isLoading}
       saveButtonText="Update Perusahaan"
       resetButtonText="Reset Data"
+      requiredRole={UserRole.SUPERADMIN}
     >
       {/* Company Basic Information */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

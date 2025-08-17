@@ -1,15 +1,16 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Edit, Trash2 } from "lucide-react";
-import { User } from "@/backend/types/schema";
+import { User } from "@/backend/services/auth";
+import { UserRole } from "@/backend/tables";
+import { useAuth } from "@/contexts/AuthContext";
 import { DashboardLayout } from "./DashboardLayout";
 
 interface ViewLayoutProps {
-  user: User;
-  onLogout: () => void;
   title: string;
   subtitle: string;
   onBack: () => void;
@@ -32,12 +33,11 @@ interface ViewLayoutProps {
     | "secondary"
     | "ghost"
     | "link";
-  headerActions?: React.ReactNode; // Optional additional actions in header
+  headerActions?: React.ReactNode;
+  requiredRole?: UserRole; // Optional role requirement
 }
 
 export function ViewLayout({
-  user,
-  onLogout,
   title,
   subtitle,
   onBack,
@@ -49,9 +49,64 @@ export function ViewLayout({
   editButtonVariant = "default",
   deleteButtonVariant = "destructive",
   headerActions,
+  requiredRole,
 }: ViewLayoutProps) {
+  const { user, logout, isLoading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoading) {
+      if (!user) {
+        router.push("/");
+        return;
+      }
+
+      if (requiredRole && user.role !== requiredRole) {
+        router.push("/dashboard");
+        return;
+      }
+    }
+  }, [user, isLoading, router, requiredRole]);
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+          <p className="mt-2 text-sm text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // User not found
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+          <p className="mt-2 text-sm text-muted-foreground">Redirecting...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Role access denied
+  if (requiredRole && user.role !== requiredRole) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-600">Access Denied</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            You don't have permission to access this page.
+          </p>
+        </div>
+      </div>
+    );
+  }
   return (
-    <DashboardLayout user={user} onLogout={onLogout}>
+    <DashboardLayout requiredRole={requiredRole}>
       <div className="p-6 max-w-4xl mx-auto space-y-6">
         {/* Header with Back Button, Title, Subtitle, and Action Buttons */}
         <div className="space-y-4">

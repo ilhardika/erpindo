@@ -3,7 +3,7 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import { ViewLayout } from "@/components/layout/ViewLayout";
-import { User } from "@/backend/types/schema";
+import { User } from "@/backend/services/auth";
 import { users } from "@/backend/tables/users";
 import { Badge } from "@/components/ui/badge";
 
@@ -83,13 +83,12 @@ export function ViewUser({ user, onLogout, userId }: ViewUserProps) {
 
   return (
     <ViewLayout
-      user={user}
-      onLogout={onLogout}
       title={targetUser.name}
       subtitle="Detail informasi pengguna yang terdaftar"
       onBack={handleBack}
       onEdit={handleEdit}
       onDelete={handleDelete}
+      requiredRole="superadmin"
     >
       {/* User Basic Information */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

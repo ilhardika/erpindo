@@ -21,7 +21,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, Eye, Edit, Trash2, Plus } from "lucide-react";
-import { User } from "@/backend/types/schema";
+import { User } from "@/backend/services/auth";
 import {
   subscriptionPlans,
   SubscriptionPlan,

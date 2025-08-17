@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { FormLayout } from "@/components/layout/FormLayout";
-import { User } from "@/backend/types/schema";
+import { User } from "@/backend/services/auth";
 import { modules } from "@/backend/tables/modules";
 
 interface CreatePlanProps {
@@ -139,14 +139,13 @@ export function CreatePlan({ user, onLogout }: CreatePlanProps) {
 
   return (
     <FormLayout
-      user={user}
-      onLogout={onLogout}
       title="Buat Plan Baru"
       subtitle="Buat paket langganan baru untuk perusahaan"
       onSave={handleSave}
       onReset={handleReset}
       onBack={handleBack}
       isLoading={isLoading}
+      requiredRole="superadmin"
     >
       {/* Basic Information */}
       <div className="space-y-6">

@@ -44,7 +44,5 @@ export default function CompanyDetailPage({ params }: CompanyDetailPageProps) {
     );
   }
 
-  return (
-    <ViewCompany user={user} onLogout={logout} companyId={resolvedParams.id} />
-  );
+  return <ViewCompany companyId={resolvedParams.id} />;
 }

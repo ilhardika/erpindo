@@ -13,7 +13,8 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { FormLayout } from "@/components/layout/FormLayout";
-import { User } from "@/backend/types/schema";
+import { User } from "@/backend/services/auth";
+import { UserRole } from "@/backend/tables";
 import { users } from "@/backend/tables/users";
 import { Eye, EyeOff } from "lucide-react";
 
@@ -171,8 +172,6 @@ export function EditUser({ user, onLogout, userId }: EditUserProps) {
 
   return (
     <FormLayout
-      user={user}
-      onLogout={onLogout}
       title={`Edit ${targetUser.name}`}
       subtitle="Edit informasi user yang terdaftar"
       onBack={handleBack}
@@ -182,6 +181,7 @@ export function EditUser({ user, onLogout, userId }: EditUserProps) {
       saveButtonText="Update User"
       resetButtonText="Reset Data"
       formActions={formActions}
+      requiredRole={UserRole.SUPERADMIN}
     >
       {/* User Basic Information */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

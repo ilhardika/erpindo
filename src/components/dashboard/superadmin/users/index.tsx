@@ -21,7 +21,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, Eye, Edit, Trash2, Shield, User } from "lucide-react";
-import { User as UserType } from "@/backend/types/schema";
+import { User as UserType } from "@/backend/services/auth";
 import { users, UserTable } from "@/backend/tables/users";
 
 interface ManageUsersProps {

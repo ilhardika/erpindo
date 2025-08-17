@@ -13,7 +13,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { FormLayout } from "@/components/layout/FormLayout";
-import { User } from "@/backend/types/schema";
+import { User } from "@/backend/services/auth";
+import { UserRole } from "@/backend/tables";
 
 interface CreateCompanyProps {
   user: User;
@@ -86,8 +87,6 @@ export function CreateCompany({ user, onLogout }: CreateCompanyProps) {
 
   return (
     <FormLayout
-      user={user}
-      onLogout={onLogout}
       title="Tambah Perusahaan Baru"
       subtitle="Tambahkan perusahaan baru ke dalam sistem"
       onBack={handleBack}
@@ -96,6 +95,7 @@ export function CreateCompany({ user, onLogout }: CreateCompanyProps) {
       isLoading={isLoading}
       saveButtonText="Simpan Perusahaan"
       resetButtonText="Reset Form"
+      requiredRole={UserRole.SUPERADMIN}
     >
       {/* Company Basic Information */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

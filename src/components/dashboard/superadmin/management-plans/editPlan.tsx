@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { FormLayout } from "@/components/layout/FormLayout";
-import { User } from "@/backend/types/schema";
+import { User } from "@/backend/services/auth";
 import { modules } from "@/backend/tables/modules";
 import {
   subscriptionPlans,
@@ -182,14 +182,13 @@ export function EditPlan({ user, onLogout, planId }: EditPlanProps) {
 
   return (
     <FormLayout
-      user={user}
-      onLogout={onLogout}
       title="Edit Plan"
       subtitle={`Edit paket langganan: ${formData.displayName}`}
       onSave={handleSave}
       onReset={handleReset}
       onBack={handleBack}
       isLoading={isLoading}
+      requiredRole="superadmin"
     >
       {/* Basic Information */}
       <div className="space-y-6">

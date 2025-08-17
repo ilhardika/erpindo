@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -30,11 +30,11 @@ import {
 import { User as UserType } from "@/backend/services/auth";
 import { UserRole } from "@/backend/tables";
 import { HRService } from "@/backend/services/hr";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface DashboardLayoutProps {
-  user: UserType;
   children: React.ReactNode;
-  onLogout: () => void;
+  requiredRole?: UserRole;
 }
 
 interface ModuleItem {
@@ -46,13 +46,42 @@ interface ModuleItem {
 }
 
 export function DashboardLayout({
-  user,
   children,
-  onLogout,
+  requiredRole,
 }: DashboardLayoutProps) {
+  const { user, isLoading, logout } = useAuth();
   const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [expandedModules, setExpandedModules] = useState<string[]>([]);
+
+  // Handle authentication check
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push("/");
+      return;
+    }
+
+    if (user && requiredRole && user.role !== requiredRole) {
+      router.push("/dashboard");
+      return;
+    }
+  }, [user, isLoading, requiredRole, router]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        Loading...
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
+
+  if (requiredRole && user.role !== requiredRole) {
+    return null;
+  }
 
   const toggleModule = (moduleKey: string) => {
     setExpandedModules((prev) =>
@@ -289,7 +318,7 @@ export function DashboardLayout({
                 Profil
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onLogout}>
+              <DropdownMenuItem onClick={logout}>
                 <LogOut className="h-4 w-4 mr-2" />
                 Keluar
               </DropdownMenuItem>

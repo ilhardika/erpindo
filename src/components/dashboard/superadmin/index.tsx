@@ -8,23 +8,20 @@ import { DataTable, createColumns } from "@/components/ui/table";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { ManageCompanies } from "./companies";
 import { Building, Users, DollarSign } from "lucide-react";
-import { User } from "@/backend/types/schema";
+import { User } from "@/backend/services/auth";
+import { UserRole } from "@/backend/tables";
 import { DashboardService } from "@/backend/services/dashboard";
 import {
   formatCompanyStatus,
   formatPaymentStatus,
 } from "@/backend/utils/formatters";
 import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 
-interface SuperadminDashboardProps {
-  user: User;
-  onLogout: () => void;
-}
+interface SuperadminDashboardProps {}
 
-export function SuperadminDashboard({
-  user,
-  onLogout,
-}: SuperadminDashboardProps) {
+export function SuperadminDashboard({}: SuperadminDashboardProps) {
+  const { user } = useAuth();
   const [currentPage, setCurrentPage] = useState<
     "dashboard" | "companies" | "users" | "reports"
   >("dashboard");
@@ -47,7 +44,7 @@ export function SuperadminDashboard({
 
   // Render different pages based on current selection
   if (currentPage === "companies") {
-    return <ManageCompanies user={user} onLogout={onLogout} />;
+    return <ManageCompanies />;
   }
 
   if (!dashboardData) {
@@ -105,11 +102,7 @@ export function SuperadminDashboard({
   ];
 
   return (
-    <DashboardLayout
-      user={user}
-      onLogout={onLogout}
-      onNavigate={handleNavigation}
-    >
+    <DashboardLayout requiredRole={UserRole.SUPERADMIN}>
       <div className="p-6 space-y-6">
         {/* Page Header */}
         <div>
