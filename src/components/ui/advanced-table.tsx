@@ -120,11 +120,6 @@ function AdvancedDataTable<T extends Record<string, any>>({
         )
         .sort();
 
-      // Debug log for cascading filter
-      console.log(
-        `Column ${columnId}: ${values.length} unique values from ${filteredData.length} filtered rows (original: ${data.length})`
-      );
-
       return values;
     },
     [data, columnFilters, globalFilter]

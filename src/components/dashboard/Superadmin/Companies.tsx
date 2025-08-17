@@ -47,13 +47,6 @@ export function ManageCompanies({ user, onLogout }: ManageCompaniesProps) {
     column("email", "Email", {
       render: (company) => <span className="text-sm">{company.email}</span>,
     }),
-    column("businessType", "Jenis Bisnis", {
-      render: (company) => (
-        <span className="text-sm text-muted-foreground">
-          {company.businessType}
-        </span>
-      ),
-    }),
     column("subscriptionPlan", "Paket", {
       render: (company) => (
         <Badge variant="outline" className="capitalize">
@@ -66,30 +59,20 @@ export function ManageCompanies({ user, onLogout }: ManageCompaniesProps) {
         <div className="text-center font-medium">{company.employeeCount}</div>
       ),
     }),
-    column("registrationDate", "Terdaftar", {
-      render: (company) => (
-        <span className="text-sm">
-          {new Date(company.registrationDate).toLocaleDateString("id-ID")}
-        </span>
-      ),
-    }),
     column("status", "Status", {
       render: (company) => (
-        <div className="flex flex-col gap-1">
-          <Badge
-            variant={company.status === "active" ? "default" : "secondary"}
-          >
-            {formatCompanyStatus(company.status)}
-          </Badge>
-          <Badge
-            variant={
-              company.paymentStatus === "paid" ? "default" : "destructive"
-            }
-            className="text-xs"
-          >
-            {formatPaymentStatus(company.paymentStatus)}
-          </Badge>
-        </div>
+        <Badge variant={company.status === "active" ? "default" : "secondary"}>
+          {formatCompanyStatus(company.status)}
+        </Badge>
+      ),
+    }),
+    column("paymentStatus", "Pembayaran", {
+      render: (company) => (
+        <Badge
+          variant={company.paymentStatus === "paid" ? "default" : "destructive"}
+        >
+          {formatPaymentStatus(company.paymentStatus)}
+        </Badge>
       ),
     }),
     customColumn(
@@ -134,13 +117,11 @@ export function ManageCompanies({ user, onLogout }: ManageCompaniesProps) {
 
   const handleDeleteCompany = () => {
     // TODO: Implement delete company logic
-    console.log("Delete company:", deleteCompanyId);
     setDeleteCompanyId(null);
   };
 
   const handleAddCompany = () => {
     // TODO: Implement add company logic
-    console.log("Add new company");
   };
 
   return (

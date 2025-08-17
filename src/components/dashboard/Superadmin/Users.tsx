@@ -36,41 +36,28 @@ export function ManageUsers({ user, onLogout }: ManageUsersProps) {
 
   const usersColumns = [
     column("name", "Nama", {
-      render: (user) => (
-        <div className="space-y-1">
-          <span className="font-medium">{user.name}</span>
-          <div className="text-sm text-muted-foreground">{user.email}</div>
-        </div>
-      ),
+      render: (user) => <span className="font-medium">{user.name}</span>,
+    }),
+    column("email", "Email", {
+      render: (user) => <span className="text-sm">{user.email}</span>,
     }),
     column("role", "Role", {
       render: (user) => (
-        <div className="flex items-center gap-2">
-          {user.role === "superadmin" && (
-            <Shield className="h-3 w-3 text-red-500" />
-          )}
-          {user.role === "company_owner" && (
-            <User className="h-3 w-3 text-blue-500" />
-          )}
-          {user.role === "employee" && (
-            <User className="h-3 w-3 text-green-500" />
-          )}
-          <Badge
-            variant={
-              user.role === "superadmin"
-                ? "destructive"
-                : user.role === "company_owner"
-                ? "default"
-                : "secondary"
-            }
-          >
-            {user.role === "superadmin"
-              ? "Super Admin"
+        <Badge
+          variant={
+            user.role === "superadmin"
+              ? "destructive"
               : user.role === "company_owner"
-              ? "Pemilik Perusahaan"
-              : "Karyawan"}
-          </Badge>
-        </div>
+              ? "default"
+              : "secondary"
+          }
+        >
+          {user.role === "superadmin"
+            ? "Super Admin"
+            : user.role === "company_owner"
+            ? "Pemilik Perusahaan"
+            : "Karyawan"}
+        </Badge>
       ),
     }),
     column("companyId", "Perusahaan", {
@@ -82,13 +69,6 @@ export function ManageUsers({ user, onLogout }: ManageUsersProps) {
     }),
     column("position", "Posisi", {
       render: (user) => <span className="text-sm">{user.position || "-"}</span>,
-    }),
-    column("createdAt", "Bergabung", {
-      render: (user) => (
-        <span className="text-sm">
-          {new Date(user.createdAt).toLocaleDateString("id-ID")}
-        </span>
-      ),
     }),
     column("isActive", "Status", {
       render: (user) => (
@@ -139,13 +119,11 @@ export function ManageUsers({ user, onLogout }: ManageUsersProps) {
 
   const handleDeleteUser = () => {
     // TODO: Implement delete user logic
-    console.log("Delete user:", deleteUserId);
     setDeleteUserId(null);
   };
 
   const handleAddUser = () => {
     // TODO: Implement add user logic
-    console.log("Add new user");
   };
 
   return (

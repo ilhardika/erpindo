@@ -26,7 +26,7 @@ export function SuperadminDashboard({
   onLogout,
 }: SuperadminDashboardProps) {
   const [currentPage, setCurrentPage] = useState<
-    "dashboard" | "companies" | "users" | "reports"
+    "dashboard" | "companies" | "subscriptions" | "usage"
   >("dashboard");
   const [dashboardData, setDashboardData] = useState<any>(null);
 
@@ -40,7 +40,7 @@ export function SuperadminDashboard({
 
   // Handle navigation from sidebar
   const handleNavigation = (
-    page: "dashboard" | "companies" | "users" | "reports"
+    page: "dashboard" | "companies" | "subscriptions" | "usage"
   ) => {
     setCurrentPage(page);
   };
@@ -105,19 +105,18 @@ export function SuperadminDashboard({
   ];
 
   return (
-    <DashboardLayout
-      user={user}
-      onLogout={onLogout}
-      onNavigate={handleNavigation}
-    >
+    <DashboardLayout user={user} onLogout={onLogout}>
       <div className="p-6 space-y-6">
         {/* Page Header */}
         <div>
           <h1 className="text-2xl font-bold">Dashboard Superadmin</h1>
-          <p className="text-muted-foreground">Selamat datang, {user.name}</p>
+          <p className="text-muted-foreground">
+            Kelola semua perusahaan yang terdaftar dalam sistem
+          </p>
         </div>
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+        {/* Stats Cards - Focus on Company Management */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
@@ -126,9 +125,9 @@ export function SuperadminDashboard({
               <Building className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{totalCompanies}</div>
+              <div className="text-2xl font-bold">{companies?.length || 0}</div>
               <p className="text-xs text-muted-foreground">
-                {activeCompanies} aktif
+                Perusahaan terdaftar
               </p>
             </CardContent>
           </Card>
@@ -136,14 +135,30 @@ export function SuperadminDashboard({
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Total Karyawan
+                Perusahaan Aktif
               </CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{totalEmployees}</div>
+              <div className="text-2xl font-bold">{activeCompanies || 0}</div>
+              <p className="text-xs text-muted-foreground">Sedang beroperasi</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Pembayaran Lunas
+              </CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {companies?.filter((c) => c.paymentStatus === "paid").length ||
+                  0}
+              </div>
               <p className="text-xs text-muted-foreground">
-                Dari semua perusahaan
+                Subscription aktif
               </p>
             </CardContent>
           </Card>
@@ -151,18 +166,86 @@ export function SuperadminDashboard({
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Pendapatan Bulanan
+                Pending Payment
               </CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
+              <DollarSign className="h-4 w-4 text-red-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">Rp 15,000,000</div>
-              <p className="text-xs text-muted-foreground">
-                +20.1% dari bulan lalu
-              </p>
+              <div className="text-2xl font-bold text-red-600">
+                {companies?.filter((c) => c.paymentStatus === "unpaid")
+                  .length || 0}
+              </div>
+              <p className="text-xs text-muted-foreground">Perlu tindakan</p>
             </CardContent>
           </Card>
         </div>
+
+        {/* Quick Actions for Company Management */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Tindakan Cepat</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Button className="w-full justify-start" variant="outline">
+                <Building className="mr-2 h-4 w-4" />
+                Tambah Perusahaan Baru
+              </Button>
+              <Button className="w-full justify-start" variant="outline">
+                <Users className="mr-2 h-4 w-4" />
+                Kelola Akses Login
+              </Button>
+              <Button className="w-full justify-start" variant="outline">
+                <DollarSign className="mr-2 h-4 w-4" />
+                Verifikasi Pembayaran
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Status Sistem</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Perusahaan Pending</span>
+                <Badge variant="destructive">
+                  {companies?.filter((c) => c.paymentStatus === "unpaid")
+                    .length || 0}
+                </Badge>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Account Disabled</span>
+                <Badge variant="secondary">
+                  {companies?.filter((c) => c.status === "inactive").length ||
+                    0}
+                </Badge>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Subscription Expires Soon</span>
+                <Badge variant="outline">0</Badge>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Recent Companies Table */}
+        <Card>
+          <CardHeader>
+            <div className="flex justify-between items-center">
+              <div>
+                <CardTitle>Perusahaan Terdaftar</CardTitle>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Daftar semua perusahaan yang terdaftar dalam sistem
+                </p>
+              </div>
+              <Button>Lihat Semua</Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <DataTable columns={companiesColumns} data={companies || []} />
+          </CardContent>
+        </Card>
       </div>
     </DashboardLayout>
   );

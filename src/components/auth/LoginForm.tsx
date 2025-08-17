@@ -148,7 +148,6 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  console.log("Superadmin button clicked");
                   setCredentials({
                     email: "superadmin@erpindo.com",
                     password: "super123",
@@ -163,7 +162,6 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  console.log("Owner button clicked");
                   setCredentials({
                     email: "owner@teknologimaju.com",
                     password: "owner123",
@@ -178,7 +176,6 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  console.log("Employee button clicked");
                   setCredentials({
                     email: "jane.smith@teknologimaju.com",
                     password: "emp123",

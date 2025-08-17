@@ -31,7 +31,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
     } catch (error) {
-      console.error("Error loading user from localStorage:", error);
       localStorage.removeItem("authUser");
     } finally {
       setIsLoading(false);
