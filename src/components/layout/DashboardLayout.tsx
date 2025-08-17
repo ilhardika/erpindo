@@ -73,6 +73,12 @@ export function DashboardLayout({
             path: "/dashboard",
           },
           {
+            key: "management-plans",
+            name: "Management Plans",
+            icon: Package,
+            path: "/management-plans",
+          },
+          {
             key: "companies",
             name: "Kelola Perusahaan",
             icon: Building,
@@ -83,12 +89,6 @@ export function DashboardLayout({
             name: "Kelola Pengguna",
             icon: Users,
             path: "/users",
-          },
-          {
-            key: "management-plans",
-            name: "Management Plans",
-            icon: Package,
-            path: "/management-plans",
           },
           {
             key: "reports",

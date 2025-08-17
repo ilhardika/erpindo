@@ -74,19 +74,19 @@ export function ViewLayout({
           </div>
 
           {/* Action Buttons - Below Subtitle */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-col items-start gap-3 w-full">
+            <div className="flex flex-wrap items-center gap-3 w-full sm:flex-1 min-w-0">
               {headerActions}
             </div>
 
-            <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-3">
+            <div className="flex gap-3 w-full sm:w-auto">
               <Button
                 type="button"
                 variant={editButtonVariant}
                 onClick={onEdit}
-                className="min-w-[80px] w-full xs:w-auto"
+                className="w-full sm:w-auto flex-1 sm:flex-none min-w-[80px]"
               >
-                <Edit className="h-4 w-4 mr-2" />
+                <Edit className="h-4 mr-2" />
                 {editButtonText}
               </Button>
 
@@ -94,9 +94,9 @@ export function ViewLayout({
                 type="button"
                 variant={deleteButtonVariant}
                 onClick={onDelete}
-                className="min-w-[80px] w-full xs:w-auto"
+                className="w-full sm:w-auto flex-1 sm:flex-none min-w-[80px]"
               >
-                <Trash2 className="h-4 w-4 mr-2" />
+                <Trash2 className="h-4 mr-2" />
                 {deleteButtonText}
               </Button>
             </div>

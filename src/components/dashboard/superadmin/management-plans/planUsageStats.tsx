@@ -14,9 +14,9 @@ import {
   getCompaniesByPlan,
   getCompaniesWithLimitIssues,
   getSubscriptionPlanStats,
-} from "@/backend/tables/companySubscriptionIntegration";
+} from "@/backend/tables/companies";
 import { subscriptionPlans } from "@/backend/tables/subscriptionPlans";
-import { CompanyStatus } from "@/backend/types/enums";
+import { CompanyStatus } from "@/backend/tables";
 import {
   Building2,
   Users,

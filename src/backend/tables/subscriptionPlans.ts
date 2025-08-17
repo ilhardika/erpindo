@@ -36,9 +36,9 @@ export const getPlansByFeature = (feature: string) =>
   subscriptionPlans.filter((plan) => plan.features.includes(feature));
 
 // Helper function to format limitations display
-export const formatLimitation = (value: number): string => {
+export const formatLimitation = (value: number, unit?: string): string => {
   if (value === -1) return "Unlimited";
-  return value.toLocaleString();
+  return unit ? `${value} ${unit}` : value.toLocaleString();
 };
 
 // Helper function to check if plan has feature

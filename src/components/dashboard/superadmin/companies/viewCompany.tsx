@@ -3,7 +3,7 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import { ViewLayout } from "@/components/layout/ViewLayout";
-import { User } from "@/backend/types/schema";
+import { User } from "@/backend/services/auth";
 import { companies } from "@/backend/tables/companies";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -15,8 +15,8 @@ import {
 } from "@/components/ui/card";
 import {
   getCompanySubscriptionPlan,
-  checkCompanyWithinLimits,
-} from "@/backend/tables/companySubscriptionIntegration";
+  getCompanyLimitsForUI,
+} from "@/backend/tables/companies";
 import { formatLimitation } from "@/backend/tables/subscriptionPlans";
 import {
   Building2,
@@ -47,7 +47,7 @@ export function ViewCompany({ user, onLogout, companyId }: ViewCompanyProps) {
   // Get company data
   const company = companies.find((c) => c.id === companyId);
   const subscriptionPlan = getCompanySubscriptionPlan(companyId);
-  const limitCheck = checkCompanyWithinLimits(companyId);
+  const limitCheck = getCompanyLimitsForUI(companyId);
 
   if (!company) {
     // Company not found, redirect back
@@ -286,7 +286,9 @@ export function ViewCompany({ user, onLogout, companyId }: ViewCompanyProps) {
           <div className="flex items-center gap-2 mb-4">
             <Activity className="h-5 w-5" />
             <h3 className="text-lg font-medium">Penggunaan & Batasan Plan</h3>
-            {!limitCheck.withinLimits && (
+            {(!limitCheck.limits.employees.withinLimit ||
+              !limitCheck.limits.transactions.withinLimit ||
+              !limitCheck.limits.storage.withinLimit) && (
               <Badge variant="destructive" className="flex items-center gap-1">
                 <AlertTriangle className="h-3 w-3" />
                 Melebihi Batas

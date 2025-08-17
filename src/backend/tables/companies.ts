@@ -117,3 +117,190 @@ export const getCompaniesApproachingLimits = (threshold = 0.8) => {
     );
   });
 };
+
+// Additional helper functions for plan management
+export const getCompaniesByPlan = (planId: string) => {
+  return companies.filter((company) => company.subscriptionPlanId === planId);
+};
+
+export const getCompaniesWithLimitIssues = () => {
+  const { getPlanById } = require("./subscriptionPlans");
+
+  return companies
+    .map((company) => {
+      const plan = getPlanById(company.subscriptionPlanId);
+      if (!plan) return null;
+
+      // Check if company is approaching or exceeding limits
+      const employeeRatio = company.employeeCount / plan.maxEmployees;
+      const transactionRatio =
+        company.currentTransactionsThisMonth /
+        plan.limitations.maxTransactionsPerMonth;
+      const storageRatio =
+        company.currentStorageUsedGB / plan.limitations.maxStorageGB;
+
+      const hasIssues =
+        employeeRatio > 0.9 || transactionRatio > 0.9 || storageRatio > 0.9;
+
+      if (!hasIssues) return null;
+
+      return {
+        companyId: company.id,
+        companyName: company.name,
+        planName: plan.name,
+        limits: {
+          employees: {
+            current: company.employeeCount,
+            limit: plan.maxEmployees,
+            limitText:
+              plan.maxEmployees === -1
+                ? "Unlimited"
+                : plan.maxEmployees.toString(),
+            withinLimit: employeeRatio <= 1,
+          },
+          transactions: {
+            current: company.currentTransactionsThisMonth,
+            limit: plan.limitations.maxTransactionsPerMonth,
+            limitText:
+              plan.limitations.maxTransactionsPerMonth === -1
+                ? "Unlimited"
+                : plan.limitations.maxTransactionsPerMonth.toString(),
+            withinLimit: transactionRatio <= 1,
+          },
+          storage: {
+            current: company.currentStorageUsedGB,
+            limit: plan.limitations.maxStorageGB,
+            limitText:
+              plan.limitations.maxStorageGB === -1
+                ? "Unlimited"
+                : `${plan.limitations.maxStorageGB} GB`,
+            withinLimit: storageRatio <= 1,
+          },
+        },
+      };
+    })
+    .filter((result) => result !== null);
+};
+
+export const getSubscriptionPlanStats = () => {
+  const stats = getSubscriptionStats();
+  const { getPlanById } = require("./subscriptionPlans");
+
+  // Convert stats object to array format expected by UI
+  const planIds = ["plan-basic", "plan-premium", "plan-enterprise"];
+
+  return planIds.map((planId) => {
+    const plan = getPlanById(planId);
+    const planCompanies = companies.filter(
+      (c) => c.subscriptionPlanId === planId
+    );
+    const monthlyRevenue = planCompanies
+      .filter((c) => c.paymentStatus === PaymentStatus.PAID)
+      .reduce((total, company) => total + company.monthlyFee, 0);
+
+    return {
+      planId,
+      planName: plan?.name || planId,
+      totalCompanies: planCompanies.length,
+      activeCompanies: planCompanies.filter(
+        (c) => c.status === CompanyStatus.ACTIVE
+      ).length,
+      monthlyRevenue,
+      yearlyProjection: monthlyRevenue * 12,
+      averageEmployeesPerCompany:
+        planCompanies.length > 0
+          ? Math.round(
+              planCompanies.reduce((sum, c) => sum + c.employeeCount, 0) /
+                planCompanies.length
+            )
+          : 0,
+      planPrice: plan?.monthlyPrice || 0,
+      billingCycle: "monthly",
+      isActive: true,
+    };
+  });
+};
+
+// New function with UI-compatible format for company limits
+export const getCompanyLimitsForUI = (companyId: string) => {
+  const company = companies.find((c) => c.id === companyId);
+  if (!company) return null;
+
+  const { getPlanById } = require("./subscriptionPlans");
+  const plan = getPlanById(company.subscriptionPlanId);
+
+  if (!plan)
+    return {
+      limits: {
+        employees: {
+          current: 0,
+          limit: 0,
+          limitText: "No plan",
+          withinLimit: false,
+        },
+        transactions: {
+          current: 0,
+          limit: 0,
+          limitText: "No plan",
+          withinLimit: false,
+        },
+        storage: {
+          current: 0,
+          limit: 0,
+          limitText: "No plan",
+          withinLimit: false,
+        },
+      },
+    };
+
+  return {
+    limits: {
+      employees: {
+        current: company.employeeCount,
+        limit: plan.maxEmployees,
+        limitText:
+          plan.maxEmployees === -1 ? "Unlimited" : plan.maxEmployees.toString(),
+        withinLimit:
+          company.employeeCount <= plan.maxEmployees ||
+          plan.maxEmployees === -1,
+      },
+      transactions: {
+        current: company.currentTransactionsThisMonth,
+        limit: plan.limitations.maxTransactionsPerMonth,
+        limitText:
+          plan.limitations.maxTransactionsPerMonth === -1
+            ? "Unlimited"
+            : plan.limitations.maxTransactionsPerMonth.toString(),
+        withinLimit:
+          company.currentTransactionsThisMonth <=
+            plan.limitations.maxTransactionsPerMonth ||
+          plan.limitations.maxTransactionsPerMonth === -1,
+      },
+      storage: {
+        current: company.currentStorageUsedGB,
+        limit: plan.limitations.maxStorageGB,
+        limitText:
+          plan.limitations.maxStorageGB === -1
+            ? "Unlimited"
+            : `${plan.limitations.maxStorageGB} GB`,
+        withinLimit:
+          company.currentStorageUsedGB <= plan.limitations.maxStorageGB ||
+          plan.limitations.maxStorageGB === -1,
+      },
+    },
+  };
+};
+
+// Get company with subscription plan details
+export const getCompanySubscriptionPlan = (companyId: string) => {
+  const company = companies.find((c) => c.id === companyId);
+  if (!company) return null;
+
+  const { getPlanById } = require("./subscriptionPlans");
+  const plan = getPlanById(company.subscriptionPlanId);
+
+  return {
+    ...company,
+    subscriptionPlan: plan,
+  };
+};
