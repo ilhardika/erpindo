@@ -29,7 +29,7 @@ import {
 } from "lucide-react";
 import { User as UserType } from "@/backend/types/schema";
 import { UserRole } from "@/backend/types/enums";
-import { ModuleService } from "@/backend/services/modules";
+import { HRService } from "@/backend/services/hr";
 
 interface DashboardLayoutProps {
   user: UserType;
@@ -131,7 +131,7 @@ export function DashboardLayout({
         const availableModules: ModuleItem[] = [];
 
         // Get module definitions from new service
-        const moduleDefinitions = ModuleService.getModuleDefinitions();
+        const moduleDefinitions = HRService.modules.getAllModules();
 
         // Mock employee modules - in real app, this would come from user permissions
         const employeeModules = ["pos", "sales", "inventory", "customers"];

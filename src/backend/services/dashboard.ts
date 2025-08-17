@@ -1,110 +1,164 @@
 import {
-  getAllCompaniesWithStats,
-  getCompanyData,
-  getDashboardData,
-  query,
+  getCompanyStats,
+  getSubscriptionStats,
+  getTotalRevenue,
+  getAllTables,
 } from "../tables";
+import { HRService } from "./hr";
+import { BusinessService } from "./business";
 
 export class DashboardService {
   // Superadmin Dashboard - All companies overview
   static getSuperadminDashboard() {
-    const companiesWithStats = getAllCompaniesWithStats();
+    const tables = getAllTables();
+    const companyStats = getCompanyStats();
+    const subscriptionStats = getSubscriptionStats();
+    const totalRevenue = getTotalRevenue();
+
+    const companiesWithStats = tables.companies.map((company) => {
+      const employees = tables.employees.filter(
+        (e) => e.companyId === company.id
+      );
+      const activeEmployees = employees.filter((e) => e.isActive).length;
+      const users = tables.users.filter((u) => u.companyId === company.id);
+      const activeUsers = users.filter((u) => u.isActive).length;
+
+      return {
+        ...company,
+        employeeCount: employees.length,
+        activeEmployees,
+        monthlyRevenue: company.monthlyFee,
+        totalUsers: activeUsers,
+      };
+    });
 
     return {
-      companies: companiesWithStats.map(({ stats, ...company }) => ({
-        ...company,
-        employeeCount: stats.employees,
-        activeEmployees: stats.activeEmployees,
-        monthlyRevenue: stats.monthlyRevenue,
-        totalUsers: stats.activeUsers,
-      })),
-      totalRevenue: companiesWithStats.reduce(
-        (sum, c) => sum + c.stats.monthlyRevenue,
-        0
-      ),
-      activeCompanies: companiesWithStats.filter((c) => c.status === "active")
-        .length,
-      totalUsers: companiesWithStats.reduce(
-        (sum, c) => sum + c.stats.activeUsers,
-        0
-      ),
-      totalEmployees: companiesWithStats.reduce(
-        (sum, c) => sum + c.stats.employees,
-        0
-      ),
+      companies: companiesWithStats,
+      stats: {
+        totalRevenue: totalRevenue,
+        totalCompanies: companyStats.total,
+        activeCompanies: companyStats.active,
+        totalActiveUsers: companiesWithStats.reduce(
+          (sum, c) => sum + c.totalUsers,
+          0
+        ),
+        totalEmployees: companiesWithStats.reduce(
+          (sum, c) => sum + c.employeeCount,
+          0
+        ),
+        subscriptionBreakdown: subscriptionStats,
+      },
     };
   }
 
   // Company Owner Dashboard - Single company management
   static getCompanyOwnerDashboard(companyId: string) {
-    const companyData = getCompanyData(companyId);
-    const dashboardData = getDashboardData(companyId, "company_owner");
+    const tables = getAllTables();
+    const company = tables.companies.find((c) => c.id === companyId);
 
-    if (!companyData.company) {
-      throw new Error("Company not found");
+    if (!company) {
+      throw new Error(`Company not found: ${companyId}`);
     }
 
-    // Get employee modules for the company
-    const employeeModules = query.employeeModules
-      ? query.employeeModules.findByCompany(companyId)
-      : [];
+    // Get data using table access
+    const employees = tables.employees.filter((e) => e.companyId === companyId);
+    const activeEmployees = employees.filter((e) => e.isActive);
+
+    // Get business data
+    const products = tables.products.filter((p) => p.companyId === companyId);
+    const customers = tables.customers.filter((c) => c.companyId === companyId);
+
+    // Get today's attendance
+    const todayAttendance = tables.attendance.filter(
+      (a) =>
+        a.companyId === companyId &&
+        a.attendanceDate === new Date().toISOString().split("T")[0]
+    );
+
+    // Get recent transactions
+    const recentTransactions = tables.transactions
+      .filter((t) => t.companyId === companyId)
+      .sort(
+        (a, b) =>
+          new Date(b.transactionDate).getTime() -
+          new Date(a.transactionDate).getTime()
+      )
+      .slice(0, 10);
+
+    // Get low stock items
+    const lowStockItems = tables.inventory.filter(
+      (i) => i.companyId === companyId && i.currentStock <= i.minimumStock
+    );
 
     return {
-      company: companyData.company,
-      stats: dashboardData.stats,
-      employees: companyData.employees,
-      recentTransactions: dashboardData.recentTransactions,
-      lowStockItems: dashboardData.lowStockItems,
-      pendingLeaves: dashboardData.pendingLeaves,
-      todayAttendance: dashboardData.todayAttendance,
-
-      // Module usage based on employeeModules table
-      moduleUsage: {
-        pos: employeeModules.filter((em) => em.moduleCode === "pos").length,
-        inventory: employeeModules.filter((em) => em.moduleCode === "inventory")
-          .length,
-        hr: employeeModules.filter((em) => em.moduleCode === "hr").length,
-        sales: employeeModules.filter((em) => em.moduleCode === "sales").length,
-        finance: employeeModules.filter((em) => em.moduleCode === "finance")
-          .length,
+      company,
+      stats: {
+        totalEmployees: employees.length,
+        activeEmployees: activeEmployees.length,
+        totalProducts: products.length,
+        totalCustomers: customers.length,
+        todayAttendance: todayAttendance.length,
+        pendingLeaves:
+          tables.leaves?.filter(
+            (l) => l.companyId === companyId && l.status === "pending"
+          ).length || 0,
       },
-
-      recentActivities: [
-        "New employee registered",
-        "POS transaction completed",
-        "Inventory updated",
-        "Attendance marked",
-      ],
+      employees: employees.slice(0, 5), // Recent employees
+      recentTransactions,
+      lowStockItems: lowStockItems.slice(0, 10),
+      todayAttendance,
     };
   }
 
-  // Employee Dashboard - Individual employee view
+  // Employee Dashboard - Personal view
   static getEmployeeDashboard(employeeId: string) {
-    const dashboardData = getDashboardData("", "employee"); // Will be filtered by employee
+    const tables = getAllTables();
+    const employee = tables.employees.find((e) => e.id === employeeId);
 
-    // Get employee modules
-    const employeeModules = query.employeeModules
-      ? query.employeeModules.findByEmployee(employeeId)
-      : [];
+    if (!employee) {
+      throw new Error(`Employee not found: ${employeeId}`);
+    }
+
+    const company = tables.companies.find((c) => c.id === employee.companyId);
+
+    // Get employee's module access via HR service
+    const employeeModules = HRService.modules.getEmployeeModules(employeeId);
+
+    // Get employee's attendance
+    const myAttendance = tables.attendance.filter(
+      (a) => a.employeeId === employeeId
+    );
+    const thisMonthAttendance = myAttendance.filter(
+      (a) => new Date(a.attendanceDate).getMonth() === new Date().getMonth()
+    );
+
+    // Get employee's leaves
+    const myLeaves =
+      tables.leaves?.filter((l) => l.employeeId === employeeId) || [];
+    const pendingLeaves = myLeaves.filter((l) => l.status === "pending");
 
     return {
-      employee: {
-        id: employeeId,
-        name: "Sample Employee",
-        position: "Staff",
-        modules: employeeModules.map((em) => em.moduleCode),
+      employee,
+      company,
+      modules: employeeModules,
+      attendance: {
+        thisMonth: thisMonthAttendance.length,
+        totalDays: new Date().getDate(),
+        lastCheckIn: myAttendance.sort(
+          (a, b) =>
+            new Date(b.checkIn || b.attendanceDate).getTime() -
+            new Date(a.checkIn || a.attendanceDate).getTime()
+        )[0],
       },
-      availableModules: employeeModules.map((em) => em.moduleCode),
-      recentTasks: [
-        "Complete daily sales report",
-        "Update inventory count",
-        "Process customer returns",
-      ],
-      notifications: [
-        "New product added to inventory",
-        "Team meeting at 2 PM",
-        "Monthly report due tomorrow",
-      ],
+      leaves: {
+        total: myLeaves.length,
+        pending: pendingLeaves.length,
+        approved: myLeaves.filter((l) => l.status === "approved").length,
+      },
+      tasks: {
+        pending: 0, // Could be extended with task management
+        completed: 0,
+      },
     };
   }
 }

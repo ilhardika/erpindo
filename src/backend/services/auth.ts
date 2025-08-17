@@ -1,12 +1,14 @@
-import { User, LoginCredentials } from "../types/schema";
-import { query, authenticateUser } from "../tables";
+import { User } from "../types/schema";
+import { UserTable } from "../tables/users";
+import { getAllTables } from "../tables";
 
-export class AuthService {
-  static async validateCredentials(
-    email: string,
-    password: string
-  ): Promise<User | null> {
-    const dbUser = query.users.findByEmail(email);
+export const authenticateUser = (
+  email: string,
+  password: string
+): User | null => {
+  try {
+    const tables = getAllTables();
+    const dbUser = tables.users.find((u) => u.email === email);
 
     if (!dbUser || !dbUser.isActive) {
       return null;
@@ -29,32 +31,35 @@ export class AuthService {
       createdAt: dbUser.createdAt,
       updatedAt: dbUser.updatedAt,
     };
+  } catch (error) {
+    console.error("Authentication error:", error);
+    return null;
+  }
+};
+
+export class AuthService {
+  static async validateCredentials(
+    email: string,
+    password: string
+  ): Promise<User | null> {
+    return authenticateUser(email, password);
   }
 
   static async login(
     email: string,
     password: string
   ): Promise<{ user: User; token: string } | null> {
-    const authResult = authenticateUser(email, password);
+    const user = authenticateUser(email, password);
 
-    if (!authResult.success) {
+    if (!user) {
       return null;
     }
 
     // Generate mock token
-    const token = `mock-token-${authResult.user.id}-${Date.now()}`;
+    const token = `mock-token-${user.id}-${Date.now()}`;
 
     return {
-      user: {
-        id: authResult.user.id,
-        email: authResult.user.email,
-        name: authResult.user.name,
-        role: authResult.user.role,
-        companyId: authResult.user.companyId,
-        isActive: authResult.user.isActive,
-        createdAt: authResult.user.createdAt,
-        updatedAt: authResult.user.updatedAt,
-      },
+      user,
       token,
     };
   }
