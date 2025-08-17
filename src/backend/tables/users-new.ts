@@ -19,7 +19,7 @@ export interface UserTable {
 export const users = usersData;
 
 // Query functions
-export const userQuery = {
+export const query = {
   users: {
     findById: (id: string) => users.find((user) => user.id === id),
     findByEmail: (email: string) => users.find((user) => user.email === email),
