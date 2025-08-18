@@ -453,6 +453,11 @@ export function DashboardLayout({
                     variant="ghost"
                     size="sm"
                     className="w-full justify-start text-sm text-muted-foreground hover:text-foreground"
+                    onClick={() => {
+                      if (subModule.path) {
+                        router.push(subModule.path);
+                      }
+                    }}
                   >
                     <subModule.icon className="h-3 w-3 mr-2" />
                     {subModule.name}
