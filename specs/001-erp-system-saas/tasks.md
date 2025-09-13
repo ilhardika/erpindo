@@ -52,7 +52,7 @@
 
 ## Phase 3.1: Project Setup & Infrastructure
 
-- [ ] T001 Create React TypeScript project with Vite in `frontend/`
+- [x] T001 Create React TypeScript project with Vite in `frontend/`
 - [ ] T002 [P] Install and configure dependencies: @supabase/supabase-js, zustand, react-hook-form, zod, shadcn/ui, tailwindcss
 - [ ] T003 [P] Setup Supabase project and configure environment variables in `frontend/.env.local`
 - [ ] T004 [P] Configure Tailwind CSS with shadcn/ui components in `frontend/tailwind.config.js`
