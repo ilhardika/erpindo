@@ -53,7 +53,7 @@
 ## Phase 3.1: Project Setup & Infrastructure
 
 - [x] T001 Create React TypeScript project with Vite in `frontend/`
-- [ ] T002 [P] Install and configure dependencies: @supabase/supabase-js, zustand, react-hook-form, zod, shadcn/ui, tailwindcss
+- [x] T002 [P] Install and configure dependencies: @supabase/supabase-js, zustand, react-hook-form, zod, shadcn/ui, tailwindcss
 - [ ] T003 [P] Setup Supabase project and configure environment variables in `frontend/.env.local`
 - [ ] T004 [P] Configure Tailwind CSS with shadcn/ui components in `frontend/tailwind.config.js`
 - [ ] T005 [P] Setup ESLint and Prettier configuration in `frontend/.eslintrc.js` and `frontend/prettier.config.js`
