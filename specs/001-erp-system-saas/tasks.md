@@ -54,10 +54,10 @@
 
 - [x] T001 Create React TypeScript project with Vite in `frontend/`
 - [x] T002 [P] Install and configure dependencies: @supabase/supabase-js, zustand, react-hook-form, zod, shadcn/ui, tailwindcss
-- [ ] T003 [P] Setup Supabase project and configure environment variables in `frontend/.env.local`
-- [ ] T004 [P] Configure Tailwind CSS with shadcn/ui components in `frontend/tailwind.config.js`
-- [ ] T005 [P] Setup ESLint and Prettier configuration in `frontend/.eslintrc.js` and `frontend/prettier.config.js`
-- [ ] T006 [P] Initialize Supabase CLI and create migration structure in `backend/supabase/`
+- [x] T003 [P] Setup Supabase project and configure environment variables in `frontend/.env.local`
+- [x] T004 [P] Configure Tailwind CSS with shadcn/ui components in `frontend/tailwind.config.js`
+- [x] T005 [P] Setup ESLint and Prettier configuration in `frontend/.eslintrc.js` and `frontend/prettier.config.js`
+- [x] T006 [P] Initialize Supabase CLI and create migration structure in `backend/supabase/`
 
 ## Phase 3.2: Database & Multi-Tenancy Setup
 
