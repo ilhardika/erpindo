@@ -73,23 +73,23 @@
 
 ### Authentication & Multi-Tenancy Tests
 
-- [ ] T012 [P] Authentication flow test in `frontend/src/__tests__/auth/login.test.tsx`
-- [ ] T013 [P] Role-based routing test in `frontend/src/__tests__/auth/protected-routes.test.tsx`
-- [ ] T014 [P] Multi-tenant data isolation test in `frontend/src/__tests__/auth/tenancy.test.tsx`
-- [ ] T015 [P] User permissions validation test in `frontend/src/__tests__/auth/permissions.test.tsx`
+- [x] T012 [P] Authentication flow test in `frontend/src/__tests__/auth/login.test.tsx`
+- [x] T013 [P] Role-based routing test in `frontend/src/__tests__/auth/protected-routes.test.tsx`
+- [x] T014 [P] Multi-tenant data isolation test in `frontend/src/__tests__/tenant/isolation.test.tsx`
+- [x] T015 [P] User permissions validation test in `frontend/src/__tests__/permissions/system.test.tsx`
 
 ### Core Feature Tests
 
-- [ ] T016 [P] Product CRUD operations test in `frontend/src/__tests__/modules/products.test.tsx`
-- [ ] T017 [P] Customer management test in `frontend/src/__tests__/modules/customers.test.tsx`
-- [ ] T018 [P] Basic POS flow test in `frontend/src/__tests__/modules/pos.test.tsx`
-- [ ] T019 [P] Dashboard navigation test in `frontend/src/__tests__/layout/dashboard.test.tsx`
+- [x] T016 [P] Product CRUD operations test in `frontend/src/__tests__/modules/products.test.tsx`
+- [x] T017 [P] Customer management test in `frontend/src/__tests__/modules/customers.test.tsx`
+- [x] T018 [P] Basic POS flow test in `frontend/src/__tests__/modules/pos.test.tsx`
+- [x] T019 [P] Dashboard navigation test in `frontend/src/__tests__/layout/dashboard.test.tsx`
 
 ### Integration Tests
 
-- [ ] T020 [P] Supabase client integration test in `frontend/src/__tests__/integration/supabase.test.tsx`
-- [ ] T021 [P] RLS policy enforcement test in `frontend/src/__tests__/integration/rls.test.tsx`
-- [ ] T022 [P] End-to-end user journey test in `frontend/src/__tests__/e2e/user-journey.test.tsx`
+- [x] T020 [P] Supabase client integration test in `frontend/src/__tests__/integration/supabase.test.tsx`
+- [x] T021 [P] RLS policy enforcement test in `frontend/src/__tests__/integration/rls.test.tsx`
+- [x] T022 [P] End-to-end user journey test in `frontend/src/__tests__/e2e/user-journey.test.tsx`
 
 ## Phase 3.4: Core Implementation (ONLY after tests are failing)
 
@@ -231,7 +231,7 @@ T024, T036, T041, T046, T053, T059, T060, T061
 - [ ] Page load times under 3 seconds
 - [ ] Works in Chrome, Firefox, Safari, Edge
 - [ ] Mobile responsive on common screen sizes
-- [ ] Basic error handling and user feedback
+- [ ] Basic error handling and user feed
 
 ## Notes for Development
 
