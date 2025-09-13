@@ -64,8 +64,8 @@
 - [x] T007 [P] Apply database migration 001_initial_system_setup.sql (subscription_plans, companies, users tables)
 - [x] T008 [P] Apply database migration 002_business_entities.sql (customers, suppliers, employees, products tables)
 - [x] T009 [P] Apply database migration 003_sales_transactions.sql (sales_orders, invoices tables for MVP)
-- [ ] T010 [P] Verify Row-Level Security policies with test data using test_rls_policies.sql
-- [ ] T011 [P] Seed database with default subscription plans and test company data
+- [x] T010 [P] Verify Row-Level Security policies with test data using test_rls_policies.sql
+- [x] T011 [P] Seed database with default subscription plans and test company data
 
 ## Phase 3.3: Tests First (TDD) ⚠️ MUST COMPLETE BEFORE 3.4
 
