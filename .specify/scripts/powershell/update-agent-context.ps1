@@ -30,7 +30,7 @@ $newProjectType = Get-PlanValue 'Project Type'
 
 function Initialize-AgentFile($targetFile, $agentName) {
     if (Test-Path $targetFile) { return }
-    $template = Join-Path $repoRoot 'templates/agent-file-template.md'
+    $template = Join-Path $repoRoot '.specify/templates/agent-file-template.md'
     if (-not (Test-Path $template)) { Write-Error "Template not found: $template"; return }
     $content = Get-Content $template -Raw
     $content = $content.Replace('[PROJECT NAME]', (Split-Path $repoRoot -Leaf))
@@ -55,7 +55,8 @@ function Update-AgentFile($targetFile, $agentName) {
     if ($newDb -and $newDb -ne 'N/A' -and ($content -notmatch [regex]::Escape($newDb))) { $content = $content -replace '(## Active Technologies\n)', "`$1- $newDb ($currentBranch)`n" }
     if ($content -match '## Recent Changes\n([\s\S]*?)(\n\n|$)') {
         $changesBlock = $matches[1].Trim().Split("`n")
-        $changesBlock = ,"- $currentBranch: Added $newLang + $newFramework" + $changesBlock
+        $newChange = "- ${currentBranch}: Added $newLang + $newFramework"
+        $changesBlock = ,$newChange + $changesBlock
         $changesBlock = $changesBlock | Where-Object { $_ } | Select-Object -First 3
         $joined = ($changesBlock -join "`n")
         $content = [regex]::Replace($content, '## Recent Changes\n([\s\S]*?)(\n\n|$)', "## Recent Changes`n$joined`n`n")
