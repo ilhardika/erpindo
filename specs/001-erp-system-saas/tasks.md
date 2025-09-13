@@ -95,18 +95,18 @@
 
 ### Authentication System
 
-- [ ] T023 [P] Supabase client configuration in `frontend/src/lib/supabase.ts`
-- [ ] T024 [P] Authentication store with Zustand in `frontend/src/stores/authStore.ts`
-- [ ] T025 [P] Login form component in `frontend/src/components/auth/LoginForm.tsx`
-- [ ] T026 [P] Protected route wrapper component in `frontend/src/components/auth/ProtectedRoute.tsx`
-- [ ] T027 [P] Role-based route components in `frontend/src/components/auth/RoleRoutes.tsx`
+- [x] T023 [P] Supabase client configuration in `frontend/src/lib/supabase.ts`
+- [x] T024 [P] Authentication store with Zustand in `frontend/src/stores/authStore.ts`
+- [x] T025 [P] Login form component in `frontend/src/components/auth/LoginForm.tsx`
+- [x] T026 [P] Protected route wrapper component in `frontend/src/components/auth/ProtectedRoute.tsx`
+- [x] T027 [P] Role-based route components in `frontend/src/components/auth/RoleRoutes.tsx`
 
 ### Layout & Navigation
 
-- [ ] T028 [P] Dashboard layout component in `frontend/src/components/layout/DashboardLayout.tsx`
-- [ ] T029 [P] Sidebar navigation with role-based menu in `frontend/src/components/layout/Sidebar.tsx`
-- [ ] T030 [P] Header component with user profile in `frontend/src/components/layout/Header.tsx`
-- [ ] T031 [P] Route configuration with protection in `frontend/src/routes/index.tsx`
+- [x] T028 [P] Dashboard layout component in `frontend/src/components/layout/DashboardLayout.tsx`
+- [x] T029 [P] Sidebar navigation with role-based menu in `frontend/src/components/layout/Sidebar.tsx`
+- [x] T030 [P] Header component with user profile in `frontend/src/components/layout/Header.tsx`
+- [x] T031 [P] Route configuration with protection in `frontend/src/routes/index.tsx`
 
 ### Data Layer & Types
 
