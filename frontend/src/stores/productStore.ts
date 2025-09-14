@@ -1,360 +1,683 @@
-// @ts-nocheck - Temporary fix for Supabase TypeScript issues
-// Product management store with Zustand
-import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
-import { supabase } from '@/lib/supabase'
-import { createAppError, handleSupabaseError } from '@/lib/errorHandling'
-import type { Database } from '@/types/database'
+/**
+ * Product Store with Zustand
+ * Manages product state, CRUD operations, and local caching
+ * Integrates with Supabase database hooks for multi-tenant isolation
+ * Date: 2025-09-14
+ */
 
-type Product = Database['public']['Tables']['products']['Row']
-type ProductInsert = Database['public']['Tables']['products']['Insert']
-type ProductUpdate = Database['public']['Tables']['products']['Update']
+import { create } from 'zustand';
+import { devtools } from 'zustand/middleware';
+import { supabase } from '@/lib/supabase';
+import { useAuthStore } from './authStore';
+import { parseError, withRetry } from '../utils/errorHandling';
+import type { Product, ProductInsert, ProductUpdate } from '../types/database';
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+/**
+ * Create a stock movement record
+ */
+const createStockMovement = async (
+  productId: string,
+  movementType: 'in' | 'out' | 'adjustment',
+  quantity: number,
+  referenceType: string,
+  referenceId?: string,
+  notes?: string
+) => {
+  try {
+    const { user } = useAuthStore.getState();
+    if (!user?.tenant_id) return false;
+
+    const { error } = await supabase
+      .from('stock_movements')
+      .insert({
+        company_id: user.tenant_id,
+        product_id: productId,
+        movement_type: movementType,
+        quantity,
+        reference_type: referenceType,
+        reference_id: referenceId,
+        notes,
+        created_by: user.id,
+      });
+
+    if (error) {
+      console.error('createStockMovement error:', error);
+      return false;
+    }
+
+    console.log('Stock movement created:', { productId, movementType, quantity });
+    return true;
+  } catch (error) {
+    console.error('createStockMovement failed:', error);
+    return false;
+  }
+};
+
+// ============================================================================
+// TYPES & INTERFACES
+// ============================================================================
+
+export interface ProductFilters {
+  search?: string;
+  category?: string;
+  is_active?: boolean;
+  low_stock?: boolean;
+  price_min?: number;
+  price_max?: number;
+}
+
+export interface ProductSortOptions {
+  field: 'name' | 'price' | 'stock_quantity' | 'created_at';
+  direction: 'asc' | 'desc';
+}
 
 export interface ProductState {
-  // Data
-  products: Product[]
-  currentProduct: Product | null
+  // Data state
+  products: Product[];
+  selectedProduct: Product | null;
   
-  // UI State
-  isLoading: boolean
-  error: string | null
-  searchQuery: string
-  selectedCategory: string | null
-  sortBy: 'name' | 'created_at' | 'stock' | 'price'
-  sortOrder: 'asc' | 'desc'
+  // UI state
+  loading: boolean;
+  saving: boolean;
+  error: string | null;
   
-  // Pagination
-  page: number
-  limit: number
-  total: number
+  // Filters and pagination
+  filters: ProductFilters;
+  sort: ProductSortOptions;
+  currentPage: number;
+  pageSize: number;
+  totalCount: number;
   
-  // Actions
-  fetchProducts: () => Promise<void>
-  fetchProduct: (id: string) => Promise<void>
-  createProduct: (data: ProductInsert) => Promise<boolean>
-  updateProduct: (id: string, data: ProductUpdate) => Promise<boolean>
-  deleteProduct: (id: string) => Promise<boolean>
-  
-  // Search & Filter
-  setSearchQuery: (query: string) => void
-  setSelectedCategory: (category: string | null) => void
-  setSorting: (by: ProductState['sortBy'], order: ProductState['sortOrder']) => void
-  
-  // UI Actions
-  setCurrentProduct: (product: Product | null) => void
-  setLoading: (loading: boolean) => void
-  setError: (error: string | null) => void
-  clearError: () => void
-  
-  // Pagination
-  setPage: (page: number) => void
-  setLimit: (limit: number) => void
-  
-  // Reset
-  reset: () => void
+  // Form state
+  showForm: boolean;
+  isEditing: boolean;
+  formErrors: Record<string, string>;
 }
 
-const initialState = {
+export interface ProductActions {
+  // Data operations
+  loadProducts: () => Promise<void>;
+  createProduct: (product: ProductInsert) => Promise<boolean>;
+  updateProduct: (id: string, product: ProductUpdate) => Promise<boolean>;
+  deleteProduct: (id: string) => Promise<boolean>;
+  
+  // Selection
+  selectProduct: (product: Product | null) => void;
+  
+  // Filters and sorting
+  setFilters: (filters: Partial<ProductFilters>) => void;
+  setSort: (sort: ProductSortOptions) => void;
+  setPagination: (page: number, pageSize?: number) => void;
+  clearFilters: () => void;
+  
+  // UI actions
+  showCreateForm: () => void;
+  showEditForm: (product: Product) => void;
+  hideForm: () => void;
+  setError: (error: string | null) => void;
+  clearError: () => void;
+  
+  // Bulk operations
+  toggleProductStatus: (id: string) => Promise<boolean>;
+  bulkUpdateStatus: (ids: string[], isActive: boolean) => Promise<boolean>;
+}
+
+export type ProductStore = ProductState & ProductActions;
+
+// ============================================================================
+// INITIAL STATE
+// ============================================================================
+
+const initialState: ProductState = {
+  // Data state
   products: [],
-  currentProduct: null,
-  isLoading: false,
+  selectedProduct: null,
+  
+  // UI state
+  loading: false,
+  saving: false,
   error: null,
-  searchQuery: '',
-  selectedCategory: null,
-  sortBy: 'name' as const,
-  sortOrder: 'asc' as const,
-  page: 1,
-  limit: 20,
-  total: 0
-}
+  
+  // Filters and pagination
+  filters: {},
+  sort: { field: 'created_at', direction: 'desc' },
+  currentPage: 1,
+  pageSize: 20,
+  totalCount: 0,
+  
+  // Form state
+  showForm: false,
+  isEditing: false,
+  formErrors: {},
+};
 
-export const useProductStore = create<ProductState>()(
-  persist(
+// ============================================================================
+// ZUSTAND STORE
+// ============================================================================
+
+export const useProductStore = create<ProductStore>()(
+  devtools(
     (set, get) => ({
       ...initialState,
 
-      // Fetch products with search and filtering
-      fetchProducts: async () => {
-        set({ isLoading: true, error: null })
+      // ========================================================================
+      // DATA OPERATIONS
+      // ========================================================================
+
+      loadProducts: async () => {
+        const { filters, sort, currentPage, pageSize } = get();
         
         try {
-          const { searchQuery, selectedCategory, sortBy, sortOrder, page, limit } = get()
+          set({ loading: true, error: null });
+
+          // Get current user's tenant_id
+          const { user } = useAuthStore.getState();
+          console.log('ProductStore: Current user:', user);
+          console.log('ProductStore: tenant_id:', user?.tenant_id);
           
+          if (!user?.tenant_id) {
+            throw new Error('User tenant not found');
+          }
+
+          // Build Supabase query
           let query = supabase
             .from('products')
             .select('*', { count: 'exact' })
-            
+            .eq('company_id', user.tenant_id);
+
+          console.log('ProductStore: Querying with company_id:', user.tenant_id);
+          console.log('ProductStore: Full query object:', query);
+
           // Apply filters
-          if (searchQuery) {
-            query = query.or(`name.ilike.%${searchQuery}%, sku.ilike.%${searchQuery}%`)
+          if (filters.search) {
+            query = query.or(`name.ilike.%${filters.search}%,sku.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
           }
           
-          if (selectedCategory) {
-            query = query.eq('category', selectedCategory)
+          if (filters.category) {
+            query = query.eq('category', filters.category);
           }
           
+          if (filters.is_active !== undefined) {
+            query = query.eq('is_active', filters.is_active);
+          }
+          
+          if (filters.low_stock) {
+            // Use a simple filter for now - can be enhanced later
+            query = query.lt('stock_quantity', 10);
+          }
+          
+          if (filters.price_min !== undefined) {
+            query = query.gte('selling_price', filters.price_min);
+          }
+          
+          if (filters.price_max !== undefined) {
+            query = query.lte('selling_price', filters.price_max);
+          }
+
           // Apply sorting
-          query = query.order(sortBy, { ascending: sortOrder === 'asc' })
-          
+          query = query.order(sort.field, { ascending: sort.direction === 'asc' });
+
           // Apply pagination
-          const start = (page - 1) * limit
-          const end = start + limit - 1
-          query = query.range(start, end)
-          
-          const { data, error, count } = await query
-          
+          const from = (currentPage - 1) * pageSize;
+          const to = from + pageSize - 1;
+          query = query.range(from, to);
+
+          const { data, count, error } = await query;
+
+          console.log('ProductStore: Query result:', { data, count, error });
+
           if (error) {
-            const appError = handleSupabaseError(error)
-            set({ error: appError.message, isLoading: false })
-            return
+            throw error;
           }
-          
+
           set({
             products: data || [],
-            total: count || 0,
-            isLoading: false,
-            error: null
-          })
-        } catch (error) {
-          const appError = createAppError('DATABASE_ERROR', 'Gagal memuat data produk')
-          set({ error: appError.message, isLoading: false })
-        }
-      },
+            totalCount: count || 0,
+            loading: false,
+          });
 
-      // Fetch single product
-      fetchProduct: async (id: string) => {
-        set({ isLoading: true, error: null })
-        
-        try {
-          const { data, error } = await supabase
-            .from('products')
-            .select('*')
-            .eq('id', id)
-            .single()
-          
-          if (error) {
-            const appError = handleSupabaseError(error)
-            set({ error: appError.message, isLoading: false })
-            return
-          }
+          console.log('ProductStore: Products loaded:', data?.length || 0);
+
+        } catch (error) {
+          console.error('Error loading products:', error);
+          const parsedError = parseError(error, {
+            operation: 'load_products',
+            table: 'products',
+            timestamp: new Date(),
+          });
           
           set({
-            currentProduct: data,
-            isLoading: false,
-            error: null
-          })
-        } catch (error) {
-          const appError = createAppError('DATABASE_ERROR', 'Gagal memuat data produk')
-          set({ error: appError.message, isLoading: false })
+            loading: false,
+            error: parsedError.userMessage,
+          });
         }
       },
 
-      // Create new product
-      createProduct: async (productData) => {
-        set({ isLoading: true, error: null })
-        
+      createProduct: async (productData: ProductInsert) => {
         try {
-          // Generate SKU if not provided
-          if (!productData.sku) {
-            const timestamp = Date.now().toString().slice(-6)
-            productData.sku = `PRD${timestamp}`
+          set({ saving: true, error: null, formErrors: {} });
+
+          // Get current user's tenant_id
+          const { user } = useAuthStore.getState();
+          if (!user?.tenant_id) {
+            throw new Error('User tenant not found');
           }
-          
-          // @ts-ignore - Temporary fix for TypeScript issue with Supabase types
+
+          // Add company_id to product data
+          const dataWithCompany = {
+            ...productData,
+            company_id: user.tenant_id,
+            created_by: user.id.startsWith('demo-') ? null : user.id // Set null for demo users to avoid FK constraint
+          };
+
+          console.log('ProductStore: Creating product with data:', dataWithCompany);
+
           const { data, error } = await supabase
             .from('products')
-            .insert(productData)
+            .insert([dataWithCompany])
             .select()
-            .single()
-          
+            .single();
+
           if (error) {
-            const appError = handleSupabaseError(error)
-            set({ error: appError.message, isLoading: false })
-            return false
+            throw error;
+          }
+
+          if (data) {
+            // Create stock movement for initial stock
+            if (dataWithCompany.stock_quantity && dataWithCompany.stock_quantity > 0) {
+              await createStockMovement(
+                data.id,
+                'in',
+                dataWithCompany.stock_quantity,
+                'initial_stock',
+                undefined,
+                'Initial stock when creating product'
+              );
+            }
+            
+            // Add to local state
+            set(state => ({
+              products: [data, ...state.products],
+              saving: false,
+              showForm: false,
+              selectedProduct: null,
+            }));
+            
+            return true;
           }
           
-          // Add to local state
-          const { products } = get()
-          set({
-            products: [data, ...products],
-            currentProduct: data,
-            isLoading: false,
-            error: null
-          })
-          
-          return true
+          return false;
+
         } catch (error) {
-          const appError = createAppError('DATABASE_ERROR', 'Gagal membuat produk baru')
-          set({ error: appError.message, isLoading: false })
-          return false
+          console.error('Error creating product:', error);
+          const parsedError = parseError(error, {
+            operation: 'create_product',
+            table: 'products',
+            timestamp: new Date(),
+          });
+          
+          set({
+            saving: false,
+            error: parsedError.userMessage,
+          });
+          
+          return false;
         }
       },
 
-      // Update product
-      updateProduct: async (id, updateData) => {
-        set({ isLoading: true, error: null })
-        
+      updateProduct: async (id: string, productData: ProductUpdate) => {
         try {
-          // @ts-ignore - Temporary fix for TypeScript issue with Supabase types
-          const { data, error } = await supabase
-            .from('products')
-            .update(updateData)
-            .eq('id', id)
-            .select()
-            .single()
-          
-          if (error) {
-            const appError = handleSupabaseError(error)
-            set({ error: appError.message, isLoading: false })
-            return false
+          set({ saving: true, error: null, formErrors: {} });
+
+          const result = await withRetry(
+            async () => {
+              console.log('productStore: updateProduct called', { id, productData });
+              
+              const { data, error } = await supabase
+                .from('products')
+                .update({
+                  ...productData,
+                  updated_at: new Date().toISOString(),
+                })
+                .eq('id', id)
+                .select()
+                .single();
+
+              if (error) {
+                console.error('productStore: updateProduct error', error);
+                throw error;
+              }
+
+              console.log('productStore: updateProduct success', data);
+              return { data, error: null };
+            },
+            { maxAttempts: 2 },
+            { operation: 'update_product', table: 'products', timestamp: new Date() }
+          );
+
+          if (result.data) {
+            // Track stock quantity changes
+            const oldProduct = get().products.find(p => p.id === id);
+            if (oldProduct && productData.stock_quantity !== undefined && 
+                productData.stock_quantity !== oldProduct.stock_quantity) {
+              
+              const quantityDiff = productData.stock_quantity - oldProduct.stock_quantity;
+              const movementType = quantityDiff > 0 ? 'in' : 'out';
+              const absQuantity = Math.abs(quantityDiff);
+              
+              await createStockMovement(
+                id,
+                movementType,
+                absQuantity,
+                'adjustment',
+                undefined,
+                `Stock adjustment: ${oldProduct.stock_quantity} → ${productData.stock_quantity}`
+              );
+            }
+            
+            // Update local state
+            set(state => ({
+              products: state.products.map(p => 
+                p.id === id ? { ...p, ...result.data } : p
+              ),
+              saving: false,
+              showForm: false,
+              selectedProduct: null,
+            }));
+            
+            return true;
           }
           
-          // Update local state
-          const { products, currentProduct } = get()
-          const updatedProducts = products.map(product => 
-            product.id === id ? data : product
-          )
+          return false;
+
+        } catch (error) {
+          const parsedError = parseError(error, {
+            operation: 'update_product',
+            table: 'products',
+            timestamp: new Date(),
+          });
           
           set({
-            products: updatedProducts,
-            currentProduct: currentProduct?.id === id ? data : currentProduct,
-            isLoading: false,
-            error: null
-          })
+            saving: false,
+            error: parsedError.userMessage,
+          });
           
-          return true
-        } catch (error) {
-          const appError = createAppError('DATABASE_ERROR', 'Gagal memperbarui produk')
-          set({ error: appError.message, isLoading: false })
-          return false
+          return false;
         }
       },
 
-      // Delete product
-      deleteProduct: async (id) => {
-        set({ isLoading: true, error: null })
-        
+      deleteProduct: async (id: string) => {
         try {
-          const { error } = await supabase
-            .from('products')
-            .delete()
-            .eq('id', id)
-          
-          if (error) {
-            const appError = handleSupabaseError(error)
-            set({ error: appError.message, isLoading: false })
-            return false
+          set({ loading: true, error: null });
+
+          const result = await withRetry(
+            async () => {
+              console.log('productStore: deleteProduct called', { id });
+              
+              const { error } = await supabase
+                .from('products')
+                .delete()
+                .eq('id', id);
+
+              if (error) {
+                console.error('productStore: deleteProduct error', error);
+                throw error;
+              }
+
+              console.log('productStore: deleteProduct success');
+              return { data: true, error: null };
+            },
+            { maxAttempts: 2 },
+            { operation: 'delete_product', table: 'products', timestamp: new Date() }
+          );
+
+          if (result.data) {
+            // Remove from local state
+            set(state => ({
+              products: state.products.filter(p => p.id !== id),
+              loading: false,
+              selectedProduct: state.selectedProduct?.id === id ? null : state.selectedProduct,
+            }));
+            
+            return true;
           }
-          
-          // Remove from local state
-          const { products, currentProduct } = get()
-          const filteredProducts = products.filter(product => product.id !== id)
+
+          return false;
+
+        } catch (error) {
+          const parsedError = parseError(error, {
+            operation: 'delete_product',
+            table: 'products',
+            timestamp: new Date(),
+          });
           
           set({
-            products: filteredProducts,
-            currentProduct: currentProduct?.id === id ? null : currentProduct,
-            isLoading: false,
-            error: null
-          })
+            loading: false,
+            error: parsedError.userMessage,
+          });
           
-          return true
-        } catch (error) {
-          const appError = createAppError('DATABASE_ERROR', 'Gagal menghapus produk')
-          set({ error: appError.message, isLoading: false })
-          return false
+          return false;
         }
       },
 
-      // Search & Filter actions
-      setSearchQuery: (query) => {
-        set({ searchQuery: query, page: 1 })
-        get().fetchProducts()
+      // ========================================================================
+      // SELECTION
+      // ========================================================================
+
+      selectProduct: (product: Product | null) => {
+        set({ selectedProduct: product });
       },
 
-      setSelectedCategory: (category) => {
-        set({ selectedCategory: category, page: 1 })
-        get().fetchProducts()
+      // ========================================================================
+      // FILTERS AND SORTING
+      // ========================================================================
+
+      setFilters: (newFilters: Partial<ProductFilters>) => {
+        set(state => ({
+          filters: { ...state.filters, ...newFilters },
+          currentPage: 1, // Reset to first page when filtering
+        }));
+        // Remove auto-reload to prevent infinite loops
       },
 
-      setSorting: (by, order) => {
-        set({ sortBy: by, sortOrder: order, page: 1 })
-        get().fetchProducts()
+      setSort: (sort: ProductSortOptions) => {
+        set({ sort, currentPage: 1 });
+        // Remove auto-reload to prevent infinite loops
       },
 
-      // UI actions
-      setCurrentProduct: (product) => set({ currentProduct: product }),
-      setLoading: (loading) => set({ isLoading: loading }),
-      setError: (error) => set({ error }),
-      clearError: () => set({ error: null }),
-
-      // Pagination
-      setPage: (page) => {
-        set({ page })
-        get().fetchProducts()
+      setPagination: (page: number, pageSize?: number) => {
+        set(state => ({
+          currentPage: page,
+          pageSize: pageSize || state.pageSize,
+        }));
+        // Remove auto-reload to prevent infinite loops
       },
 
-      setLimit: (limit) => {
-        set({ limit, page: 1 })
-        get().fetchProducts()
+      clearFilters: () => {
+        set({
+          filters: {},
+          currentPage: 1,
+        });
+        // Remove auto-reload to prevent infinite loops
       },
 
-      // Reset store
-      reset: () => set(initialState)
+      // ========================================================================
+      // UI ACTIONS
+      // ========================================================================
+
+      showCreateForm: () => {
+        set({
+          showForm: true,
+          isEditing: false,
+          selectedProduct: null,
+          formErrors: {},
+          error: null,
+        });
+      },
+
+      showEditForm: (product: Product) => {
+        set({
+          showForm: true,
+          isEditing: true,
+          selectedProduct: product,
+          formErrors: {},
+          error: null,
+        });
+      },
+
+      hideForm: () => {
+        set({
+          showForm: false,
+          isEditing: false,
+          selectedProduct: null,
+          formErrors: {},
+        });
+      },
+
+      setError: (error: string | null) => {
+        set({ error });
+      },
+
+      clearError: () => {
+        set({ error: null });
+      },
+
+      // ========================================================================
+      // BULK OPERATIONS
+      // ========================================================================
+
+      toggleProductStatus: async (id: string) => {
+        const product = get().products.find(p => p.id === id);
+        if (!product) return false;
+
+        return get().updateProduct(id, {
+          is_active: !product.is_active,
+        });
+      },
+
+      bulkUpdateStatus: async (ids: string[], isActive: boolean) => {
+        try {
+          set({ loading: true, error: null });
+
+          // Update all products
+          const promises = ids.map(id => 
+            get().updateProduct(id, { is_active: isActive })
+          );
+
+          const results = await Promise.all(promises);
+          const success = results.every(result => result);
+
+          set({ loading: false });
+          return success;
+
+        } catch (error) {
+          const parsedError = parseError(error, {
+            operation: 'bulk_update_status',
+            table: 'products',
+            timestamp: new Date(),
+          });
+          
+          set({
+            loading: false,
+            error: parsedError.userMessage,
+          });
+          
+          return false;
+        }
+      },
     }),
     {
-      name: 'product-storage',
-      partialize: (state) => ({
-        searchQuery: state.searchQuery,
-        selectedCategory: state.selectedCategory,
-        sortBy: state.sortBy,
-        sortOrder: state.sortOrder,
-        limit: state.limit
-      })
+      name: 'product-store',
+      partialize: (state: ProductStore) => ({
+        filters: state.filters,
+        sort: state.sort,
+        pageSize: state.pageSize,
+      }),
     }
   )
-)
+);
 
-// Selector hooks for easier access
-export const useProducts = () => {
-  const store = useProductStore()
+// ============================================================================
+// COMPUTED SELECTORS
+// ============================================================================
+
+export const useProductSelectors = () => {
+  const store = useProductStore();
+  
   return {
-    products: store.products,
-    total: store.total,
-    isLoading: store.isLoading,
-    error: store.error,
-    searchQuery: store.searchQuery,
-    selectedCategory: store.selectedCategory,
-    sortBy: store.sortBy,
-    sortOrder: store.sortOrder,
-    page: store.page,
-    limit: store.limit
-  }
-}
+    // Filtered products for current page
+    currentPageProducts: store.products,
+    
+    // Pagination info
+    totalPages: Math.ceil(store.totalCount / store.pageSize),
+    hasNextPage: store.currentPage < Math.ceil(store.totalCount / store.pageSize),
+    hasPreviousPage: store.currentPage > 1,
+    
+    // Active products only
+    activeProducts: store.products.filter(p => p.is_active),
+    
+    // Low stock products
+    lowStockProducts: store.products.filter(p => 
+      p.stock_quantity <= (p.minimum_stock || 0)
+    ),
+    
+    // Categories from products
+    availableCategories: [...new Set(
+      store.products
+        .map(p => p.category)
+        .filter(Boolean)
+    )],
+    
+    // Form state helpers
+    canSave: !store.saving && !store.loading,
+    hasUnsavedChanges: store.showForm && store.selectedProduct !== null,
+  };
+};
+
+// ============================================================================
+// UTILITY HOOKS
+// ============================================================================
 
 export const useProductActions = () => {
-  const store = useProductStore()
-  return {
-    fetchProducts: store.fetchProducts,
-    fetchProduct: store.fetchProduct,
-    createProduct: store.createProduct,
-    updateProduct: store.updateProduct,
-    deleteProduct: store.deleteProduct,
-    setSearchQuery: store.setSearchQuery,
-    setSelectedCategory: store.setSelectedCategory,
-    setSorting: store.setSorting,
-    setCurrentProduct: store.setCurrentProduct,
-    setPage: store.setPage,
-    setLimit: store.setLimit,
-    clearError: store.clearError,
-    reset: store.reset
-  }
-}
+  const {
+    loadProducts,
+    createProduct,
+    updateProduct,
+    deleteProduct,
+    selectProduct,
+    setFilters,
+    setSort,
+    setPagination,
+    clearFilters,
+    showCreateForm,
+    showEditForm,
+    hideForm,
+    setError,
+    clearError,
+    toggleProductStatus,
+    bulkUpdateStatus,
+  } = useProductStore();
 
-export const useCurrentProduct = () => {
-  const store = useProductStore()
   return {
-    currentProduct: store.currentProduct,
-    isLoading: store.isLoading,
-    error: store.error
-  }
-}
+    loadProducts,
+    createProduct,
+    updateProduct,
+    deleteProduct,
+    selectProduct,
+    setFilters,
+    setSort,
+    setPagination,
+    clearFilters,
+    showCreateForm,
+    showEditForm,
+    hideForm,
+    setError,
+    clearError,
+    toggleProductStatus,
+    bulkUpdateStatus,
+  };
+};

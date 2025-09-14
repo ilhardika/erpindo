@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Outlet, useNavigate } from 'react-router-dom'
 import { Menu, X } from 'lucide-react'
-import { useAuth, useAuthActions } from '@/stores/authStore'
+import { useAuth } from '@/stores/authStore'
 import { Sidebar } from './Sidebar'
 import { Header } from './Header'
 
@@ -13,7 +13,6 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const { user, isAuthenticated, isInitialized } = useAuth()
-  const { initializeAuth } = useAuthActions()
   const navigate = useNavigate()
 
   // Check if mobile screen
@@ -30,12 +29,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
     return () => window.removeEventListener('resize', checkScreenSize)
   }, [])
 
-  // Initialize auth on mount
-  useEffect(() => {
-    if (!isInitialized) {
-      initializeAuth()
-    }
-  }, [isInitialized, initializeAuth])
+  // No need to initialize auth here - handled in App.tsx
 
   // Redirect to login if not authenticated
   useEffect(() => {

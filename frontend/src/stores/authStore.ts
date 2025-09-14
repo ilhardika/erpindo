@@ -78,28 +78,48 @@ export interface AuthState {
 // Default permissions by role
 const DEFAULT_PERMISSIONS = {
   owner: [
-    'tenant.manage',
-    'users.manage',
-    'products.manage',
-    'customers.manage',
-    'orders.manage',
-    'reports.view',
-    'settings.manage',
-    'integrations.manage'
+    'tenant:manage',
+    'users:manage',
+    'products:view',
+    'products:create',
+    'products:edit',
+    'products:delete',
+    'products:manage-stock',
+    'customers:view',
+    'customers:create',
+    'customers:edit',
+    'customers:delete',
+    'orders:view',
+    'orders:create',
+    'orders:edit',
+    'orders:delete',
+    'reports:view',
+    'settings:manage',
+    'integrations:manage'
   ],
   dev: [
-    'users.view',
-    'products.manage',
-    'customers.manage',
-    'orders.manage',
-    'reports.view',
-    'settings.view'
+    'users:view',
+    'products:view',
+    'products:create',
+    'products:edit',
+    'products:delete',
+    'products:manage-stock',
+    'customers:view',
+    'customers:create',
+    'customers:edit',
+    'customers:delete',
+    'orders:view',
+    'orders:create',
+    'orders:edit',
+    'orders:delete',
+    'reports:view',
+    'settings:view'
   ],
   employee: [
-    'products.view',
-    'customers.view',
-    'orders.create',
-    'orders.view'
+    'products:view',
+    'customers:view',
+    'orders:create',
+    'orders:view'
   ]
 }
 
@@ -135,7 +155,7 @@ export const useAuthStore = create<AuthState>()(
               id: `demo-${demoUser.role}`,
               email,
               user_metadata: { full_name: demoUser.name },
-              tenant_id: 'demo-tenant',
+              tenant_id: '55555555-5555-5555-5555-555555555555', // Toko Modern Indo
               role: demoUser.role as 'owner' | 'dev' | 'employee',
               permissions: DEFAULT_PERMISSIONS[demoUser.role as keyof typeof DEFAULT_PERMISSIONS],
               aud: 'authenticated',
@@ -149,8 +169,8 @@ export const useAuthStore = create<AuthState>()(
             }
 
             const tenant: AuthTenant = {
-              id: 'demo-tenant',
-              name: 'Demo Company',
+              id: '55555555-5555-5555-5555-555555555555', // Toko Modern Indo
+              name: 'Toko Modern Indo',
               type: 'retail',
               settings: {
                 currency: 'IDR',
@@ -176,6 +196,10 @@ export const useAuthStore = create<AuthState>()(
               isLoading: false,
               error: null
             })
+
+            console.log('AuthStore: Demo user logged in:', authUser);
+            console.log('AuthStore: Tenant:', tenant);
+            console.log('AuthStore: tenant_id:', authUser.tenant_id);
 
             return { success: true, user: authUser }
           }
@@ -325,13 +349,17 @@ export const useAuthStore = create<AuthState>()(
 
       // Session management
       initializeAuth: async () => {
+        const currentState = get()
+        
+        // Prevent re-initialization if already initialized or in progress
+        if (currentState.isInitialized || currentState.isLoading) {
+          return
+        }
+        
         set({ isLoading: true })
         
         try {
           // First check if we have persisted demo user state
-          const currentState = get()
-          
-          // If we have a persisted demo user, keep it
           if (currentState.user && currentState.user.id.startsWith('demo-')) {
             console.log('Restoring demo user session:', currentState.user.email)
             set({ 
@@ -509,11 +537,12 @@ export const useAuthStore = create<AuthState>()(
       }
     }),
     {
-      name: 'auth-storage',
+      name: 'auth-storage-v2', // Changed version to force cache refresh
       partialize: (state) => ({
         user: state.user,
         session: state.session,
-        tenant: state.tenant
+        tenant: state.tenant,
+        isInitialized: state.isInitialized // Include to prevent re-initialization
       })
     }
   )

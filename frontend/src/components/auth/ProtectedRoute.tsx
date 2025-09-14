@@ -1,7 +1,7 @@
-import React, { useEffect } from 'react'
+import React from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import { Loader2 } from 'lucide-react'
-import { useAuth, useAuthActions } from '@/stores/authStore'
+import { useAuth } from '@/stores/authStore'
 
 export interface ProtectedRouteProps {
   children: React.ReactNode
@@ -37,15 +37,9 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     isOwner,
     isAdmin
   } = useAuth()
-  const { initializeAuth } = useAuthActions()
   const location = useLocation()
 
-  // Initialize auth on mount
-  useEffect(() => {
-    if (!isInitialized) {
-      initializeAuth()
-    }
-  }, [isInitialized, initializeAuth])
+  // No need to initialize auth here - handled in App.tsx
 
   // Show loading while initializing
   if (!isInitialized || isLoading) {

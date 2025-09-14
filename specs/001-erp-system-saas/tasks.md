@@ -117,11 +117,11 @@
 
 ### Core Modules - Products
 
-- [ ] T036 [P] Product data store with Zustand in `frontend/src/stores/productStore.ts`
-- [ ] T037 [P] Product list component in `frontend/src/components/modules/products/ProductList.tsx`
-- [ ] T038 [P] Product form component in `frontend/src/components/modules/products/ProductForm.tsx`
-- [ ] T039 Product CRUD operations service in `frontend/src/services/productService.ts`
-- [ ] T040 Product management page in `frontend/src/pages/products/ProductsPage.tsx`
+- [x] T036 [P] Product data store with Zustand in `frontend/src/stores/productStore.ts`
+- [x] T037 [P] Product list component in `frontend/src/components/modules/products/ProductList.tsx`
+- [x] T038 [P] Product form component in `frontend/src/components/modules/products/ProductForm.tsx`
+- [x] T039 Product CRUD operations service in `frontend/src/services/productService.ts`
+- [x] T040 Product management page in `frontend/src/pages/products/ProductsPage.tsx`
 
 ### Core Modules - Customers
 
