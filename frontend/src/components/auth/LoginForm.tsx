@@ -104,7 +104,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
       {/* Password Field */}
       <div className="space-y-2">
         <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-          Password
+          Kata Sandi
         </label>
         <div className="relative">
           <input

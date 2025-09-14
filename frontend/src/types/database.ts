@@ -1,442 +1,129 @@
-// Database type definitions for Supabase
+/**
+ * Database Type Definitions for ERP System
+ * Auto-generated from Supabase migrations
+ * Based on: 001_initial_system_setup.sql, 002_business_entities.sql, 003_sales_transactions.sql
+ * Date: 2025-09-14
+ */
+
+// ============================================================================
+// BASE TYPES & UTILITIES
+// ============================================================================
+
+export type UUID = string;
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
+export type Decimal = number; // PostgreSQL DECIMAL maps to number in TypeScript
+
+// Common enums based on CHECK constraints
+export type BillingCycle = 'monthly' | 'yearly' | 'lifetime';
+export type SubscriptionStatus = 'active' | 'inactive' | 'suspended' | 'trial';
+export type UserRole = 'dev' | 'owner' | 'staff';
+export type CustomerType = 'regular' | 'vip' | 'wholesale';
+export type EmploymentStatus = 'active' | 'inactive' | 'terminated';
+export type OrderStatus = 'draft' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled';
+export type PaymentStatus = 'pending' | 'partial' | 'paid' | 'overdue';
+export type TransactionType = 'income' | 'expense' | 'transfer';
+export type PaymentMethod = 'cash' | 'bank_transfer' | 'credit_card' | 'check';
+export type MovementType = 'in' | 'out' | 'adjustment' | 'transfer';
+export type TransactionStatus = 'pending' | 'completed' | 'cancelled';
+export type VehicleStatus = 'available' | 'in_use' | 'maintenance' | 'inactive';
+export type PromotionType = 'percentage' | 'fixed_amount' | 'buy_x_get_y';
+
+// Base entity interface for audit fields
+export interface BaseEntity {
+  id: UUID;
+  created_at: string;
+  updated_at: string;
+  created_by?: UUID | null;
+}
+
+// Multi-tenant entity interface
+export interface TenantEntity extends BaseEntity {
+  company_id: UUID;
+}
+
+// ============================================================================
+// MAIN DATABASE INTERFACE
+// ============================================================================
+
 export interface Database {
   public: {
     Tables: {
+      // System Tables
       subscription_plans: {
-        Row: {
-          id: string;
-          name: string;
-          description: string | null;
-          price: number;
-          features: string[] | null;
-          max_users: number | null;
-          max_companies: number | null;
-          is_active: boolean;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          name: string;
-          description?: string | null;
-          price: number;
-          features?: string[] | null;
-          max_users?: number | null;
-          max_companies?: number | null;
-          is_active?: boolean;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          name?: string;
-          description?: string | null;
-          price?: number;
-          features?: string[] | null;
-          max_users?: number | null;
-          max_companies?: number | null;
-          is_active?: boolean;
-          created_at?: string;
-          updated_at?: string;
-        };
+        Row: SubscriptionPlan;
+        Insert: SubscriptionPlanInsert;
+        Update: SubscriptionPlanUpdate;
       };
       companies: {
-        Row: {
-          id: string;
-          name: string;
-          slug: string;
-          description: string | null;
-          logo_url: string | null;
-          website: string | null;
-          phone: string | null;
-          email: string | null;
-          address: string | null;
-          city: string | null;
-          province: string | null;
-          postal_code: string | null;
-          country: string;
-          npwp: string | null;
-          legal_form: string | null;
-          subscription_plan_id: string;
-          subscription_start_date: string | null;
-          subscription_end_date: string | null;
-          is_active: boolean;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          name: string;
-          slug: string;
-          description?: string | null;
-          logo_url?: string | null;
-          website?: string | null;
-          phone?: string | null;
-          email?: string | null;
-          address?: string | null;
-          city?: string | null;
-          province?: string | null;
-          postal_code?: string | null;
-          country?: string;
-          npwp?: string | null;
-          legal_form?: string | null;
-          subscription_plan_id: string;
-          subscription_start_date?: string | null;
-          subscription_end_date?: string | null;
-          is_active?: boolean;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          name?: string;
-          slug?: string;
-          description?: string | null;
-          logo_url?: string | null;
-          website?: string | null;
-          phone?: string | null;
-          email?: string | null;
-          address?: string | null;
-          city?: string | null;
-          province?: string | null;
-          postal_code?: string | null;
-          country?: string;
-          npwp?: string | null;
-          legal_form?: string | null;
-          subscription_plan_id?: string;
-          subscription_start_date?: string | null;
-          subscription_end_date?: string | null;
-          is_active?: boolean;
-          created_at?: string;
-          updated_at?: string;
-        };
+        Row: Company;
+        Insert: CompanyInsert;
+        Update: CompanyUpdate;
       };
       users: {
-        Row: {
-          id: string;
-          company_id: string | null;
-          role: 'dev' | 'owner' | 'staff';
-          full_name: string;
-          email: string;
-          phone: string | null;
-          avatar_url: string | null;
-          is_active: boolean;
-          last_sign_in_at: string | null;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id: string;
-          company_id?: string | null;
-          role: 'dev' | 'owner' | 'staff';
-          full_name: string;
-          email: string;
-          phone?: string | null;
-          avatar_url?: string | null;
-          is_active?: boolean;
-          last_sign_in_at?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          company_id?: string | null;
-          role?: 'dev' | 'owner' | 'staff';
-          full_name?: string;
-          email?: string;
-          phone?: string | null;
-          avatar_url?: string | null;
-          is_active?: boolean;
-          last_sign_in_at?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
+        Row: User;
+        Insert: UserInsert;
+        Update: UserUpdate;
+      };
+      
+      // Business Entity Tables
+      customers: {
+        Row: Customer;
+        Insert: CustomerInsert;
+        Update: CustomerUpdate;
+      };
+      suppliers: {
+        Row: Supplier;
+        Insert: SupplierInsert;
+        Update: SupplierUpdate;
+      };
+      employees: {
+        Row: Employee;
+        Insert: EmployeeInsert;
+        Update: EmployeeUpdate;
       };
       products: {
-        Row: {
-          id: string;
-          company_id: string;
-          name: string;
-          description: string | null;
-          sku: string | null;
-          barcode: string | null;
-          price: number;
-          cost_price: number | null;
-          stock: number;
-          min_stock: number | null;
-          category: string | null;
-          unit: string | null;
-          weight: number | null;
-          dimensions: Record<string, any> | null;
-          images: string[] | null;
-          is_active: boolean;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          company_id: string;
-          name: string;
-          description?: string | null;
-          sku?: string | null;
-          barcode?: string | null;
-          price: number;
-          cost_price?: number | null;
-          stock?: number;
-          min_stock?: number | null;
-          category?: string | null;
-          unit?: string | null;
-          weight?: number | null;
-          dimensions?: Record<string, any> | null;
-          images?: string[] | null;
-          is_active?: boolean;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          company_id?: string;
-          name?: string;
-          description?: string | null;
-          sku?: string | null;
-          barcode?: string | null;
-          price?: number;
-          cost_price?: number | null;
-          stock?: number;
-          min_stock?: number | null;
-          category?: string | null;
-          unit?: string | null;
-          weight?: number | null;
-          dimensions?: Record<string, any> | null;
-          images?: string[] | null;
-          is_active?: boolean;
-          created_at?: string;
-          updated_at?: string;
-        };
+        Row: Product;
+        Insert: ProductInsert;
+        Update: ProductUpdate;
       };
-      customers: {
-        Row: {
-          id: string;
-          company_id: string;
-          customer_type: 'individual' | 'business';
-          name: string;
-          email: string | null;
-          phone: string | null;
-          address: string | null;
-          city: string | null;
-          province: string | null;
-          postal_code: string | null;
-          npwp: string | null;
-          nik: string | null;
-          notes: string | null;
-          is_active: boolean;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          company_id: string;
-          customer_type: 'individual' | 'business';
-          name: string;
-          email?: string | null;
-          phone?: string | null;
-          address?: string | null;
-          city?: string | null;
-          province?: string | null;
-          postal_code?: string | null;
-          npwp?: string | null;
-          nik?: string | null;
-          notes?: string | null;
-          is_active?: boolean;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          company_id?: string;
-          customer_type?: 'individual' | 'business';
-          name?: string;
-          email?: string | null;
-          phone?: string | null;
-          address?: string | null;
-          city?: string | null;
-          province?: string | null;
-          postal_code?: string | null;
-          npwp?: string | null;
-          nik?: string | null;
-          notes?: string | null;
-          is_active?: boolean;
-          created_at?: string;
-          updated_at?: string;
-        };
-      };
+      
+      // Transaction Tables
       sales_orders: {
-        Row: {
-          id: string;
-          company_id: string;
-          customer_id: string | null;
-          order_number: string;
-          order_date: string;
-          status: 'draft' | 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
-          subtotal: number;
-          tax_rate: number;
-          tax_amount: number;
-          discount_amount: number | null;
-          total_amount: number;
-          payment_method: 'cash' | 'credit_card' | 'debit_card' | 'bank_transfer' | 'qris' | 'other';
-          payment_status: 'pending' | 'paid' | 'partial' | 'refunded' | 'cancelled';
-          notes: string | null;
-          created_by: string;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          company_id: string;
-          customer_id?: string | null;
-          order_number: string;
-          order_date?: string;
-          status?: 'draft' | 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
-          subtotal: number;
-          tax_rate?: number;
-          tax_amount: number;
-          discount_amount?: number | null;
-          total_amount: number;
-          payment_method: 'cash' | 'credit_card' | 'debit_card' | 'bank_transfer' | 'qris' | 'other';
-          payment_status?: 'pending' | 'paid' | 'partial' | 'refunded' | 'cancelled';
-          notes?: string | null;
-          created_by: string;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          company_id?: string;
-          customer_id?: string | null;
-          order_number?: string;
-          order_date?: string;
-          status?: 'draft' | 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
-          subtotal?: number;
-          tax_rate?: number;
-          tax_amount?: number;
-          discount_amount?: number | null;
-          total_amount?: number;
-          payment_method?: 'cash' | 'credit_card' | 'debit_card' | 'bank_transfer' | 'qris' | 'other';
-          payment_status?: 'pending' | 'paid' | 'partial' | 'refunded' | 'cancelled';
-          notes?: string | null;
-          created_by?: string;
-          created_at?: string;
-          updated_at?: string;
-        };
+        Row: SalesOrder;
+        Insert: SalesOrderInsert;
+        Update: SalesOrderUpdate;
       };
       sales_order_items: {
-        Row: {
-          id: string;
-          sales_order_id: string;
-          product_id: string;
-          product_name: string;
-          product_sku: string | null;
-          quantity: number;
-          unit_price: number;
-          total_price: number;
-          notes: string | null;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          sales_order_id: string;
-          product_id: string;
-          product_name: string;
-          product_sku?: string | null;
-          quantity: number;
-          unit_price: number;
-          total_price: number;
-          notes?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          sales_order_id?: string;
-          product_id?: string;
-          product_name?: string;
-          product_sku?: string | null;
-          quantity?: number;
-          unit_price?: number;
-          total_price?: number;
-          notes?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
+        Row: SalesOrderItem;
+        Insert: SalesOrderItemInsert;
+        Update: SalesOrderItemUpdate;
       };
       invoices: {
-        Row: {
-          id: string;
-          company_id: string;
-          sales_order_id: string | null;
-          customer_id: string | null;
-          invoice_number: string;
-          invoice_date: string;
-          due_date: string | null;
-          status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
-          subtotal: number;
-          tax_rate: number;
-          tax_amount: number;
-          discount_amount: number | null;
-          total_amount: number;
-          paid_amount: number;
-          balance_amount: number;
-          currency: string;
-          notes: string | null;
-          created_by: string;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          company_id: string;
-          sales_order_id?: string | null;
-          customer_id?: string | null;
-          invoice_number: string;
-          invoice_date?: string;
-          due_date?: string | null;
-          status?: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
-          subtotal: number;
-          tax_rate?: number;
-          tax_amount: number;
-          discount_amount?: number | null;
-          total_amount: number;
-          paid_amount?: number;
-          balance_amount?: number;
-          currency?: string;
-          notes?: string | null;
-          created_by: string;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          company_id?: string;
-          sales_order_id?: string | null;
-          customer_id?: string | null;
-          invoice_number?: string;
-          invoice_date?: string;
-          due_date?: string | null;
-          status?: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
-          subtotal?: number;
-          tax_rate?: number;
-          tax_amount?: number;
-          discount_amount?: number | null;
-          total_amount?: number;
-          paid_amount?: number;
-          balance_amount?: number;
-          currency?: string;
-          notes?: string | null;
-          created_by?: string;
-          created_at?: string;
-          updated_at?: string;
-        };
+        Row: Invoice;
+        Insert: InvoiceInsert;
+        Update: InvoiceUpdate;
+      };
+      transactions: {
+        Row: Transaction;
+        Insert: TransactionInsert;
+        Update: TransactionUpdate;
+      };
+      stock_movements: {
+        Row: StockMovement;
+        Insert: StockMovementInsert;
+        Update: StockMovementUpdate;
+      };
+      
+      // Additional Feature Tables (for future migrations)
+      vehicles: {
+        Row: Vehicle;
+        Insert: VehicleInsert;
+        Update: VehicleUpdate;
+      };
+      promotions: {
+        Row: Promotion;
+        Insert: PromotionInsert;
+        Update: PromotionUpdate;
       };
     };
     Views: {
@@ -446,64 +133,682 @@ export interface Database {
       [_ in never]: never;
     };
     Enums: {
-      user_role: 'dev' | 'owner' | 'staff';
-      customer_type: 'individual' | 'business';
-      order_status: 'draft' | 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
-      payment_method: 'cash' | 'credit_card' | 'debit_card' | 'bank_transfer' | 'qris' | 'other';
-      payment_status: 'pending' | 'paid' | 'partial' | 'refunded' | 'cancelled';
-      invoice_status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
-    };
-    CompositeTypes: {
       [_ in never]: never;
     };
   };
 }
 
-// Type exports for easier usage
-export type SubscriptionPlan = Database['public']['Tables']['subscription_plans']['Row'];
-export type Company = Database['public']['Tables']['companies']['Row'];
-export type User = Database['public']['Tables']['users']['Row'];
-export type Product = Database['public']['Tables']['products']['Row'];
-export type Customer = Database['public']['Tables']['customers']['Row'];
-export type SalesOrder = Database['public']['Tables']['sales_orders']['Row'];
-export type SalesOrderItem = Database['public']['Tables']['sales_order_items']['Row'];
-export type Invoice = Database['public']['Tables']['invoices']['Row'];
+// ============================================================================
+// ENTITY INTERFACES - SYSTEM TABLES
+// ============================================================================
 
-export type UserRole = Database['public']['Enums']['user_role'];
-export type CustomerType = Database['public']['Enums']['customer_type'];
-export type OrderStatus = Database['public']['Enums']['order_status'];
-export type PaymentMethod = Database['public']['Enums']['payment_method'];
-export type PaymentStatus = Database['public']['Enums']['payment_status'];
-export type InvoiceStatus = Database['public']['Enums']['invoice_status'];
-
-// Insert types for easier form handling
-export type SubscriptionPlanInsert = Database['public']['Tables']['subscription_plans']['Insert'];
-export type CompanyInsert = Database['public']['Tables']['companies']['Insert'];
-export type UserInsert = Database['public']['Tables']['users']['Insert'];
-export type ProductInsert = Database['public']['Tables']['products']['Insert'];
-export type CustomerInsert = Database['public']['Tables']['customers']['Insert'];
-export type SalesOrderInsert = Database['public']['Tables']['sales_orders']['Insert'];
-export type SalesOrderItemInsert = Database['public']['Tables']['sales_order_items']['Insert'];
-export type InvoiceInsert = Database['public']['Tables']['invoices']['Insert'];
-
-// Update types for easier form handling
-export type SubscriptionPlanUpdate = Database['public']['Tables']['subscription_plans']['Update'];
-export type CompanyUpdate = Database['public']['Tables']['companies']['Update'];
-export type UserUpdate = Database['public']['Tables']['users']['Update'];
-export type ProductUpdate = Database['public']['Tables']['products']['Update'];
-export type CustomerUpdate = Database['public']['Tables']['customers']['Update'];
-export type SalesOrderUpdate = Database['public']['Tables']['sales_orders']['Update'];
-export type SalesOrderItemUpdate = Database['public']['Tables']['sales_order_items']['Update'];
-export type InvoiceUpdate = Database['public']['Tables']['invoices']['Update'];
-
-// Additional utility types
-export interface DatabaseError {
-  message: string;
-  code?: string;
-  details?: string;
-  hint?: string;
+export interface SubscriptionPlan extends BaseEntity {
+  name: string;
+  description: string | null;
+  price: Decimal;
+  billing_cycle: BillingCycle;
+  features: Json;
+  max_users: number | null;
+  max_companies: number | null;
+  is_active: boolean;
 }
 
+export interface SubscriptionPlanInsert {
+  id?: UUID;
+  name: string;
+  description?: string | null;
+  price: Decimal;
+  billing_cycle: BillingCycle;
+  features?: Json;
+  max_users?: number | null;
+  max_companies?: number | null;
+  is_active?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface SubscriptionPlanUpdate {
+  id?: UUID;
+  name?: string;
+  description?: string | null;
+  price?: Decimal;
+  billing_cycle?: BillingCycle;
+  features?: Json;
+  max_users?: number | null;
+  max_companies?: number | null;
+  is_active?: boolean;
+  updated_at?: string;
+}
+
+export interface Company extends BaseEntity {
+  name: string;
+  email: string;
+  phone: string | null;
+  address: string | null;
+  business_type: string | null;
+  logo_url: string | null;
+  subscription_plan_id: UUID | null;
+  subscription_status: SubscriptionStatus;
+  subscription_start_date: string | null;
+  subscription_end_date: string | null;
+  next_payment_date: string | null;
+  is_active: boolean;
+}
+
+export interface CompanyInsert {
+  id?: UUID;
+  name: string;
+  email: string;
+  phone?: string | null;
+  address?: string | null;
+  business_type?: string | null;
+  logo_url?: string | null;
+  subscription_plan_id?: UUID | null;
+  subscription_status?: SubscriptionStatus;
+  subscription_start_date?: string | null;
+  subscription_end_date?: string | null;
+  next_payment_date?: string | null;
+  is_active?: boolean;
+  created_at?: string;
+  updated_at?: string;
+  created_by?: UUID | null;
+}
+
+export interface CompanyUpdate {
+  id?: UUID;
+  name?: string;
+  email?: string;
+  phone?: string | null;
+  address?: string | null;
+  business_type?: string | null;
+  logo_url?: string | null;
+  subscription_plan_id?: UUID | null;
+  subscription_status?: SubscriptionStatus;
+  subscription_start_date?: string | null;
+  subscription_end_date?: string | null;
+  next_payment_date?: string | null;
+  is_active?: boolean;
+  updated_at?: string;
+}
+
+export interface User extends BaseEntity {
+  email: string;
+  role: UserRole;
+  company_id: UUID | null;
+  first_name: string | null;
+  last_name: string | null;
+  phone: string | null;
+  position: string | null;
+  permissions: Json;
+  is_active: boolean;
+  last_login: string | null;
+}
+
+export interface UserInsert {
+  id: UUID; // Required as it references auth.users(id)
+  email: string;
+  role: UserRole;
+  company_id?: UUID | null;
+  first_name?: string | null;
+  last_name?: string | null;
+  phone?: string | null;
+  position?: string | null;
+  permissions?: Json;
+  is_active?: boolean;
+  last_login?: string | null;
+  created_at?: string;
+  updated_at?: string;
+  created_by?: UUID | null;
+}
+
+export interface UserUpdate {
+  email?: string;
+  role?: UserRole;
+  company_id?: UUID | null;
+  first_name?: string | null;
+  last_name?: string | null;
+  phone?: string | null;
+  position?: string | null;
+  permissions?: Json;
+  is_active?: boolean;
+  last_login?: string | null;
+  updated_at?: string;
+}
+
+// ============================================================================
+// ENTITY INTERFACES - BUSINESS TABLES
+// ============================================================================
+
+export interface Customer extends TenantEntity {
+  name: string;
+  email: string | null;
+  phone: string | null;
+  address: string | null;
+  customer_type: CustomerType;
+  tax_number: string | null;
+  credit_limit: Decimal;
+  payment_terms: number; // Days
+  is_active: boolean;
+}
+
+export interface CustomerInsert {
+  id?: UUID;
+  company_id: UUID;
+  name: string;
+  email?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  customer_type?: CustomerType;
+  tax_number?: string | null;
+  credit_limit?: Decimal;
+  payment_terms?: number;
+  is_active?: boolean;
+  created_at?: string;
+  updated_at?: string;
+  created_by?: UUID | null;
+}
+
+export interface CustomerUpdate {
+  name?: string;
+  email?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  customer_type?: CustomerType;
+  tax_number?: string | null;
+  credit_limit?: Decimal;
+  payment_terms?: number;
+  is_active?: boolean;
+  updated_at?: string;
+}
+
+export interface Supplier extends TenantEntity {
+  name: string;
+  email: string | null;
+  phone: string | null;
+  address: string | null;
+  contact_person: string | null;
+  tax_number: string | null;
+  payment_terms: number; // Days
+  is_active: boolean;
+}
+
+export interface SupplierInsert {
+  id?: UUID;
+  company_id: UUID;
+  name: string;
+  email?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  contact_person?: string | null;
+  tax_number?: string | null;
+  payment_terms?: number;
+  is_active?: boolean;
+  created_at?: string;
+  updated_at?: string;
+  created_by?: UUID | null;
+}
+
+export interface SupplierUpdate {
+  name?: string;
+  email?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  contact_person?: string | null;
+  tax_number?: string | null;
+  payment_terms?: number;
+  is_active?: boolean;
+  updated_at?: string;
+}
+
+export interface Employee extends TenantEntity {
+  user_id: UUID | null;
+  employee_number: string;
+  first_name: string;
+  last_name: string;
+  email: string | null;
+  phone: string | null;
+  address: string | null;
+  position: string | null;
+  department: string | null;
+  hire_date: string | null; // DATE
+  salary: Decimal | null;
+  employment_status: EmploymentStatus;
+  is_active: boolean;
+}
+
+export interface EmployeeInsert {
+  id?: UUID;
+  company_id: UUID;
+  user_id?: UUID | null;
+  employee_number: string;
+  first_name: string;
+  last_name: string;
+  email?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  position?: string | null;
+  department?: string | null;
+  hire_date?: string | null;
+  salary?: Decimal | null;
+  employment_status?: EmploymentStatus;
+  is_active?: boolean;
+  created_at?: string;
+  updated_at?: string;
+  created_by?: UUID | null;
+}
+
+export interface EmployeeUpdate {
+  user_id?: UUID | null;
+  employee_number?: string;
+  first_name?: string;
+  last_name?: string;
+  email?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  position?: string | null;
+  department?: string | null;
+  hire_date?: string | null;
+  salary?: Decimal | null;
+  employment_status?: EmploymentStatus;
+  is_active?: boolean;
+  updated_at?: string;
+}
+
+export interface Product extends TenantEntity {
+  sku: string;
+  barcode: string | null;
+  name: string;
+  description: string | null;
+  category: string | null;
+  brand: string | null;
+  unit_of_measure: string;
+  cost_price: Decimal;
+  selling_price: Decimal;
+  stock_quantity: number;
+  minimum_stock: number;
+  maximum_stock: number | null;
+  location: string | null; // Warehouse location
+  is_active: boolean;
+}
+
+export interface ProductInsert {
+  id?: UUID;
+  company_id: UUID;
+  sku: string;
+  barcode?: string | null;
+  name: string;
+  description?: string | null;
+  category?: string | null;
+  brand?: string | null;
+  unit_of_measure?: string;
+  cost_price?: Decimal;
+  selling_price?: Decimal;
+  stock_quantity?: number;
+  minimum_stock?: number;
+  maximum_stock?: number | null;
+  location?: string | null;
+  is_active?: boolean;
+  created_at?: string;
+  updated_at?: string;
+  created_by?: UUID | null;
+}
+
+export interface ProductUpdate {
+  sku?: string;
+  barcode?: string | null;
+  name?: string;
+  description?: string | null;
+  category?: string | null;
+  brand?: string | null;
+  unit_of_measure?: string;
+  cost_price?: Decimal;
+  selling_price?: Decimal;
+  stock_quantity?: number;
+  minimum_stock?: number;
+  maximum_stock?: number | null;
+  location?: string | null;
+  is_active?: boolean;
+  updated_at?: string;
+}
+
+// ============================================================================
+// ENTITY INTERFACES - TRANSACTION TABLES
+// ============================================================================
+
+export interface SalesOrder extends TenantEntity {
+  order_number: string;
+  customer_id: UUID | null;
+  salesperson_id: UUID | null;
+  order_date: string;
+  due_date: string | null;
+  status: OrderStatus;
+  subtotal: Decimal;
+  tax_amount: Decimal;
+  discount_amount: Decimal;
+  total_amount: Decimal;
+  payment_status: PaymentStatus;
+  notes: string | null;
+}
+
+export interface SalesOrderInsert {
+  id?: UUID;
+  company_id: UUID;
+  order_number: string;
+  customer_id?: UUID | null;
+  salesperson_id?: UUID | null;
+  order_date?: string;
+  due_date?: string | null;
+  status?: OrderStatus;
+  subtotal?: Decimal;
+  tax_amount?: Decimal;
+  discount_amount?: Decimal;
+  total_amount?: Decimal;
+  payment_status?: PaymentStatus;
+  notes?: string | null;
+  created_at?: string;
+  updated_at?: string;
+  created_by?: UUID | null;
+}
+
+export interface SalesOrderUpdate {
+  order_number?: string;
+  customer_id?: UUID | null;
+  salesperson_id?: UUID | null;
+  order_date?: string;
+  due_date?: string | null;
+  status?: OrderStatus;
+  subtotal?: Decimal;
+  tax_amount?: Decimal;
+  discount_amount?: Decimal;
+  total_amount?: Decimal;
+  payment_status?: PaymentStatus;
+  notes?: string | null;
+  updated_at?: string;
+}
+
+export interface SalesOrderItem {
+  id: UUID;
+  company_id: UUID;
+  sales_order_id: UUID;
+  product_id: UUID;
+  quantity: number;
+  unit_price: Decimal;
+  discount_percent: Decimal;
+  discount_amount: Decimal;
+  line_total: Decimal;
+  created_at: string;
+}
+
+export interface SalesOrderItemInsert {
+  id?: UUID;
+  company_id: UUID;
+  sales_order_id: UUID;
+  product_id: UUID;
+  quantity: number;
+  unit_price: Decimal;
+  discount_percent?: Decimal;
+  discount_amount?: Decimal;
+  line_total: Decimal;
+  created_at?: string;
+}
+
+export interface SalesOrderItemUpdate {
+  quantity?: number;
+  unit_price?: Decimal;
+  discount_percent?: Decimal;
+  discount_amount?: Decimal;
+  line_total?: Decimal;
+}
+
+export interface Invoice extends TenantEntity {
+  invoice_number: string;
+  sales_order_id: UUID | null;
+  customer_id: UUID | null;
+  invoice_date: string;
+  due_date: string | null;
+  subtotal: Decimal;
+  tax_amount: Decimal;
+  discount_amount: Decimal;
+  total_amount: Decimal;
+  paid_amount: Decimal;
+  payment_status: PaymentStatus;
+  notes: string | null;
+}
+
+export interface InvoiceInsert {
+  id?: UUID;
+  company_id: UUID;
+  invoice_number: string;
+  sales_order_id?: UUID | null;
+  customer_id?: UUID | null;
+  invoice_date?: string;
+  due_date?: string | null;
+  subtotal?: Decimal;
+  tax_amount?: Decimal;
+  discount_amount?: Decimal;
+  total_amount?: Decimal;
+  paid_amount?: Decimal;
+  payment_status?: PaymentStatus;
+  notes?: string | null;
+  created_at?: string;
+  updated_at?: string;
+  created_by?: UUID | null;
+}
+
+export interface InvoiceUpdate {
+  invoice_number?: string;
+  sales_order_id?: UUID | null;
+  customer_id?: UUID | null;
+  invoice_date?: string;
+  due_date?: string | null;
+  subtotal?: Decimal;
+  tax_amount?: Decimal;
+  discount_amount?: Decimal;
+  total_amount?: Decimal;
+  paid_amount?: Decimal;
+  payment_status?: PaymentStatus;
+  notes?: string | null;
+  updated_at?: string;
+}
+
+export interface Transaction {
+  id: UUID;
+  company_id: UUID;
+  transaction_number: string;
+  transaction_date: string;
+  transaction_type: TransactionType;
+  category: string | null;
+  description: string;
+  amount: Decimal;
+  payment_method: PaymentMethod | null;
+  reference_type: string | null;
+  reference_id: UUID | null;
+  account_from: string | null;
+  account_to: string | null;
+  status: TransactionStatus;
+  created_at: string;
+  created_by: UUID | null;
+}
+
+export interface TransactionInsert {
+  id?: UUID;
+  company_id: UUID;
+  transaction_number: string;
+  transaction_date?: string;
+  transaction_type: TransactionType;
+  category?: string | null;
+  description: string;
+  amount: Decimal;
+  payment_method?: PaymentMethod | null;
+  reference_type?: string | null;
+  reference_id?: UUID | null;
+  account_from?: string | null;
+  account_to?: string | null;
+  status?: TransactionStatus;
+  created_at?: string;
+  created_by?: UUID | null;
+}
+
+export interface TransactionUpdate {
+  transaction_number?: string;
+  transaction_date?: string;
+  transaction_type?: TransactionType;
+  category?: string | null;
+  description?: string;
+  amount?: Decimal;
+  payment_method?: PaymentMethod | null;
+  reference_type?: string | null;
+  reference_id?: UUID | null;
+  account_from?: string | null;
+  account_to?: string | null;
+  status?: TransactionStatus;
+}
+
+export interface StockMovement {
+  id: UUID;
+  company_id: UUID;
+  product_id: UUID;
+  movement_type: MovementType;
+  quantity: number;
+  reference_type: string | null;
+  reference_id: UUID | null;
+  notes: string | null;
+  created_at: string;
+  created_by: UUID | null;
+}
+
+export interface StockMovementInsert {
+  id?: UUID;
+  company_id: UUID;
+  product_id: UUID;
+  movement_type: MovementType;
+  quantity: number;
+  reference_type?: string | null;
+  reference_id?: UUID | null;
+  notes?: string | null;
+  created_at?: string;
+  created_by?: UUID | null;
+}
+
+export interface StockMovementUpdate {
+  movement_type?: MovementType;
+  quantity?: number;
+  reference_type?: string | null;
+  reference_id?: UUID | null;
+  notes?: string | null;
+}
+
+// ============================================================================
+// ENTITY INTERFACES - ADDITIONAL FEATURES (Future Migrations)
+// ============================================================================
+
+export interface Vehicle extends TenantEntity {
+  license_plate: string;
+  vehicle_type: string | null;
+  brand: string | null;
+  model: string | null;
+  year: number | null;
+  capacity: string | null;
+  driver_id: UUID | null;
+  status: VehicleStatus;
+  is_active: boolean;
+}
+
+export interface VehicleInsert {
+  id?: UUID;
+  company_id: UUID;
+  license_plate: string;
+  vehicle_type?: string | null;
+  brand?: string | null;
+  model?: string | null;
+  year?: number | null;
+  capacity?: string | null;
+  driver_id?: UUID | null;
+  status?: VehicleStatus;
+  is_active?: boolean;
+  created_at?: string;
+  updated_at?: string;
+  created_by?: UUID | null;
+}
+
+export interface VehicleUpdate {
+  license_plate?: string;
+  vehicle_type?: string | null;
+  brand?: string | null;
+  model?: string | null;
+  year?: number | null;
+  capacity?: string | null;
+  driver_id?: UUID | null;
+  status?: VehicleStatus;
+  is_active?: boolean;
+  updated_at?: string;
+}
+
+export interface Promotion extends TenantEntity {
+  name: string;
+  description: string | null;
+  promotion_type: PromotionType;
+  discount_value: Decimal | null;
+  min_purchase_amount: Decimal | null;
+  start_date: string;
+  end_date: string;
+  applicable_products: Json | null; // Product IDs or categories
+  max_uses: number | null;
+  current_uses: number;
+  is_active: boolean;
+}
+
+export interface PromotionInsert {
+  id?: UUID;
+  company_id: UUID;
+  name: string;
+  description?: string | null;
+  promotion_type: PromotionType;
+  discount_value?: Decimal | null;
+  min_purchase_amount?: Decimal | null;
+  start_date: string;
+  end_date: string;
+  applicable_products?: Json | null;
+  max_uses?: number | null;
+  current_uses?: number;
+  is_active?: boolean;
+  created_at?: string;
+  updated_at?: string;
+  created_by?: UUID | null;
+}
+
+export interface PromotionUpdate {
+  name?: string;
+  description?: string | null;
+  promotion_type?: PromotionType;
+  discount_value?: Decimal | null;
+  min_purchase_amount?: Decimal | null;
+  start_date?: string;
+  end_date?: string;
+  applicable_products?: Json | null;
+  max_uses?: number | null;
+  current_uses?: number;
+  is_active?: boolean;
+  updated_at?: string;
+}
+
+// ============================================================================
+// UTILITY TYPES & HELPERS
+// ============================================================================
+
+// Database operation result types
+export type DatabaseResult<T> = {
+  data: T | null;
+  error: Error | null;
+};
+
+export type DatabaseListResult<T> = {
+  data: T[] | null;
+  error: Error | null;
+  count?: number;
+};
+
+// Common query filters
 export interface PaginationParams {
   page?: number;
   limit?: number;
@@ -511,40 +816,103 @@ export interface PaginationParams {
 }
 
 export interface SortParams {
-  column?: string;
-  ascending?: boolean;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
 }
 
 export interface FilterParams {
+  search?: string;
+  status?: string;
+  is_active?: boolean;
+  date_from?: string;
+  date_to?: string;
+}
+
+export interface QueryParams extends PaginationParams, SortParams, FilterParams {
   [key: string]: any;
 }
 
-export interface QueryParams extends PaginationParams, SortParams {
-  filters?: FilterParams;
-  search?: string;
+// Table type helpers
+export type TableName = keyof Database['public']['Tables'];
+export type TableRow<T extends TableName> = Database['public']['Tables'][T]['Row'];
+export type TableInsert<T extends TableName> = Database['public']['Tables'][T]['Insert'];
+export type TableUpdate<T extends TableName> = Database['public']['Tables'][T]['Update'];
+
+// Entity relationships (for joins and includes)
+export interface CustomerWithTransactions extends Customer {
+  sales_orders?: SalesOrder[];
+  invoices?: Invoice[];
 }
 
-// Indonesian-specific types
-export interface IndonesianAddress {
-  street?: string;
-  city?: string;
-  province?: string;
-  postal_code?: string;
-  country: 'Indonesia';
+export interface ProductWithMovements extends Product {
+  stock_movements?: StockMovement[];
 }
 
-export interface IndonesianBusinessInfo {
-  npwp?: string; // Format: XX.XXX.XXX.X-XXX.XXX
-  legal_form?: 'PT' | 'CV' | 'UD' | 'Firma' | 'Koperasi' | 'Yayasan' | 'Lainnya';
+export interface SalesOrderWithItems extends SalesOrder {
+  sales_order_items?: SalesOrderItem[];
+  customer?: Customer;
+  salesperson?: Employee;
 }
 
-export interface IndonesianPersonalInfo {
-  nik?: string; // 16 digits
-  phone?: string; // Format: +62XXXXXXXXXX or 08XXXXXXXXX
+export interface InvoiceWithOrder extends Invoice {
+  sales_order?: SalesOrder;
+  customer?: Customer;
 }
 
-export interface IndonesianTaxInfo {
-  ppn_rate: 0.11; // PPN 11%
-  currency: 'IDR';
-  tax_inclusive?: boolean;
+export interface EmployeeWithUser extends Employee {
+  user?: User;
+}
+
+export interface CompanyWithPlan extends Company {
+  subscription_plan?: SubscriptionPlan;
+}
+
+// Dashboard statistics types
+export interface DashboardStats {
+  total_customers: number;
+  total_products: number;
+  total_sales_orders: number;
+  total_revenue: Decimal;
+  pending_invoices: number;
+  low_stock_products: number;
+}
+
+export interface SalesAnalytics {
+  daily_sales: { date: string; amount: Decimal }[];
+  monthly_sales: { month: string; amount: Decimal }[];
+  top_products: { product_id: UUID; product_name: string; quantity_sold: number }[];
+  top_customers: { customer_id: UUID; customer_name: string; total_amount: Decimal }[];
+}
+
+// Permission system types (based on user.permissions JSONB)
+export interface UserPermissions {
+  modules: {
+    pos?: boolean;
+    inventory?: boolean;
+    customers?: boolean;
+    suppliers?: boolean;
+    sales?: boolean;
+    hr?: boolean;
+    finance?: boolean;
+    vehicles?: boolean;
+    promotions?: boolean;
+    reports?: boolean;
+  };
+  actions: {
+    create?: boolean;
+    read?: boolean;
+    update?: boolean;
+    delete?: boolean;
+  };
+}
+
+// Subscription plan features (based on subscription_plans.features JSONB)
+export interface SubscriptionFeatures {
+  modules: string[];
+  max_users: number;
+  max_products?: number;
+  max_transactions?: number;
+  api_access?: boolean;
+  custom_reports?: boolean;
+  integrations?: string[];
 }

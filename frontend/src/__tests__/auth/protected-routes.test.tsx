@@ -3,11 +3,14 @@ import { render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { RoleRoutes } from '@/components/auth/RoleRoutes'
-import { useAuthStore } from '@/stores/authStore'
 
-// Mock auth store
+// Mock auth store hooks
+const mockUseAuth = vi.fn()
+const mockUseAuthActions = vi.fn()
+
 vi.mock('@/stores/authStore', () => ({
-  useAuthStore: vi.fn()
+  useAuth: () => mockUseAuth(),
+  useAuthActions: () => mockUseAuthActions()
 }))
 
 // Mock React Router
@@ -34,25 +37,59 @@ describe('Role-Based Routing Tests', () => {
   const mockUser = {
     id: 'user-123',
     email: 'test@example.com',
-    user_metadata: {}
+    role: 'employee' as const,
+    permissions: [] as string[]
   }
 
   beforeEach(() => {
     vi.clearAllMocks()
+    
+    // Reset mock to default state
+    mockUseAuth.mockReturnValue({
+      user: null,
+      session: null,
+      tenant: null,
+      isLoading: false,
+      isInitialized: true,
+      error: null,
+      isAuthenticated: false,
+      hasPermission: vi.fn(() => false),
+      isOwner: vi.fn(() => false),
+      isAdmin: vi.fn(() => false),
+      canAccess: vi.fn(() => false)
+    })
+    
+    mockUseAuthActions.mockReturnValue({
+      signIn: vi.fn(),
+      signUp: vi.fn(),
+      signOut: vi.fn(),
+      initializeAuth: vi.fn(),
+      refreshSession: vi.fn(),
+      switchTenant: vi.fn(),
+      updateTenant: vi.fn(),
+      setUser: vi.fn(),
+      setSession: vi.fn(),
+      setTenant: vi.fn(),
+      setLoading: vi.fn(),
+      setError: vi.fn(),
+      clearError: vi.fn()
+    })
   })
 
   describe('ProtectedRoute Component', () => {
     it('should redirect to login when user is not authenticated', () => {
-      vi.mocked(useAuthStore).mockReturnValue({
+      mockUseAuth.mockReturnValue({
         user: null,
+        session: null,
+        tenant: null,
         isLoading: false,
+        isInitialized: true,
         error: null,
-        login: vi.fn(),
-        logout: vi.fn(),
-        setUser: vi.fn(),
-        setLoading: vi.fn(),
-        clearError: vi.fn(),
-        isAuthenticated: false
+        isAuthenticated: false,
+        hasPermission: vi.fn(() => false),
+        isOwner: vi.fn(() => false),
+        isAdmin: vi.fn(() => false),
+        canAccess: vi.fn(() => false)
       })
 
       render(
@@ -63,21 +100,22 @@ describe('Role-Based Routing Tests', () => {
         </MemoryRouter>
       )
 
-      // This test will fail because ProtectedRoute is not implemented yet
       expect(screen.getByTestId('navigate')).toHaveTextContent('/login')
     })
 
     it('should show loading state while authentication is being checked', () => {
-      vi.mocked(useAuthStore).mockReturnValue({
+      mockUseAuth.mockReturnValue({
         user: null,
+        session: null,
+        tenant: null,
         isLoading: true,
+        isInitialized: false,
         error: null,
-        login: vi.fn(),
-        logout: vi.fn(),
-        setUser: vi.fn(),
-        setLoading: vi.fn(),
-        clearError: vi.fn(),
-        isAuthenticated: false
+        isAuthenticated: false,
+        hasPermission: vi.fn(() => false),
+        isOwner: vi.fn(() => false),
+        isAdmin: vi.fn(() => false),
+        canAccess: vi.fn(() => false)
       })
 
       render(
@@ -88,21 +126,22 @@ describe('Role-Based Routing Tests', () => {
         </MemoryRouter>
       )
 
-      // This test will fail because loading state is not implemented yet
       expect(screen.getByText(/memuat/i)).toBeInTheDocument()
     })
 
     it('should render children when user is authenticated', () => {
-      vi.mocked(useAuthStore).mockReturnValue({
-        user: { ...mockUser, user_metadata: { role: 'owner', company_id: 'company-123' } },
+      mockUseAuth.mockReturnValue({
+        user: { ...mockUser, role: 'owner', tenant_id: 'company-123' },
+        session: { access_token: 'test-token' },
+        tenant: { id: 'test-tenant', name: 'Test Company' },
         isLoading: false,
+        isInitialized: true,
         error: null,
-        login: vi.fn(),
-        logout: vi.fn(),
-        setUser: vi.fn(),
-        setLoading: vi.fn(),
-        clearError: vi.fn(),
-        isAuthenticated: true
+        isAuthenticated: true,
+        hasPermission: vi.fn(() => true),
+        isOwner: vi.fn(() => true),
+        isAdmin: vi.fn(() => false),
+        canAccess: vi.fn(() => true)
       })
 
       render(
@@ -113,7 +152,6 @@ describe('Role-Based Routing Tests', () => {
         </MemoryRouter>
       )
 
-      // This test will fail because ProtectedRoute is not implemented yet
       expect(screen.getByTestId('dashboard')).toBeInTheDocument()
     })
   })
@@ -121,42 +159,44 @@ describe('Role-Based Routing Tests', () => {
   describe('Dev Role Routing', () => {
     const devUser = {
       ...mockUser,
-      user_metadata: { role: 'dev', company_id: null }
+      role: 'dev' as const,
+      tenant_id: null
     }
 
     beforeEach(() => {
-      vi.mocked(useAuthStore).mockReturnValue({
+      mockUseAuth.mockReturnValue({
         user: devUser,
+        session: { access_token: 'test-token' },
+        tenant: null,
         isLoading: false,
+        isInitialized: true,
         error: null,
-        login: vi.fn(),
-        logout: vi.fn(),
-        setUser: vi.fn(),
-        setLoading: vi.fn(),
-        clearError: vi.fn(),
-        isAuthenticated: true
+        isAuthenticated: true,
+        hasPermission: vi.fn(() => true),
+        isOwner: vi.fn(() => false),
+        isAdmin: vi.fn(() => false),
+        canAccess: vi.fn(() => true)
       })
     })
 
     it('should allow dev user to access company management', () => {
       render(
         <MemoryRouter initialEntries={['/admin/companies']}>
-          <RoleRoutes allowedRoles={['dev']}>
+          <ProtectedRoute allowedRoles={['dev']}>
             <MockCompanyManagement />
-          </RoleRoutes>
+          </ProtectedRoute>
         </MemoryRouter>
       )
 
-      // This test will fail because RoleRoutes is not implemented yet
       expect(screen.getByTestId('company-management')).toBeInTheDocument()
     })
 
     it('should allow dev user to access all company data across tenants', () => {
       render(
         <MemoryRouter initialEntries={['/admin/companies']}>
-          <RoleRoutes allowedRoles={['dev']} requireCompany={false}>
+          <ProtectedRoute allowedRoles={['dev']} requireCompany={false}>
             <MockCompanyManagement />
-          </RoleRoutes>
+          </ProtectedRoute>
         </MemoryRouter>
       )
 
@@ -167,9 +207,9 @@ describe('Role-Based Routing Tests', () => {
     it('should redirect dev user from company-specific routes to admin dashboard', () => {
       render(
         <MemoryRouter initialEntries={['/dashboard']}>
-          <RoleRoutes allowedRoles={['owner', 'staff']} requireCompany={true}>
+          <ProtectedRoute allowedRoles={['owner', 'staff']} requireCompany={true}>
             <MockDashboard />
-          </RoleRoutes>
+          </ProtectedRoute>
         </MemoryRouter>
       )
 
@@ -181,29 +221,32 @@ describe('Role-Based Routing Tests', () => {
   describe('Owner Role Routing', () => {
     const ownerUser = {
       ...mockUser,
-      user_metadata: { role: 'owner', company_id: 'company-123' }
+      role: 'owner' as const,
+      tenant_id: 'company-123'
     }
 
     beforeEach(() => {
-      vi.mocked(useAuthStore).mockReturnValue({
+      mockUseAuth.mockReturnValue({
         user: ownerUser,
+        session: { access_token: 'test-token' },
+        tenant: { id: 'company-123', name: 'Test Company' },
         isLoading: false,
+        isInitialized: true,
         error: null,
-        login: vi.fn(),
-        logout: vi.fn(),
-        setUser: vi.fn(),
-        setLoading: vi.fn(),
-        clearError: vi.fn(),
-        isAuthenticated: true
+        isAuthenticated: true,
+        hasPermission: vi.fn(() => true),
+        isOwner: vi.fn(() => true),
+        isAdmin: vi.fn(() => false),
+        canAccess: vi.fn(() => true)
       })
     })
 
     it('should allow owner to access dashboard', () => {
       render(
         <MemoryRouter initialEntries={['/dashboard']}>
-          <RoleRoutes allowedRoles={['owner', 'staff']}>
+          <ProtectedRoute allowedRoles={['owner', 'staff']}>
             <MockDashboard />
-          </RoleRoutes>
+          </ProtectedRoute>
         </MemoryRouter>
       )
 
@@ -214,9 +257,9 @@ describe('Role-Based Routing Tests', () => {
     it('should allow owner to access user management', () => {
       render(
         <MemoryRouter initialEntries={['/users']}>
-          <RoleRoutes allowedRoles={['owner']}>
+          <ProtectedRoute allowedRoles={['owner']}>
             <MockUserManagement />
-          </RoleRoutes>
+          </ProtectedRoute>
         </MemoryRouter>
       )
 
@@ -227,15 +270,15 @@ describe('Role-Based Routing Tests', () => {
     it('should allow owner to access all business modules', () => {
       const TestComponent = () => (
         <div>
-          <RoleRoutes allowedRoles={['owner', 'staff']}>
+          <ProtectedRoute allowedRoles={['owner', 'staff']}>
             <MockProducts />
-          </RoleRoutes>
-          <RoleRoutes allowedRoles={['owner', 'staff']}>
+          </ProtectedRoute>
+          <ProtectedRoute allowedRoles={['owner', 'staff']}>
             <MockCustomers />
-          </RoleRoutes>
-          <RoleRoutes allowedRoles={['owner', 'staff']}>
+          </ProtectedRoute>
+          <ProtectedRoute allowedRoles={['owner', 'staff']}>
             <MockPOS />
-          </RoleRoutes>
+          </ProtectedRoute>
         </div>
       )
 
@@ -254,9 +297,9 @@ describe('Role-Based Routing Tests', () => {
     it('should deny owner access to dev-only routes', () => {
       render(
         <MemoryRouter initialEntries={['/admin/companies']}>
-          <RoleRoutes allowedRoles={['dev']}>
+          <ProtectedRoute allowedRoles={['dev']}>
             <MockCompanyManagement />
-          </RoleRoutes>
+          </ProtectedRoute>
         </MemoryRouter>
       )
 
@@ -267,9 +310,9 @@ describe('Role-Based Routing Tests', () => {
     it('should verify owner belongs to correct company', () => {
       render(
         <MemoryRouter>
-          <RoleRoutes allowedRoles={['owner']} requiredCompanyId="company-123">
+          <ProtectedRoute allowedRoles={['owner']} requiredCompanyId="company-123">
             <MockUserManagement />
-          </RoleRoutes>
+          </ProtectedRoute>
         </MemoryRouter>
       )
 
@@ -281,33 +324,33 @@ describe('Role-Based Routing Tests', () => {
   describe('Staff Role Routing', () => {
     const staffUser = {
       ...mockUser,
-      user_metadata: { 
-        role: 'staff', 
-        company_id: 'company-123',
-        permissions: ['pos.read', 'pos.write', 'products.read', 'customers.read']
-      }
+      role: 'employee' as const,
+      tenant_id: 'company-123',
+      permissions: ['pos.read', 'pos.write', 'products.read', 'customers.read']
     }
 
     beforeEach(() => {
-      vi.mocked(useAuthStore).mockReturnValue({
+      mockUseAuth.mockReturnValue({
         user: staffUser,
+        session: { access_token: 'test-token' },
+        tenant: { id: 'company-123', name: 'Test Company' },
         isLoading: false,
+        isInitialized: true,
         error: null,
-        login: vi.fn(),
-        logout: vi.fn(),
-        setUser: vi.fn(),
-        setLoading: vi.fn(),
-        clearError: vi.fn(),
-        isAuthenticated: true
+        isAuthenticated: true,
+        hasPermission: vi.fn((permission) => staffUser.permissions.includes(permission)),
+        isOwner: vi.fn(() => false),
+        isAdmin: vi.fn(() => false),
+        canAccess: vi.fn(() => true)
       })
     })
 
     it('should allow staff to access POS system', () => {
       render(
         <MemoryRouter initialEntries={['/pos']}>
-          <RoleRoutes allowedRoles={['owner', 'staff']} requiredPermissions={['pos.read']}>
+          <ProtectedRoute allowedRoles={['owner', 'staff']} requiredPermissions={['pos.read']}>
             <MockPOS />
-          </RoleRoutes>
+          </ProtectedRoute>
         </MemoryRouter>
       )
 
@@ -318,9 +361,9 @@ describe('Role-Based Routing Tests', () => {
     it('should allow staff to read products but deny product management access', () => {
       render(
         <MemoryRouter initialEntries={['/products']}>
-          <RoleRoutes allowedRoles={['owner', 'staff']} requiredPermissions={['products.read']}>
+          <ProtectedRoute allowedRoles={['owner', 'staff']} requiredPermissions={['products.read']}>
             <MockProducts />
-          </RoleRoutes>
+          </ProtectedRoute>
         </MemoryRouter>
       )
 
@@ -329,9 +372,9 @@ describe('Role-Based Routing Tests', () => {
       // Test that write access is denied (this will fail because permission checking is not implemented)
       render(
         <MemoryRouter initialEntries={['/products/create']}>
-          <RoleRoutes allowedRoles={['owner', 'staff']} requiredPermissions={['products.write']}>
+          <ProtectedRoute allowedRoles={['owner', 'staff']} requiredPermissions={['products.write']}>
             <div data-testid="create-product">Create Product</div>
-          </RoleRoutes>
+          </ProtectedRoute>
         </MemoryRouter>
       )
 
@@ -341,9 +384,9 @@ describe('Role-Based Routing Tests', () => {
     it('should deny staff access to user management', () => {
       render(
         <MemoryRouter initialEntries={['/users']}>
-          <RoleRoutes allowedRoles={['owner']}>
+          <ProtectedRoute allowedRoles={['owner']}>
             <MockUserManagement />
-          </RoleRoutes>
+          </ProtectedRoute>
         </MemoryRouter>
       )
 
@@ -354,9 +397,9 @@ describe('Role-Based Routing Tests', () => {
     it('should deny staff access to admin routes', () => {
       render(
         <MemoryRouter initialEntries={['/admin']}>
-          <RoleRoutes allowedRoles={['dev']}>
+          <ProtectedRoute allowedRoles={['dev']}>
             <MockCompanyManagement />
-          </RoleRoutes>
+          </ProtectedRoute>
         </MemoryRouter>
       )
 
@@ -368,77 +411,77 @@ describe('Role-Based Routing Tests', () => {
   describe('Multi-Tenant Route Isolation', () => {
     const companyAUser = {
       ...mockUser,
-      user_metadata: { role: 'owner', company_id: 'company-a' }
-    }
-
-    const companyBUser = {
-      ...mockUser,
-      user_metadata: { role: 'owner', company_id: 'company-b' }
+      role: 'owner' as const,
+      tenant_id: 'company-a'
     }
 
     it('should prevent cross-company data access', () => {
-      vi.mocked(useAuthStore).mockReturnValue({
+      mockUseAuth.mockReturnValue({
         user: companyAUser,
+        session: { access_token: 'test-token' },
+        tenant: { id: 'company-a', name: 'Company A' },
         isLoading: false,
+        isInitialized: true,
         error: null,
-        login: vi.fn(),
-        logout: vi.fn(),
-        setUser: vi.fn(),
-        setLoading: vi.fn(),
-        clearError: vi.fn(),
-        isAuthenticated: true
+        isAuthenticated: true,
+        hasPermission: vi.fn(() => true),
+        isOwner: vi.fn(() => true),
+        isAdmin: vi.fn(() => false),
+        canAccess: vi.fn(() => false) // This should block access to company-b
       })
 
       render(
         <MemoryRouter initialEntries={['/company-b/dashboard']}>
-          <RoleRoutes allowedRoles={['owner']} requiredCompanyId="company-b">
+          <ProtectedRoute allowedRoles={['owner']} requiredCompanyId="company-b">
             <MockDashboard />
-          </RoleRoutes>
+          </ProtectedRoute>
         </MemoryRouter>
       )
 
-      // This test will fail because cross-company access prevention is not implemented
       expect(screen.getByTestId('navigate')).toHaveTextContent('/unauthorized')
     })
 
     it('should allow access only to own company resources', () => {
-      vi.mocked(useAuthStore).mockReturnValue({
+      mockUseAuth.mockReturnValue({
         user: companyAUser,
+        session: { access_token: 'test-token' },
+        tenant: { id: 'company-a', name: 'Company A' },
         isLoading: false,
+        isInitialized: true,
         error: null,
-        login: vi.fn(),
-        logout: vi.fn(),
-        setUser: vi.fn(),
-        setLoading: vi.fn(),
-        clearError: vi.fn(),
-        isAuthenticated: true
+        isAuthenticated: true,
+        hasPermission: vi.fn(() => true),
+        isOwner: vi.fn(() => true),
+        isAdmin: vi.fn(() => false),
+        canAccess: vi.fn(() => true)
       })
 
       render(
         <MemoryRouter>
-          <RoleRoutes allowedRoles={['owner']} requiredCompanyId="company-a">
+          <ProtectedRoute allowedRoles={['owner']} requiredCompanyId="company-a">
             <MockDashboard />
-          </RoleRoutes>
+          </ProtectedRoute>
         </MemoryRouter>
       )
 
-      // This test will fail because company access verification is not implemented
       expect(screen.getByTestId('dashboard')).toBeInTheDocument()
     })
   })
 
   describe('Route Navigation and Redirects', () => {
     it('should redirect unauthenticated users to login', async () => {
-      vi.mocked(useAuthStore).mockReturnValue({
+      mockUseAuth.mockReturnValue({
         user: null,
+        session: null,
+        tenant: null,
         isLoading: false,
+        isInitialized: true,
         error: null,
-        login: vi.fn(),
-        logout: vi.fn(),
-        setUser: vi.fn(),
-        setLoading: vi.fn(),
-        clearError: vi.fn(),
-        isAuthenticated: false
+        isAuthenticated: false,
+        hasPermission: vi.fn(() => false),
+        isOwner: vi.fn(() => false),
+        isAdmin: vi.fn(() => false),
+        canAccess: vi.fn(() => false)
       })
 
       render(
@@ -449,91 +492,93 @@ describe('Role-Based Routing Tests', () => {
         </MemoryRouter>
       )
 
-      // This test will fail because redirection logic is not implemented
       await waitFor(() => {
         expect(screen.getByTestId('navigate')).toHaveTextContent('/login')
       })
     })
 
     it('should redirect authenticated users from login page to appropriate dashboard', () => {
-      vi.mocked(useAuthStore).mockReturnValue({
-        user: { ...mockUser, user_metadata: { role: 'owner', company_id: 'company-123' } },
+      mockUseAuth.mockReturnValue({
+        user: { ...mockUser, role: 'owner', tenant_id: 'company-123' },
+        session: { access_token: 'test-token' },
+        tenant: { id: 'company-123', name: 'Test Company' },
         isLoading: false,
+        isInitialized: true,
         error: null,
-        login: vi.fn(),
-        logout: vi.fn(),
-        setUser: vi.fn(),
-        setLoading: vi.fn(),
-        clearError: vi.fn(),
-        isAuthenticated: true
+        isAuthenticated: true,
+        hasPermission: vi.fn(() => true),
+        isOwner: vi.fn(() => true),
+        isAdmin: vi.fn(() => false),
+        canAccess: vi.fn(() => true)
       })
 
       render(
         <MemoryRouter initialEntries={['/login']}>
-          <RoleRoutes redirectAuthenticated={true}>
+          <ProtectedRoute redirectAuthenticated={true}>
             <MockLoginForm />
-          </RoleRoutes>
+          </ProtectedRoute>
         </MemoryRouter>
       )
 
-      // This test will fail because authenticated user redirection is not implemented
       expect(screen.getByTestId('navigate')).toHaveTextContent('/dashboard')
     })
 
     it('should redirect dev users to admin dashboard', () => {
-      vi.mocked(useAuthStore).mockReturnValue({
-        user: { ...mockUser, user_metadata: { role: 'dev', company_id: null } },
+      mockUseAuth.mockReturnValue({
+        user: { ...mockUser, role: 'dev', tenant_id: null },
+        session: { access_token: 'test-token' },
+        tenant: null,
         isLoading: false,
+        isInitialized: true,
         error: null,
-        login: vi.fn(),
-        logout: vi.fn(),
-        setUser: vi.fn(),
-        setLoading: vi.fn(),
-        clearError: vi.fn(),
-        isAuthenticated: true
+        isAuthenticated: true,
+        hasPermission: vi.fn(() => true),
+        isOwner: vi.fn(() => false),
+        isAdmin: vi.fn(() => false),
+        canAccess: vi.fn(() => true)
       })
 
       render(
         <MemoryRouter initialEntries={['/']}>
-          <RoleRoutes redirectToRoleDashboard={true}>
+          <ProtectedRoute redirectToRoleDashboard={true}>
             <div>Home</div>
-          </RoleRoutes>
+          </ProtectedRoute>
         </MemoryRouter>
       )
 
-      // This test will fail because role-based dashboard redirection is not implemented
       expect(screen.getByTestId('navigate')).toHaveTextContent('/admin')
     })
   })
 
   describe('Indonesian Language Support', () => {
     it('should display unauthorized message in Bahasa Indonesia', () => {
-      vi.mocked(useAuthStore).mockReturnValue({
-        user: { ...mockUser, user_metadata: { role: 'staff', company_id: 'company-123' } },
+      mockUseAuth.mockReturnValue({
+        user: { ...mockUser, role: 'employee', tenant_id: 'company-123' },
+        session: { access_token: 'test-token' },
+        tenant: { id: 'company-123', name: 'Test Company' },
         isLoading: false,
+        isInitialized: true,
         error: null,
-        login: vi.fn(),
-        logout: vi.fn(),
-        setUser: vi.fn(),
-        setLoading: vi.fn(),
-        clearError: vi.fn(),
-        isAuthenticated: true
+        isAuthenticated: true,
+        hasPermission: vi.fn(() => false),
+        isOwner: vi.fn(() => false),
+        isAdmin: vi.fn(() => false),
+        canAccess: vi.fn(() => false)
       })
 
       render(
         <MemoryRouter>
-          <RoleRoutes allowedRoles={['dev']} showUnauthorizedMessage={true}>
+          <ProtectedRoute allowedRoles={['dev']} showUnauthorizedMessage={true}>
             <MockCompanyManagement />
-          </RoleRoutes>
+          </ProtectedRoute>
         </MemoryRouter>
       )
 
-      // This test will fail because Indonesian error messages are not implemented
       expect(screen.getByText(/anda tidak memiliki akses/i)).toBeInTheDocument()
     })
 
     it('should display loading message in Bahasa Indonesia', () => {
-      vi.mocked(useAuthStore).mockReturnValue({
+      mockUseAuth.mockReturnValue({
         user: null,
         isLoading: true,
         error: null,

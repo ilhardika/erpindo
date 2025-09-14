@@ -10,6 +10,10 @@ export interface ProtectedRouteProps {
   requiredRole?: 'owner' | 'dev' | 'employee'
   fallbackPath?: string
   allowedRoles?: ('owner' | 'dev' | 'employee')[]
+  redirectAuthenticated?: boolean
+  redirectToRoleDashboard?: boolean
+  requiredCompanyId?: string
+  showUnauthorizedMessage?: boolean
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
@@ -18,7 +22,11 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requiredPermissions = [],
   requiredRole,
   fallbackPath = '/login',
-  allowedRoles = []
+  allowedRoles = [],
+  redirectAuthenticated = false,
+  redirectToRoleDashboard = false,
+  requiredCompanyId,
+  showUnauthorizedMessage = false
 }) => {
   const { 
     user, 
@@ -49,6 +57,18 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         </div>
       </div>
     )
+  }
+
+  // Redirect authenticated users (e.g., from login page)
+  if (redirectAuthenticated && isAuthenticated) {
+    const defaultPath = user?.role === 'dev' ? '/admin' : '/dashboard'
+    return <Navigate to={defaultPath} replace />
+  }
+
+  // Role-based dashboard redirection
+  if (redirectToRoleDashboard && isAuthenticated && user) {
+    const roleDashboard = user.role === 'dev' ? '/admin' : '/dashboard'
+    return <Navigate to={roleDashboard} replace />
   }
 
   // Check authentication requirement
@@ -87,6 +107,24 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     const hasAllowedRole = allowedRoles.includes(user.role || 'employee')
 
     if (!hasAllowedRole) {
+      // Show unauthorized message in Indonesian if requested
+      if (showUnauthorizedMessage) {
+        return (
+          <div className="min-h-screen flex items-center justify-center bg-gray-50">
+            <div className="text-center p-8">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+                <h2 className="text-lg font-semibold text-red-800 mb-2">
+                  Anda tidak memiliki akses
+                </h2>
+                <p className="text-red-600">
+                  Role yang diizinkan: {allowedRoles.join(', ')}
+                </p>
+              </div>
+            </div>
+          </div>
+        )
+      }
+
       return (
         <Navigate 
           to="/unauthorized" 
@@ -100,6 +138,20 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     }
   }
 
+  // Check company ID requirement (multi-tenant isolation)
+  if (user && requiredCompanyId && user.tenant_id !== requiredCompanyId) {
+    return (
+      <Navigate 
+        to="/unauthorized" 
+        state={{ 
+          message: `Akses ditolak. Anda tidak memiliki akses ke perusahaan ini.`,
+          from: location.pathname 
+        }}
+        replace 
+      />
+    )
+  }
+
   // Check permission-based access
   if (requiredPermissions.length > 0) {
     const hasAllPermissions = requiredPermissions.every(permission => 
@@ -110,6 +162,24 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       const missingPermissions = requiredPermissions.filter(permission => 
         !hasPermission(permission)
       )
+
+      // Show unauthorized message in Indonesian if requested
+      if (showUnauthorizedMessage) {
+        return (
+          <div className="min-h-screen flex items-center justify-center bg-gray-50">
+            <div className="text-center p-8">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+                <h2 className="text-lg font-semibold text-red-800 mb-2">
+                  Anda tidak memiliki akses
+                </h2>
+                <p className="text-red-600">
+                  Permission diperlukan: {missingPermissions.join(', ')}
+                </p>
+              </div>
+            </div>
+          </div>
+        )
+      }
 
       return (
         <Navigate 

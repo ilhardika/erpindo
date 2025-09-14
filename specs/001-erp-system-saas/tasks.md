@@ -110,7 +110,7 @@
 
 ### Data Layer & Types
 
-- [ ] T032 [P] TypeScript interfaces for all entities in `frontend/src/types/database.ts`
+- [x] T032 [P] TypeScript interfaces for all entities in `frontend/src/types/database.ts`
 - [ ] T033 [P] Supabase database hooks in `frontend/src/hooks/useDatabase.ts`
 - [ ] T034 [P] Custom hooks for data fetching in `frontend/src/hooks/useSupabaseQuery.ts`
 - [ ] T035 [P] Error handling utilities in `frontend/src/lib/errorHandling.ts`
