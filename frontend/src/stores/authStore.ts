@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase'
 // Types for authentication state
 export interface AuthUser extends User {
   tenant_id?: string
-  role?: 'owner' | 'admin' | 'employee'
+  role?: 'owner' | 'dev' | 'employee'
   permissions?: string[]
 }
 
@@ -87,7 +87,7 @@ const DEFAULT_PERMISSIONS = {
     'settings.manage',
     'integrations.manage'
   ],
-  admin: [
+  dev: [
     'users.view',
     'products.manage',
     'customers.manage',
@@ -123,7 +123,7 @@ export const useAuthStore = create<AuthState>()(
           // Demo credentials for testing without real Supabase
           const demoUsers = {
             'owner@demo.com': { role: 'owner', name: 'Owner Demo' },
-            'admin@demo.com': { role: 'admin', name: 'Admin Demo' },
+            'dev@demo.com': { role: 'dev', name: 'Dev Demo' },
             'staff@demo.com': { role: 'employee', name: 'Staff Demo' }
           }
 
@@ -136,7 +136,7 @@ export const useAuthStore = create<AuthState>()(
               email,
               user_metadata: { full_name: demoUser.name },
               tenant_id: 'demo-tenant',
-              role: demoUser.role as 'owner' | 'admin' | 'employee',
+              role: demoUser.role as 'owner' | 'dev' | 'employee',
               permissions: DEFAULT_PERMISSIONS[demoUser.role as keyof typeof DEFAULT_PERMISSIONS],
               aud: 'authenticated',
               created_at: new Date().toISOString(),
@@ -189,12 +189,12 @@ export const useAuthStore = create<AuthState>()(
           if (error) {
             // If Supabase fails, show helpful message
             set({ 
-              error: 'Demo: Gunakan owner@demo.com, admin@demo.com, atau staff@demo.com dengan password "password123"', 
+              error: 'Demo: Gunakan owner@demo.com, dev@demo.com, atau staff@demo.com dengan password "password123"', 
               isLoading: false 
             })
             return { 
               success: false, 
-              error: 'Demo: Gunakan owner@demo.com, admin@demo.com, atau staff@demo.com dengan password "password123"' 
+              error: 'Demo: Gunakan owner@demo.com, dev@demo.com, atau staff@demo.com dengan password "password123"' 
             }
           }
 
@@ -328,6 +328,21 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true })
         
         try {
+          // First check if we have persisted demo user state
+          const currentState = get()
+          
+          // If we have a persisted demo user, keep it
+          if (currentState.user && currentState.user.id.startsWith('demo-')) {
+            console.log('Restoring demo user session:', currentState.user.email)
+            set({ 
+              isLoading: false, 
+              isInitialized: true,
+              error: null
+            })
+            return
+          }
+
+          // For real Supabase users, check session
           const { data: { session } } = await supabase.auth.getSession()
           
           if (session?.user) {
@@ -360,6 +375,7 @@ export const useAuthStore = create<AuthState>()(
               error: null
             })
           } else {
+            // No Supabase session and no demo user - clear state
             set({
               user: null,
               session: null,
@@ -481,7 +497,7 @@ export const useAuthStore = create<AuthState>()(
 
       isAdmin: () => {
         const { user } = get()
-        return user?.role === 'admin' || user?.role === 'owner'
+        return user?.role === 'dev' || user?.role === 'owner'
       },
 
       canAccess: (resource: string, action: string) => {

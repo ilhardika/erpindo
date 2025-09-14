@@ -49,7 +49,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-gray-600">Memuat aplikasi...</p>
         </div>
       </div>
@@ -70,7 +70,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex">
       {/* Mobile sidebar overlay */}
       {isMobile && sidebarOpen && (
         <div 
@@ -81,9 +81,9 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
 
       {/* Sidebar */}
       <div className={`
-        fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out
+        ${isMobile ? 'fixed' : 'relative'} inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out
         ${isMobile ? (sidebarOpen ? 'translate-x-0' : '-translate-x-full') : 'translate-x-0'}
-        lg:relative lg:translate-x-0
+        flex-shrink-0
       `}>
         {/* Mobile close button */}
         {isMobile && (
@@ -102,12 +102,12 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
       </div>
 
       {/* Main content */}
-      <div className={`flex-1 ${!isMobile ? 'lg:ml-64' : ''}`}>
+      <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
         <Header onMenuClick={toggleSidebar} showMenuButton={isMobile} />
 
         {/* Page content */}
-        <main className="p-4 lg:p-6">
+        <main className="flex-1 p-4 lg:p-6">
           <div className="max-w-7xl mx-auto">
             {children || <Outlet />}
           </div>

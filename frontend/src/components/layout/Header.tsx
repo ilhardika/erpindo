@@ -84,7 +84,7 @@ export const Header: React.FC<HeaderProps> = ({
     switch (user?.role) {
       case 'owner':
         return 'Pemilik'
-      case 'admin':
+      case 'dev':
         return 'Administrator'
       case 'employee':
         return 'Karyawan'
@@ -94,7 +94,7 @@ export const Header: React.FC<HeaderProps> = ({
   }
 
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200">
+    <header className="flex-shrink-0 bg-white shadow-sm border-b border-gray-200">
       <div className="px-4 lg:px-6 py-4">
         <div className="flex items-center justify-between">
           {/* Left section */}
@@ -150,7 +150,7 @@ export const Header: React.FC<HeaderProps> = ({
               >
                 <div className="flex items-center space-x-3">
                   {/* Avatar */}
-                  <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                  <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
                     <User className="h-4 w-4 text-white" />
                   </div>
                   
@@ -184,7 +184,7 @@ export const Header: React.FC<HeaderProps> = ({
                     <div className="mt-1">
                       <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
                         user?.role === 'owner' ? 'bg-purple-100 text-purple-800' :
-                        user?.role === 'admin' ? 'bg-blue-100 text-blue-800' :
+                        user?.role === 'dev' ? 'bg-gray-200 text-gray-800' :
                         'bg-green-100 text-green-800'
                       }`}>
                         {getRoleDisplayName()}

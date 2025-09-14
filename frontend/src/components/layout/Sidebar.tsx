@@ -23,7 +23,7 @@ export interface MenuItemData {
   name: string
   href: string
   icon: React.ComponentType<{ className?: string }>
-  roles: ('owner' | 'admin' | 'employee')[]
+  roles: ('owner' | 'dev' | 'employee')[]
   permissions?: string[]
 }
 
@@ -34,7 +34,7 @@ const menuItems: MenuItemData[] = [
     name: 'Beranda',
     href: '/dashboard',
     icon: Home,
-    roles: ['owner', 'admin', 'employee']
+    roles: ['owner', 'dev', 'employee']
   },
 
   // POS - All roles (employees can use POS)
@@ -42,25 +42,25 @@ const menuItems: MenuItemData[] = [
     name: 'Kasir (POS)',
     href: '/pos',
     icon: ShoppingCart,
-    roles: ['owner', 'admin', 'employee'],
+    roles: ['owner', 'dev', 'employee'],
     permissions: ['orders.create']
   },
 
-  // Products - Admin and Owner
+  // Products - Dev and Owner
   {
     name: 'Produk',
     href: '/products',
     icon: Package,
-    roles: ['owner', 'admin'],
+    roles: ['owner', 'dev'],
     permissions: ['products.manage']
   },
 
-  // Customers - Admin and Owner
+  // Customers - Dev and Owner
   {
     name: 'Pelanggan',
     href: '/customers',
     icon: Users,
-    roles: ['owner', 'admin'],
+    roles: ['owner', 'dev'],
     permissions: ['customers.manage']
   },
 
@@ -69,34 +69,34 @@ const menuItems: MenuItemData[] = [
     name: 'Pesanan',
     href: '/orders',
     icon: ShoppingBag,
-    roles: ['owner', 'admin', 'employee'],
+    roles: ['owner', 'dev', 'employee'],
     permissions: ['orders.view']
   },
 
-  // Invoices - Admin and Owner
+  // Invoices - Dev and Owner
   {
     name: 'Faktur',
     href: '/invoices',
     icon: FileText,
-    roles: ['owner', 'admin'],
+    roles: ['owner', 'dev'],
     permissions: ['orders.manage']
   },
 
-  // Reports - Admin and Owner
+  // Reports - Dev and Owner
   {
     name: 'Laporan',
     href: '/reports',
     icon: BarChart3,
-    roles: ['owner', 'admin'],
+    roles: ['owner', 'dev'],
     permissions: ['reports.view']
   },
 
-  // Payments - Admin and Owner
+  // Payments - Dev and Owner
   {
     name: 'Pembayaran',
     href: '/payments',
     icon: CreditCard,
-    roles: ['owner', 'admin'],
+    roles: ['owner', 'dev'],
     permissions: ['orders.manage']
   },
 
@@ -123,7 +123,7 @@ const menuItems: MenuItemData[] = [
     name: 'Pengaturan',
     href: '/settings',
     icon: Settings,
-    roles: ['owner', 'admin', 'employee']
+    roles: ['owner', 'dev', 'employee']
   }
 ]
 
@@ -151,12 +151,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ onNavigate }) => {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-screen">
       {/* Logo and Company Info */}
-      <div className="p-4 border-b border-gray-200">
+      <div className="flex-shrink-0 p-6 border-b border-gray-200">
         <div className="flex items-center space-x-3">
           <div className="flex-shrink-0">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
               <Building className="h-5 w-5 text-white" />
             </div>
           </div>
@@ -186,7 +186,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onNavigate }) => {
             className={({ isActive }) =>
               `flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors duration-150 ${
                 isActive
-                  ? 'bg-blue-100 text-blue-700 border-r-2 border-blue-700'
+                  ? 'bg-gray-200 text-gray-900 border-r-2 border-gray-900'
                   : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
               }`
             }
@@ -198,7 +198,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onNavigate }) => {
       </nav>
 
       {/* User Role Badge */}
-      <div className="p-4 border-t border-gray-200">
+      <div className="flex-shrink-0 p-4 border-t border-gray-200">
         <div className="flex items-center space-x-3">
           <div className="flex-1">
             <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
@@ -206,16 +206,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ onNavigate }) => {
             </p>
             <p className="text-sm font-medium text-gray-900 capitalize">
               {user?.role === 'owner' ? 'Pemilik' : 
-               user?.role === 'admin' ? 'Admin' : 'Karyawan'}
+               user?.role === 'dev' ? 'Developer' : 'Karyawan'}
             </p>
           </div>
           <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-            user?.role === 'owner' ? 'bg-purple-100 text-purple-800' :
-            user?.role === 'admin' ? 'bg-blue-100 text-blue-800' :
-            'bg-green-100 text-green-800'
+            user?.role === 'owner' ? 'bg-gray-800 text-white' :
+            user?.role === 'dev' ? 'bg-gray-600 text-white' :
+            'bg-gray-400 text-white'
           }`}>
             {user?.role === 'owner' ? 'Owner' : 
-             user?.role === 'admin' ? 'Admin' : 'Staff'}
+             user?.role === 'dev' ? 'Dev' : 'Staff'}
           </div>
         </div>
       </div>

@@ -116,7 +116,7 @@ function App() {
               <p className="text-gray-600 mb-4">Anda tidak memiliki izin untuk mengakses halaman ini.</p>
               <button 
                 onClick={() => window.history.back()}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90"
               >
                 Kembali
               </button>
@@ -132,7 +132,7 @@ function App() {
               <p className="text-gray-600 mb-4">Halaman yang Anda cari tidak ada.</p>
               <button 
                 onClick={() => window.location.href = '/dashboard'}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90"
               >
                 Kembali ke Dashboard
               </button>

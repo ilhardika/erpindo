@@ -19,18 +19,18 @@ export const LoginPage: React.FC = () => {
       email: 'owner@demo.com',
       password: 'password123',
       name: 'Owner Demo',
-      role: 'Pemilik',
-      description: 'Akses penuh ke semua fitur',
+      role: 'Pemilik Perusahaan',
+      description: 'Akses penuh ke semua fitur perusahaan',
       icon: Building,
       color: 'purple'
     },
     {
-      id: 'admin',
-      email: 'admin@demo.com',
+      id: 'dev',
+      email: 'dev@demo.com',
       password: 'password123',
-      name: 'Admin Demo',
-      role: 'Administrator',
-      description: 'Manajemen produk, pelanggan, dan laporan',
+      name: 'Dev Demo',
+      role: 'System Developer',
+      description: 'Kelola subscription & semua perusahaan',
       icon: Shield,
       color: 'blue'
     },
@@ -81,7 +81,7 @@ export const LoginPage: React.FC = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-gray-600">Memuat...</p>
         </div>
       </div>
@@ -99,7 +99,7 @@ export const LoginPage: React.FC = () => {
         {/* Header */}
         <div className="text-center">
           <div className="flex justify-center">
-            <div className="w-16 h-16 bg-blue-600 rounded-xl flex items-center justify-center">
+            <div className="w-16 h-16 bg-primary rounded-xl flex items-center justify-center">
               <Building className="h-8 w-8 text-white" />
             </div>
           </div>
@@ -149,9 +149,9 @@ export const LoginPage: React.FC = () => {
                 const Icon = credential.icon
                 const isLoading = selectedCredential === credential.id
                 const colorClasses = {
-                  purple: 'border-purple-200 bg-purple-50 hover:bg-purple-100 text-purple-700',
-                  blue: 'border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700',
-                  green: 'border-green-200 bg-green-50 hover:bg-green-100 text-green-700'
+                  purple: 'border-gray-300 bg-gray-50 hover:bg-gray-100 text-gray-800',
+                  blue: 'border-gray-400 bg-gray-100 hover:bg-gray-200 text-gray-900', 
+                  green: 'border-gray-200 bg-white hover:bg-gray-50 text-gray-700'
                 }
                 
                 return (
@@ -182,13 +182,13 @@ export const LoginPage: React.FC = () => {
           </div>
           
           {/* Manual Credentials Info */}
-          <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
-            <h4 className="text-xs font-medium text-blue-800 mb-2">
+          <div className="bg-gray-50 border border-gray-200 rounded-md p-3">
+            <h4 className="text-xs font-medium text-gray-800 mb-2">
               Manual Login Credentials
             </h4>
-            <div className="text-xs text-blue-700 space-y-1">
+            <div className="text-xs text-gray-700 space-y-1">
               <p><strong>Owner:</strong> owner@demo.com / password123</p>
-              <p><strong>Admin:</strong> admin@demo.com / password123</p>
+              <p><strong>Dev:</strong> dev@demo.com / password123</p>
               <p><strong>Staff:</strong> staff@demo.com / password123</p>
             </div>
           </div>

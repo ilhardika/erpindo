@@ -7,9 +7,9 @@ export interface ProtectedRouteProps {
   children: React.ReactNode
   requireAuth?: boolean
   requiredPermissions?: string[]
-  requiredRole?: 'owner' | 'admin' | 'employee'
+  requiredRole?: 'owner' | 'dev' | 'employee'
   fallbackPath?: string
-  allowedRoles?: ('owner' | 'admin' | 'employee')[]
+  allowedRoles?: ('owner' | 'dev' | 'employee')[]
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
@@ -44,7 +44,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
+          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
           <p className="text-gray-600">Memuat...</p>
         </div>
       </div>
@@ -65,7 +65,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   // Check role-based access
   if (user && requiredRole) {
     const hasRequiredRole = user.role === requiredRole || 
-      (requiredRole === 'admin' && isOwner()) ||
+      (requiredRole === 'dev' && isOwner()) ||
       (requiredRole === 'employee' && (isAdmin() || isOwner()))
 
     if (!hasRequiredRole) {
@@ -148,13 +148,13 @@ export const OwnerOnlyRoute: React.FC<{ children: React.ReactNode }> = ({ childr
 )
 
 export const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <ProtectedRoute allowedRoles={['owner', 'admin']}>
+  <ProtectedRoute allowedRoles={['owner', 'dev']}>
     {children}
   </ProtectedRoute>
 )
 
 export const EmployeeRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <ProtectedRoute allowedRoles={['owner', 'admin', 'employee']}>
+  <ProtectedRoute allowedRoles={['owner', 'dev', 'employee']}>
     {children}
   </ProtectedRoute>
 )
@@ -195,7 +195,7 @@ export const PermissionGate: React.FC<{
 // Role-based conditional rendering
 export const RoleGate: React.FC<{
   children: React.ReactNode
-  roles: ('owner' | 'admin' | 'employee')[]
+  roles: ('owner' | 'dev' | 'employee')[]
   fallback?: React.ReactNode
 }> = ({ children, roles, fallback = null }) => {
   const { user } = useAuth()

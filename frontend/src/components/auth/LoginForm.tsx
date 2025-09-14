@@ -88,7 +88,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           id="email"
           placeholder="nama@email.com"
           className={`
-            w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+            w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary
             ${errors.email ? 'border-red-500' : 'border-gray-300'}
           `}
           data-testid="email-input"
@@ -113,7 +113,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
             id="password"
             placeholder="Masukkan password"
             className={`
-              w-full px-3 py-2 pr-10 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+              w-full px-3 py-2 pr-10 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary
               ${errors.password ? 'border-red-500' : 'border-gray-300'}
             `}
             data-testid="password-input"
@@ -149,7 +149,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           ${
             isSubmitting
               ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
+              : 'bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary'
           }
         `}
         data-testid="submit-button"
@@ -175,7 +175,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
             <button
               type="button"
               onClick={onRegisterClick}
-              className="font-medium text-blue-600 hover:text-blue-500 focus:outline-none focus:underline"
+              className="font-medium text-primary hover:text-primary/80 focus:outline-none focus:underline"
               data-testid="register-link"
               disabled={isSubmitting}
             >

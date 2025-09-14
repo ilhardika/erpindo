@@ -38,7 +38,7 @@ export const DashboardPage: React.FC = () => {
     switch (user?.role) {
       case 'owner':
         return 'Selamat datang kembali, Pemilik!'
-      case 'admin':
+      case 'dev':
         return 'Selamat datang, Administrator!'
       case 'employee':
         return 'Selamat datang, Tim!'
@@ -58,17 +58,17 @@ export const DashboardPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Welcome Section */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg p-6 text-white">
+      <div className="bg-gradient-to-r from-gray-800 to-gray-900 rounded-lg p-6 text-white">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold mb-2">
               {getGreeting()}! 👋
             </h1>
-            <p className="text-blue-100 mb-1">
+            <p className="text-gray-300 mb-1">
               {getRoleGreeting()}
             </p>
             {tenant && (
-              <p className="text-blue-200 text-sm">
+              <p className="text-gray-400 text-sm">
                 {tenant.name} • {tenant.type === 'retail' ? 'Toko Ritel' : 
                                  tenant.type === 'restaurant' ? 'Restoran' :
                                  tenant.type === 'service' ? 'Jasa' : 'Manufaktur'}
@@ -76,7 +76,7 @@ export const DashboardPage: React.FC = () => {
             )}
           </div>
           <div className="text-right">
-            <p className="text-blue-100 text-sm">
+            <p className="text-gray-300 text-sm">
               {new Date().toLocaleDateString('id-ID', {
                 weekday: 'long',
                 year: 'numeric',
@@ -84,7 +84,7 @@ export const DashboardPage: React.FC = () => {
                 day: 'numeric'
               })}
             </p>
-            <p className="text-blue-200 text-sm">
+            <p className="text-gray-400 text-sm">
               {new Date().toLocaleTimeString('id-ID', {
                 hour: '2-digit',
                 minute: '2-digit'
@@ -100,7 +100,7 @@ export const DashboardPage: React.FC = () => {
         <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <Users className="h-8 w-8 text-blue-600" />
+              <Users className="h-8 w-8 text-primary" />
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Total Pelanggan</p>
@@ -180,7 +180,7 @@ export const DashboardPage: React.FC = () => {
               </div>
             </div>
             <div className="flex items-center space-x-3">
-              <Users className="h-5 w-5 text-blue-500 flex-shrink-0" />
+              <Users className="h-5 w-5 text-gray-600 flex-shrink-0" />
               <div className="flex-1">
                 <p className="text-sm text-gray-900">Pelanggan baru mendaftar</p>
                 <p className="text-xs text-gray-500">15 menit yang lalu</p>
@@ -197,7 +197,7 @@ export const DashboardPage: React.FC = () => {
           <div className="grid grid-cols-2 gap-3">
             <button className="flex items-center justify-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
               <div className="text-center">
-                <ShoppingCart className="h-6 w-6 text-blue-600 mx-auto mb-2" />
+                <ShoppingCart className="h-6 w-6 text-primary mx-auto mb-2" />
                 <span className="text-sm font-medium text-gray-900">Buka Kasir</span>
               </div>
             </button>

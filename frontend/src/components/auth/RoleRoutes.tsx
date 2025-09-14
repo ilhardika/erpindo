@@ -7,7 +7,7 @@ import { ProtectedRoute } from './ProtectedRoute'
 export interface RoleRouteConfig {
   path: string
   component: React.ComponentType<any>
-  roles: ('owner' | 'admin' | 'employee')[]
+  roles: ('owner' | 'dev' | 'employee')[]
   permissions?: string[]
   exact?: boolean
   redirectTo?: string
@@ -83,13 +83,13 @@ export const OwnerRoute: React.FC<{ component: React.ComponentType<any> }> = ({ 
 )
 
 export const AdminRoute: React.FC<{ component: React.ComponentType<any> }> = ({ component: Component }) => (
-  <ProtectedRoute allowedRoles={['owner', 'admin']}>
+  <ProtectedRoute allowedRoles={['owner', 'dev']}>
     <Component />
   </ProtectedRoute>
 )
 
 export const EmployeeRoute: React.FC<{ component: React.ComponentType<any> }> = ({ component: Component }) => (
-  <ProtectedRoute allowedRoles={['owner', 'admin', 'employee']}>
+  <ProtectedRoute allowedRoles={['owner', 'dev', 'employee']}>
     <Component />
   </ProtectedRoute>
 )
@@ -103,7 +103,7 @@ export const DashboardRoute: React.FC = () => {
   }
 
   if (isAdmin()) {
-    return <Navigate to="/dashboard/admin" replace />
+    return <Navigate to="/dashboard/dev" replace />
   }
 
   return <Navigate to="/dashboard/employee" replace />
@@ -112,9 +112,9 @@ export const DashboardRoute: React.FC = () => {
 // Menu route resolver based on permissions
 export const MenuRoute: React.FC<{ 
   ownerComponent: React.ComponentType<any>
-  adminComponent: React.ComponentType<any>
+  devComponent: React.ComponentType<any>
   employeeComponent: React.ComponentType<any>
-}> = ({ ownerComponent: OwnerComponent, adminComponent: AdminComponent, employeeComponent: EmployeeComponent }) => {
+}> = ({ ownerComponent: OwnerComponent, devComponent: DevComponent, employeeComponent: EmployeeComponent }) => {
   const { isOwner, isAdmin } = useAuth()
 
   if (isOwner()) {
@@ -122,7 +122,7 @@ export const MenuRoute: React.FC<{
   }
 
   if (isAdmin()) {
-    return <AdminComponent />
+    return <DevComponent />
   }
 
   return <EmployeeComponent />
@@ -133,7 +133,7 @@ export const useRoutePermission = () => {
   const { user, hasPermission, isOwner, isAdmin } = useAuth()
 
   const canAccessRoute = (
-    routeRoles: ('owner' | 'admin' | 'employee')[],
+    routeRoles: ('owner' | 'dev' | 'employee')[],
     routePermissions: string[] = []
   ): boolean => {
     if (!user) return false
@@ -158,7 +158,7 @@ export const useRoutePermission = () => {
 
   const getDefaultRoute = (): string => {
     if (isOwner()) return '/dashboard/owner'
-    if (isAdmin()) return '/dashboard/admin'
+    if (isAdmin()) return '/dashboard/dev'
     return '/dashboard/employee'
   }
 
@@ -247,23 +247,23 @@ export const indonesianERPRoutes: RoleRouteConfig[] = [
     permissions: ['users.manage']
   },
 
-  // Admin routes
+  // Dev routes
   {
-    path: '/dashboard/admin',
-    component: () => <div>Admin Dashboard</div>,
-    roles: ['owner', 'admin'],
+    path: '/dashboard/dev',
+    component: () => <div>Dev Dashboard</div>,
+    roles: ['owner', 'dev'],
     permissions: ['reports.view']
   },
   {
     path: '/products/manage',
     component: () => <div>Product Management</div>,
-    roles: ['owner', 'admin'],
+    roles: ['owner', 'dev'],
     permissions: ['products.manage']
   },
   {
     path: '/customers/manage',
     component: () => <div>Customer Management</div>,
-    roles: ['owner', 'admin'],
+    roles: ['owner', 'dev'],
     permissions: ['customers.manage']
   },
 
@@ -271,19 +271,19 @@ export const indonesianERPRoutes: RoleRouteConfig[] = [
   {
     path: '/dashboard/employee',
     component: () => <div>Employee Dashboard</div>,
-    roles: ['owner', 'admin', 'employee'],
+    roles: ['owner', 'dev', 'employee'],
     permissions: ['orders.view']
   },
   {
     path: '/pos/cashier',
     component: () => <div>POS Cashier</div>,
-    roles: ['owner', 'admin', 'employee'],
+    roles: ['owner', 'dev', 'employee'],
     permissions: ['orders.create']
   },
   {
     path: '/products/view',
     component: () => <div>Product Catalog</div>,
-    roles: ['owner', 'admin', 'employee'],
+    roles: ['owner', 'dev', 'employee'],
     permissions: ['products.view']
   }
 ]
