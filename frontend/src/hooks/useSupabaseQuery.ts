@@ -1,304 +1,588 @@
-// Custom React hooks for Supabase operations with React Query integration
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { supabase } from '@/lib/supabase'
-import { useAuth } from '@/stores/authStore'
-import type { Database } from '@/types/database'
-
-type Tables = Database['public']['Tables']
-
-interface QueryOptions {
-  enabled?: boolean
-  staleTime?: number
-  cacheTime?: number
-  refetchOnWindowFocus?: boolean
-}
-
-interface SupabaseQueryResult<T> {
-  data: T[] | null
-  error: string | null
-  loading: boolean
-  refetch: () => void
-}
-
 /**
- * Custom hook for querying Supabase data with React Query
- * Includes automatic multi-tenant filtering and caching
+ * Advanced Supabase Query Hooks for ERP System
+ * Provides caching, pagination, real-time subscriptions, and complex queries
+ * Uses MCP Supabase patterns for production-ready data fetching
+ * Date: 2025-09-14
  */
-export function useSupabaseQuery<T = any>(
-  table: string,
-  queryKey: string[],
-  options?: {
-    columns?: string
-    filters?: Record<string, any>
-    orderBy?: { column: string; ascending?: boolean }
-    limit?: number
-    enabled?: boolean
-  } & QueryOptions
-): SupabaseQueryResult<T> {
-  const { user } = useAuth()
-  const companyId = user?.tenant_id
 
-  const queryResult = useQuery({
-    queryKey: [...queryKey, companyId],
-    queryFn: async () => {
-      let query = supabase.from(table).select(options?.columns || '*')
+import { useCallback, useEffect, useState, useRef } from 'react';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../stores/authStore';
+import type {
+  TableName,
+  TableRow,
+} from '../types/database';
 
-      // Apply company_id filter for multi-tenancy (except for dev users)
-      if (user?.role !== 'dev' && table !== 'subscription_plans' && companyId) {
-        query = query.eq('company_id', companyId)
+// ============================================================================
+// ADVANCED QUERY TYPES & OPTIONS
+// ============================================================================
+
+export interface QueryOptions {
+  enabled?: boolean;
+  staleTime?: number; // Cache time in ms
+  cacheTime?: number; // Cache persist time in ms
+  refetchOnWindowFocus?: boolean;
+  refetchInterval?: number;
+  select?: string; // Custom select fields
+  orderBy?: { column: string; ascending?: boolean }[];
+  filters?: Record<string, any>;
+  limit?: number;
+  offset?: number;
+}
+
+export interface PaginationOptions {
+  page: number;
+  pageSize: number;
+  orderBy?: { column: string; ascending?: boolean }[];
+  filters?: Record<string, any>;
+}
+
+export interface PaginationResult<T> {
+  data: T[];
+  count: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}
+
+export interface SubscriptionOptions {
+  event: 'INSERT' | 'UPDATE' | 'DELETE' | '*';
+  filter?: string;
+  schema?: string;
+}
+
+export interface OptimisticUpdate<T> {
+  type: 'insert' | 'update' | 'delete';
+  data: T | Partial<T>;
+  rollback?: () => void;
+}
+
+// Cache interface
+interface CacheEntry<T> {
+  data: T;
+  timestamp: number;
+  staleTime: number;
+}
+
+// ============================================================================
+// CACHE MANAGEMENT
+// ============================================================================
+
+class QueryCache {
+  private cache = new Map<string, CacheEntry<any>>();
+
+  get<T>(key: string): T | null {
+    const entry = this.cache.get(key);
+    if (!entry) return null;
+
+    const now = Date.now();
+    if (now - entry.timestamp > entry.staleTime) {
+      this.cache.delete(key);
+      return null;
+    }
+
+    return entry.data;
+  }
+
+  set<T>(key: string, data: T, staleTime = 5 * 60 * 1000): void {
+    this.cache.set(key, {
+      data,
+      timestamp: Date.now(),
+      staleTime,
+    });
+  }
+
+  invalidate(pattern?: string): void {
+    if (!pattern) {
+      this.cache.clear();
+      return;
+    }
+
+    const regex = new RegExp(pattern);
+    for (const key of this.cache.keys()) {
+      if (regex.test(key)) {
+        this.cache.delete(key);
+      }
+    }
+  }
+
+  clear(): void {
+    this.cache.clear();
+  }
+}
+
+const queryCache = new QueryCache();
+
+// ============================================================================
+// ADVANCED SUPABASE QUERY HOOK
+// ============================================================================
+
+export function useSupabaseQuery<T extends TableName>(
+  tableName: T,
+  options: QueryOptions = {}
+) {
+  const [data, setData] = useState<TableRow<T>[] | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  const [lastFetch, setLastFetch] = useState<Date | null>(null);
+  
+  const { user } = useAuth();
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const {
+    enabled = true,
+    staleTime = 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus = true,
+    refetchInterval,
+    select = '*',
+    orderBy = [{ column: 'created_at', ascending: false }],
+    filters = {},
+    limit,
+    offset,
+  } = options;
+
+  // Generate cache key
+  const cacheKey = `${tableName}-${JSON.stringify({ 
+    select, 
+    orderBy, 
+    filters, 
+    limit, 
+    offset,
+    company_id: user?.tenant_id 
+  })}`;
+
+  // Fetch function
+  const fetchData = useCallback(async (forceRefetch = false) => {
+    if (!enabled || !user?.tenant_id) return;
+
+    // Check cache first
+    if (!forceRefetch) {
+      const cachedData = queryCache.get<TableRow<T>[]>(cacheKey);
+      if (cachedData) {
+        setData(cachedData);
+        return;
+      }
+    }
+
+    // Cancel previous request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    abortControllerRef.current = new AbortController();
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      let query = supabase
+        .from(tableName)
+        .select(select, { count: 'exact' });
+
+      // Apply company isolation
+      const systemTables = ['subscription_plans'];
+      if (!systemTables.includes(tableName)) {
+        query = query.eq('company_id', user.tenant_id);
       }
 
-      // Apply additional filters
-      if (options?.filters) {
-        Object.entries(options.filters).forEach(([key, value]) => {
-          if (value !== undefined && value !== null) {
-            query = query.eq(key, value)
+      // Apply filters
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          if (Array.isArray(value)) {
+            query = query.in(key, value);
+          } else if (typeof value === 'string' && value.startsWith('ilike:')) {
+            query = query.ilike(key, value.substring(6));
+          } else if (typeof value === 'string' && value.startsWith('gte:')) {
+            query = query.gte(key, value.substring(4));
+          } else if (typeof value === 'string' && value.startsWith('lte:')) {
+            query = query.lte(key, value.substring(4));
+          } else {
+            query = query.eq(key, value);
           }
-        })
-      }
+        }
+      });
 
       // Apply ordering
-      if (options?.orderBy) {
-        query = query.order(options.orderBy.column, { 
-          ascending: options.orderBy.ascending ?? true 
-        })
+      orderBy.forEach(({ column, ascending = true }) => {
+        query = query.order(column, { ascending });
+      });
+
+      // Apply pagination
+      if (limit) {
+        query = query.limit(limit);
       }
 
-      // Apply limit
-      if (options?.limit) {
-        query = query.limit(options.limit)
+      if (offset) {
+        query = query.range(offset, offset + (limit || 50) - 1);
       }
 
-      const { data, error } = await query
+      const { data: fetchedData, error: fetchError } = await query.abortSignal(
+        abortControllerRef.current.signal
+      );
 
-      if (error) {
-        throw new Error(error.message)
+      if (fetchError) throw fetchError;
+
+      const result = fetchedData || [];
+      setData(result);
+      setLastFetch(new Date());
+
+      // Cache the result
+      queryCache.set(cacheKey, result, staleTime);
+
+    } catch (err) {
+      if ((err as Error).name === 'AbortError') return;
+      
+      const error = err as Error;
+      setError(error);
+      console.error('Query error:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [
+    enabled,
+    user?.tenant_id,
+    tableName,
+    select,
+    orderBy,
+    filters,
+    limit,
+    offset,
+    cacheKey,
+    staleTime,
+  ]);
+
+  // Refetch function
+  const refetch = useCallback(() => {
+    return fetchData(true);
+  }, [fetchData]);
+
+  // Invalidate cache for this query
+  const invalidate = useCallback(() => {
+    queryCache.invalidate(tableName);
+    return fetchData(true);
+  }, [tableName, fetchData]);
+
+  // Initial fetch
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  // Refetch interval
+  useEffect(() => {
+    if (refetchInterval && enabled) {
+      intervalRef.current = setInterval(() => {
+        fetchData(true);
+      }, refetchInterval);
+
+      return () => {
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+        }
+      };
+    }
+  }, [refetchInterval, enabled, fetchData]);
+
+  // Window focus refetch
+  useEffect(() => {
+    if (refetchOnWindowFocus) {
+      const handleFocus = () => {
+        fetchData(true);
+      };
+
+      window.addEventListener('focus', handleFocus);
+      return () => window.removeEventListener('focus', handleFocus);
+    }
+  }, [refetchOnWindowFocus, fetchData]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
       }
-
-      return data as T[]
-    },
-    enabled: options?.enabled ?? true,
-    staleTime: options?.staleTime ?? 5 * 60 * 1000, // 5 minutes
-    cacheTime: options?.cacheTime ?? 10 * 60 * 1000, // 10 minutes
-    refetchOnWindowFocus: options?.refetchOnWindowFocus ?? false
-  })
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, []);
 
   return {
-    data: queryResult.data || null,
-    error: queryResult.error?.message || null,
-    loading: queryResult.isLoading,
-    refetch: queryResult.refetch
-  }
+    data,
+    loading,
+    error,
+    lastFetch,
+    refetch,
+    invalidate,
+  };
 }
 
-/**
- * Hook for inserting data with optimistic updates
- */
-export function useSupabaseInsert<T = any>(
-  table: string,
-  invalidateQueries?: string[]
+// ============================================================================
+// PAGINATED QUERY HOOK
+// ============================================================================
+
+export function usePaginatedQuery<T extends TableName>(
+  tableName: T,
+  paginationOptions: PaginationOptions
 ) {
-  const { user } = useAuth()
-  const queryClient = useQueryClient()
-  const companyId = user?.tenant_id
+  const [result, setResult] = useState<PaginationResult<TableRow<T>> | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  
+  const { user } = useAuth();
 
-  return useMutation({
-    mutationFn: async (data: Partial<T> & { company_id?: string }) => {
-      // Add company_id for multi-tenancy
-      if (user?.role !== 'dev' && table !== 'subscription_plans' && !data.company_id && companyId) {
-        data.company_id = companyId
+  const { page, pageSize, orderBy = [], filters = {} } = paginationOptions;
+
+  const fetchPage = useCallback(async () => {
+    if (!user?.tenant_id) return;
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const offset = (page - 1) * pageSize;
+
+      let query = supabase
+        .from(tableName)
+        .select('*', { count: 'exact' });
+
+      // Apply company isolation
+      const systemTables = ['subscription_plans'];
+      if (!systemTables.includes(tableName)) {
+        query = query.eq('company_id', user.tenant_id);
       }
 
-      const { data: result, error } = await supabase
-        .from(table)
-        .insert(data as any)
-        .select()
-        .single()
+      // Apply filters
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          query = query.eq(key, value);
+        }
+      });
 
-      if (error) {
-        throw new Error(error.message)
-      }
+      // Apply ordering
+      orderBy.forEach(({ column, ascending = true }) => {
+        query = query.order(column, { ascending });
+      });
 
-      return result
-    },
-    onSuccess: () => {
-      // Invalidate related queries
-      if (invalidateQueries) {
-        invalidateQueries.forEach(queryKey => {
-          queryClient.invalidateQueries({ queryKey: [queryKey] })
-        })
-      }
+      // Apply pagination
+      query = query.range(offset, offset + pageSize - 1);
+
+      const { data, error: fetchError, count } = await query;
+
+      if (fetchError) throw fetchError;
+
+      const totalPages = Math.ceil((count || 0) / pageSize);
+
+      setResult({
+        data: data || [],
+        count: count || 0,
+        page,
+        pageSize,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+      });
+
+    } catch (err) {
+      const error = err as Error;
+      setError(error);
+      console.error('Pagination error:', error);
+    } finally {
+      setLoading(false);
     }
-  })
+  }, [tableName, page, pageSize, orderBy, filters, user?.tenant_id]);
+
+  useEffect(() => {
+    fetchPage();
+  }, [fetchPage]);
+
+  return {
+    result,
+    loading,
+    error,
+    refetch: fetchPage,
+  };
 }
 
-/**
- * Hook for updating data with optimistic updates
- */
-export function useSupabaseUpdate<T = any>(
-  table: string,
-  invalidateQueries?: string[]
+// ============================================================================
+// REAL-TIME SUBSCRIPTION HOOK
+// ============================================================================
+
+export function useSupabaseSubscription<T extends TableName>(
+  tableName: T,
+  options: SubscriptionOptions = { event: '*' }
 ) {
-  const { user } = useAuth()
-  const queryClient = useQueryClient()
-  const companyId = user?.tenant_id
+  const [lastChange, setLastChange] = useState<{
+    eventType: string;
+    new: TableRow<T> | null;
+    old: TableRow<T> | null;
+    timestamp: Date;
+  } | null>(null);
+  
+  const { user } = useAuth();
+  const subscriptionRef = useRef<any>(null);
 
-  return useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<T> }) => {
-      let query = supabase.from(table).update(data as any).eq('id', id)
+  const { event = '*', filter, schema = 'public' } = options;
 
-      // Apply company_id filter for multi-tenancy
-      if (user?.role !== 'dev' && table !== 'subscription_plans' && companyId) {
-        query = query.eq('company_id', companyId)
-      }
+  useEffect(() => {
+    if (!user?.tenant_id) return;
 
-      const { data: result, error } = await query.select().single()
-
-      if (error) {
-        throw new Error(error.message)
-      }
-
-      return result
-    },
-    onSuccess: () => {
-      // Invalidate related queries
-      if (invalidateQueries) {
-        invalidateQueries.forEach(queryKey => {
-          queryClient.invalidateQueries({ queryKey: [queryKey] })
-        })
-      }
-    }
-  })
-}
-
-/**
- * Hook for deleting data
- */
-export function useSupabaseDelete(
-  table: string,
-  invalidateQueries?: string[]
-) {
-  const { user } = useAuth()
-  const queryClient = useQueryClient()
-  const companyId = user?.tenant_id
-
-  return useMutation({
-    mutationFn: async (id: string) => {
-      let query = supabase.from(table).delete().eq('id', id)
-
-      // Apply company_id filter for multi-tenancy
-      if (user?.role !== 'dev' && table !== 'subscription_plans' && companyId) {
-        query = query.eq('company_id', companyId)
-      }
-
-      const { error } = await query
-
-      if (error) {
-        throw new Error(error.message)
-      }
-
-      return { success: true }
-    },
-    onSuccess: () => {
-      // Invalidate related queries
-      if (invalidateQueries) {
-        invalidateQueries.forEach(queryKey => {
-          queryClient.invalidateQueries({ queryKey: [queryKey] })
-        })
-      }
-    }
-  })
-}
-
-/**
- * Hook for real-time subscriptions
- */
-export function useSupabaseSubscription<T = any>(
-  table: string,
-  callback: (payload: any) => void,
-  options?: {
-    event?: 'INSERT' | 'UPDATE' | 'DELETE' | '*'
-    filter?: string
-  }
-) {
-  const { user } = useAuth()
-  const companyId = user?.tenant_id
-
-  const subscribe = () => {
+    // Create subscription
     let subscription = supabase
-      .channel(`${table}-changes`)
+      .channel(`${tableName}-changes`)
       .on(
-        'postgres_changes',
+        'postgres_changes' as any,
         {
-          event: options?.event || '*',
-          schema: 'public',
-          table: table,
-          filter: options?.filter
+          event,
+          schema,
+          table: tableName,
+          filter,
         },
-        (payload) => {
-          // Filter by company_id if multi-tenant
-          if (user?.role !== 'dev' && table !== 'subscription_plans') {
-            const record = payload.new || payload.old
-            if (record && record.company_id !== companyId) {
-              return // Skip this change
-            }
-          }
-          
-          callback(payload)
+        (payload: any) => {
+          setLastChange({
+            eventType: payload.eventType,
+            new: payload.new as TableRow<T>,
+            old: payload.old as TableRow<T>,
+            timestamp: new Date(),
+          });
+
+          // Invalidate cache on changes
+          queryCache.invalidate(tableName);
         }
       )
-      .subscribe()
+      .subscribe();
+
+    subscriptionRef.current = subscription;
 
     return () => {
-      subscription.unsubscribe()
-    }
-  }
+      if (subscriptionRef.current) {
+        subscriptionRef.current.unsubscribe();
+      }
+    };
+  }, [tableName, event, filter, schema, user?.tenant_id]);
 
-  return { subscribe }
+  return {
+    lastChange,
+  };
 }
 
-/**
- * Hook for counting records
- */
-export function useSupabaseCount(
-  table: string,
-  queryKey: string[],
-  filters?: Record<string, any>,
-  options?: QueryOptions
-) {
-  const { user } = useAuth()
-  const companyId = user?.tenant_id
+// ============================================================================
+// OPTIMISTIC UPDATES HOOK
+// ============================================================================
 
-  return useQuery({
-    queryKey: [...queryKey, 'count', companyId],
-    queryFn: async () => {
-      let query = supabase.from(table).select('*', { count: 'exact', head: true })
+export function useOptimisticUpdates<T extends TableName>(_tableName: T) {
+  const [optimisticData, setOptimisticData] = useState<TableRow<T>[]>([]);
+  const [rollbackQueue, setRollbackQueue] = useState<(() => void)[]>([]);
 
-      // Apply company_id filter for multi-tenancy
-      if (user?.role !== 'dev' && table !== 'subscription_plans' && companyId) {
-        query = query.eq('company_id', companyId)
+  const applyOptimisticUpdate = useCallback((update: OptimisticUpdate<TableRow<T>>) => {
+    const rollback = () => {
+      setOptimisticData(prev => {
+        switch (update.type) {
+          case 'insert':
+            return prev.filter(item => item.id !== (update.data as TableRow<T>).id);
+          case 'update':
+            // Restore original data
+            return prev;
+          case 'delete':
+            return [...prev, update.data as TableRow<T>];
+          default:
+            return prev;
+        }
+      });
+    };
+
+    setOptimisticData(prev => {
+      switch (update.type) {
+        case 'insert':
+          return [...prev, update.data as TableRow<T>];
+        case 'update':
+          return prev.map(item => 
+            item.id === (update.data as TableRow<T>).id 
+              ? { ...item, ...update.data }
+              : item
+          );
+        case 'delete':
+          return prev.filter(item => item.id !== (update.data as TableRow<T>).id);
+        default:
+          return prev;
       }
+    });
 
-      // Apply additional filters
-      if (filters) {
-        Object.entries(filters).forEach(([key, value]) => {
-          if (value !== undefined && value !== null) {
-            query = query.eq(key, value)
-          }
-        })
-      }
+    setRollbackQueue(prev => [...prev, rollback]);
 
-      const { count, error } = await query
+    return rollback;
+  }, []);
 
-      if (error) {
-        throw new Error(error.message)
-      }
+  const clearOptimistic = useCallback(() => {
+    setOptimisticData([]);
+    setRollbackQueue([]);
+  }, []);
 
-      return count || 0
-    },
-    enabled: options?.enabled ?? true,
-    staleTime: options?.staleTime ?? 5 * 60 * 1000,
-    cacheTime: options?.cacheTime ?? 10 * 60 * 1000,
-    refetchOnWindowFocus: options?.refetchOnWindowFocus ?? false
-  })
+  const rollbackAll = useCallback(() => {
+    rollbackQueue.forEach(rollback => rollback());
+    clearOptimistic();
+  }, [rollbackQueue, clearOptimistic]);
+
+  return {
+    optimisticData,
+    applyOptimisticUpdate,
+    clearOptimistic,
+    rollbackAll,
+  };
+}
+
+// ============================================================================
+// UTILITY HOOKS
+// ============================================================================
+
+// Global cache control
+export function useQueryCache() {
+  const invalidateAll = useCallback(() => {
+    queryCache.clear();
+  }, []);
+
+  const invalidateTable = useCallback((tableName: string) => {
+    queryCache.invalidate(tableName);
+  }, []);
+
+  return {
+    invalidateAll,
+    invalidateTable,
+  };
+}
+
+// Connection status
+export function useSupabaseConnection() {
+  const [isConnected, setIsConnected] = useState(true);
+  const [reconnecting, setReconnecting] = useState(false);
+
+  useEffect(() => {
+    const channel = supabase.channel('connection-test');
+    
+    channel
+      .on('presence', { event: 'sync' }, () => {
+        setIsConnected(true);
+        setReconnecting(false);
+      })
+      .on('presence', { event: 'join' }, () => {
+        setIsConnected(true);
+        setReconnecting(false);
+      })
+      .on('presence', { event: 'leave' }, () => {
+        setIsConnected(false);
+        setReconnecting(true);
+      })
+      .subscribe();
+
+    return () => {
+      channel.unsubscribe();
+    };
+  }, []);
+
+  return {
+    isConnected,
+    reconnecting,
+  };
 }

@@ -1,218 +1,396 @@
-// Custom hooks for database operations
-import { useCallback } from 'react'
-import { supabase } from '@/lib/supabase'
-import { useAuth } from '@/stores/authStore'
-import type { Database } from '@/types/database'
-
-type Tables = Database['public']['Tables']
-
-export interface DatabaseResult<T> {
-  data: T | null
-  error: string | null
-  loading: boolean
-}
-
-export interface DatabaseMutation<T> {
-  mutate: (data: T) => Promise<{ data: any; error: string | null }>
-  loading: boolean
-}
-
 /**
- * Hook for basic database CRUD operations with multi-tenant support
+ * Database Hooks for ERP System
+ * Provides type-safe CRUD operations for all database entities
+ * Uses real Supabase connection with multi-tenant isolation
+ * Date: 2025-09-14
  */
-export function useDatabase() {
-  const { user } = useAuth()
 
-  // Ensure user has company_id for multi-tenant filtering
-  const getCompanyId = useCallback(() => {
-    if (!user?.tenant_id) {
-      throw new Error('User must be authenticated with a company')
-    }
-    return user.tenant_id
-  }, [user?.tenant_id])
+import { useCallback, useState } from 'react';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../stores/authStore';
+import type {
+  UUID,
+  TableName,
+  TableRow,
+  TableInsert,
+  TableUpdate,
+  DatabaseResult,
+  DatabaseListResult,
+} from '../types/database';
 
-  // Generic select function with RLS support
-  const select = useCallback(async <T>(
-    table: keyof Tables,
-    options?: {
-      columns?: string
-      filters?: Record<string, any>
-      orderBy?: { column: string; ascending?: boolean }
-      limit?: number
+// ============================================================================
+// HOOK OPTIONS & TYPES
+// ============================================================================
+
+export interface QueryFilters {
+  search?: string;
+  status?: string;
+  is_active?: boolean;
+  date_from?: string;
+  date_to?: string;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+  limit?: number;
+  offset?: number;
+}
+
+export interface MutationOptions<T> {
+  onSuccess?: (data: T) => void;
+  onError?: (error: Error) => void;
+  onSettled?: () => void;
+}
+
+// ============================================================================
+// MAIN DATABASE HOOK
+// ============================================================================
+
+export function useDatabase<T extends TableName>(tableName: T) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  const { user } = useAuth();
+
+  // Build query with company isolation
+  const buildQuery = useCallback((filters: QueryFilters = {}) => {
+    let query = supabase.from(tableName).select('*');
+
+    // Apply company-level isolation for tenant tables
+    const systemTables = ['subscription_plans'];
+    if (!systemTables.includes(tableName) && user?.tenant_id) {
+      query = query.eq('company_id', user.tenant_id);
     }
-  ): Promise<DatabaseResult<T[]>> => {
+
+    // Apply search filter
+    if (filters.search) {
+      const orConditions = `name.ilike.%${filters.search}%,description.ilike.%${filters.search}%,code.ilike.%${filters.search}%`;
+      query = query.or(orConditions);
+    }
+
+    // Apply status filter
+    if (filters.status) {
+      query = query.eq('status', filters.status);
+    }
+
+    // Apply active filter
+    if (filters.is_active !== undefined) {
+      query = query.eq('is_active', filters.is_active);
+    }
+
+    // Apply date range filters
+    if (filters.date_from) {
+      query = query.gte('created_at', filters.date_from);
+    }
+
+    if (filters.date_to) {
+      query = query.lte('created_at', filters.date_to);
+    }
+
+    // Apply sorting
+    if (filters.sortBy && filters.sortOrder) {
+      query = query.order(filters.sortBy, {
+        ascending: filters.sortOrder === 'asc'
+      });
+    } else {
+      query = query.order('created_at', { ascending: false });
+    }
+
+    // Apply pagination
+    if (filters.limit) {
+      query = query.limit(filters.limit);
+    }
+
+    if (filters.offset) {
+      query = query.range(filters.offset, filters.offset + (filters.limit || 50) - 1);
+    }
+
+    return query;
+  }, [tableName, user?.tenant_id]);
+
+  // Select all records with filtering
+  const selectAll = useCallback(async (
+    filters: QueryFilters = {}
+  ): Promise<DatabaseListResult<TableRow<T>>> => {
     try {
-      let query = supabase.from(table).select(options?.columns || '*')
+      setLoading(true);
+      setError(null);
 
-      // Apply company_id filter for multi-tenancy (except for dev users)
-      if (user?.role !== 'dev' && table !== 'subscription_plans') {
-        const companyId = getCompanyId()
-        query = query.eq('company_id', companyId)
-      }
+      const query = buildQuery(filters);
+      const { data, error, count } = await query;
 
-      // Apply additional filters
-      if (options?.filters) {
-        Object.entries(options.filters).forEach(([key, value]) => {
-          query = query.eq(key, value)
-        })
-      }
-
-      // Apply ordering
-      if (options?.orderBy) {
-        query = query.order(options.orderBy.column, { 
-          ascending: options.orderBy.ascending ?? true 
-        })
-      }
-
-      // Apply limit
-      if (options?.limit) {
-        query = query.limit(options.limit)
-      }
-
-      const { data, error } = await query
+      if (error) throw error;
 
       return {
-        data: data as T[] || null,
-        error: error?.message || null,
-        loading: false
-      }
+        data: data || [],
+        count: count || 0,
+        error: null
+      };
     } catch (err) {
+      const error = err as Error;
+      setError(error);
       return {
-        data: null,
-        error: err instanceof Error ? err.message : 'Unknown error',
-        loading: false
-      }
-    }
-  }, [user?.role, getCompanyId])
-
-  // Generic insert function
-  const insert = useCallback(async <T>(
-    table: keyof Tables,
-    data: Partial<T> & { company_id?: string }
-  ): Promise<{ data: T | null; error: string | null }> => {
-    try {
-      // Add company_id for multi-tenancy (except for dev-only tables)
-      if (user?.role !== 'dev' && table !== 'subscription_plans' && !data.company_id) {
-        data.company_id = getCompanyId()
-      }
-
-      const { data: result, error } = await supabase
-        .from(table)
-        .insert(data)
-        .select()
-        .single()
-
-      return {
-        data: result as T || null,
-        error: error?.message || null
-      }
-    } catch (err) {
-      return {
-        data: null,
-        error: err instanceof Error ? err.message : 'Unknown error'
-      }
-    }
-  }, [user?.role, getCompanyId])
-
-  // Generic update function
-  const update = useCallback(async <T>(
-    table: keyof Tables,
-    id: string,
-    data: Partial<T>
-  ): Promise<{ data: T | null; error: string | null }> => {
-    try {
-      let query = supabase.from(table).update(data).eq('id', id)
-
-      // Apply company_id filter for multi-tenancy
-      if (user?.role !== 'dev' && table !== 'subscription_plans') {
-        const companyId = getCompanyId()
-        query = query.eq('company_id', companyId)
-      }
-
-      const { data: result, error } = await query.select().single()
-
-      return {
-        data: result as T || null,
-        error: error?.message || null
-      }
-    } catch (err) {
-      return {
-        data: null,
-        error: err instanceof Error ? err.message : 'Unknown error'
-      }
-    }
-  }, [user?.role, getCompanyId])
-
-  // Generic delete function
-  const remove = useCallback(async (
-    table: keyof Tables,
-    id: string
-  ): Promise<{ success: boolean; error: string | null }> => {
-    try {
-      let query = supabase.from(table).delete().eq('id', id)
-
-      // Apply company_id filter for multi-tenancy
-      if (user?.role !== 'dev' && table !== 'subscription_plans') {
-        const companyId = getCompanyId()
-        query = query.eq('company_id', companyId)
-      }
-
-      const { error } = await query
-
-      return {
-        success: !error,
-        error: error?.message || null
-      }
-    } catch (err) {
-      return {
-        success: false,
-        error: err instanceof Error ? err.message : 'Unknown error'
-      }
-    }
-  }, [user?.role, getCompanyId])
-
-  // Count records
-  const count = useCallback(async (
-    table: keyof Tables,
-    filters?: Record<string, any>
-  ): Promise<{ count: number; error: string | null }> => {
-    try {
-      let query = supabase.from(table).select('*', { count: 'exact', head: true })
-
-      // Apply company_id filter for multi-tenancy
-      if (user?.role !== 'dev' && table !== 'subscription_plans') {
-        const companyId = getCompanyId()
-        query = query.eq('company_id', companyId)
-      }
-
-      // Apply additional filters
-      if (filters) {
-        Object.entries(filters).forEach(([key, value]) => {
-          query = query.eq(key, value)
-        })
-      }
-
-      const { count: result, error } = await query
-
-      return {
-        count: result || 0,
-        error: error?.message || null
-      }
-    } catch (err) {
-      return {
+        data: [],
         count: 0,
-        error: err instanceof Error ? err.message : 'Unknown error'
-      }
+        error
+      };
+    } finally {
+      setLoading(false);
     }
-  }, [user?.role, getCompanyId])
+  }, [buildQuery]);
+
+  // Select record by ID
+  const selectById = useCallback(async (
+    id: UUID
+  ): Promise<DatabaseResult<TableRow<T>>> => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      let query = supabase
+        .from(tableName)
+        .select('*')
+        .eq('id', id);
+
+      // Apply company isolation
+      const systemTables = ['subscription_plans'];
+      if (!systemTables.includes(tableName) && user?.tenant_id) {
+        query = query.eq('company_id', user.tenant_id);
+      }
+
+      const { data, error } = await query.single();
+
+      if (error) throw error;
+
+      return { data, error: null };
+    } catch (err) {
+      const error = err as Error;
+      setError(error);
+      return { data: null, error };
+    } finally {
+      setLoading(false);
+    }
+  }, [tableName, user?.tenant_id]);
+
+  // Insert new record
+  const insert = useCallback(async (
+    values: TableInsert<T>,
+    options: MutationOptions<TableRow<T>> = {}
+  ): Promise<DatabaseResult<TableRow<T>>> => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Add company_id for tenant tables
+      const systemTables = ['subscription_plans'];
+      const insertData = !systemTables.includes(tableName) && user?.tenant_id
+        ? { ...values, company_id: user.tenant_id }
+        : values;
+
+      const { data, error } = await supabase
+        .from(tableName)
+        .insert(insertData)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const response = { data, error: null };
+      options.onSuccess?.(data);
+      return response;
+    } catch (err) {
+      const error = err as Error;
+      setError(error);
+      options.onError?.(error);
+      return { data: null, error };
+    } finally {
+      setLoading(false);
+      options.onSettled?.();
+    }
+  }, [tableName, user?.tenant_id]);
+
+  // Update existing record
+  const update = useCallback(async (
+    id: UUID,
+    values: TableUpdate<T>,
+    options: MutationOptions<TableRow<T>> = {}
+  ): Promise<DatabaseResult<TableRow<T>>> => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      let query = supabase
+        .from(tableName)
+        .update(values)
+        .eq('id', id);
+
+      // Apply company isolation
+      const systemTables = ['subscription_plans'];
+      if (!systemTables.includes(tableName) && user?.tenant_id) {
+        query = query.eq('company_id', user.tenant_id);
+      }
+
+      const { data, error } = await query.select().single();
+
+      if (error) throw error;
+
+      const response = { data, error: null };
+      options.onSuccess?.(data);
+      return response;
+    } catch (err) {
+      const error = err as Error;
+      setError(error);
+      options.onError?.(error);
+      return { data: null, error };
+    } finally {
+      setLoading(false);
+      options.onSettled?.();
+    }
+  }, [tableName, user?.tenant_id]);
+
+  // Delete record
+  const remove = useCallback(async (
+    id: UUID,
+    options: MutationOptions<boolean> = {}
+  ): Promise<DatabaseResult<boolean>> => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      let query = supabase
+        .from(tableName)
+        .delete()
+        .eq('id', id);
+
+      // Apply company isolation
+      const systemTables = ['subscription_plans'];
+      if (!systemTables.includes(tableName) && user?.tenant_id) {
+        query = query.eq('company_id', user.tenant_id);
+      }
+
+      const { error } = await query;
+
+      if (error) throw error;
+
+      const response = { data: true, error: null };
+      options.onSuccess?.(true);
+      return response;
+    } catch (err) {
+      const error = err as Error;
+      setError(error);
+      options.onError?.(error);
+      return { data: null, error };
+    } finally {
+      setLoading(false);
+      options.onSettled?.();
+    }
+  }, [tableName, user?.tenant_id]);
 
   return {
-    select,
+    // State
+    loading,
+    error,
+    
+    // Operations
+    selectAll,
+    selectById,
     insert,
     update,
     remove,
-    count,
-    user,
-    companyId: user?.tenant_id
-  }
+    
+    // Utilities
+    buildQuery
+  };
+}
+
+// ============================================================================
+// ENTITY-SPECIFIC HOOKS
+// ============================================================================
+
+// System
+export const useSubscriptionPlans = () => useDatabase('subscription_plans');
+
+// Companies & Users
+export const useCompanies = () => useDatabase('companies');
+export const useUsers = () => useDatabase('users');
+
+// Business Entities
+export const useCustomers = () => useDatabase('customers');
+export const useSuppliers = () => useDatabase('suppliers');
+export const useEmployees = () => useDatabase('employees');
+
+// Products & Inventory
+export const useProducts = () => useDatabase('products');
+export const useStockMovements = () => useDatabase('stock_movements');
+
+// Sales & Orders
+export const useSalesOrders = () => useDatabase('sales_orders');
+export const useSalesOrderItems = () => useDatabase('sales_order_items');
+
+// Finance
+export const useInvoices = () => useDatabase('invoices');
+export const useTransactions = () => useDatabase('transactions');
+
+// Assets & Logistics
+export const useVehicles = () => useDatabase('vehicles');
+
+// Marketing
+export const usePromotions = () => useDatabase('promotions');
+
+// ============================================================================
+// DASHBOARD STATS HOOK
+// ============================================================================
+
+export interface DashboardStats {
+  total_customers: number;
+  total_products: number;
+  total_orders: number;
+  low_stock_products: number;
+}
+
+export function useDashboardStats() {
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  const { user } = useAuth();
+
+  const fetchStats = useCallback(async () => {
+    if (!user?.tenant_id) return;
+    
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Execute all queries in parallel
+      const [
+        customersResult,
+        productsResult,
+        ordersResult,
+        lowStockResult
+      ] = await Promise.all([
+        supabase.from('customers').select('id', { count: 'exact', head: true }).eq('company_id', user.tenant_id),
+        supabase.from('products').select('id', { count: 'exact', head: true }).eq('company_id', user.tenant_id),
+        supabase.from('sales_orders').select('id', { count: 'exact', head: true }).eq('company_id', user.tenant_id),
+        supabase.from('products').select('id', { count: 'exact', head: true }).eq('company_id', user.tenant_id).filter('stock_quantity', 'lte', 'minimum_stock'),
+      ]);
+
+      setStats({
+        total_customers: customersResult.count || 0,
+        total_products: productsResult.count || 0,
+        total_orders: ordersResult.count || 0,
+        low_stock_products: lowStockResult.count || 0,
+      });
+
+    } catch (err) {
+      const error = err as Error;
+      setError(error);
+      console.error('Error fetching dashboard stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.tenant_id]);
+
+  return {
+    stats,
+    loading,
+    error,
+    fetchStats,
+  };
 }
