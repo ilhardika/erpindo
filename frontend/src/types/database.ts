@@ -86,6 +86,11 @@ export interface Database {
         Insert: ProductInsert;
         Update: ProductUpdate;
       };
+      product_categories: {
+        Row: ProductCategory;
+        Insert: ProductCategoryInsert;
+        Update: ProductCategoryUpdate;
+      };
       
       // Transaction Tables
       sales_orders: {
@@ -414,12 +419,49 @@ export interface EmployeeUpdate {
   updated_at?: string;
 }
 
+// ============================================================================
+// PRODUCT CATEGORIES
+// ============================================================================
+
+export interface ProductCategory extends BaseEntity {
+  name: string;
+  description: string | null;
+  color: string | null; // Hex color for UI
+  user_id: UUID;
+  tenant_id: UUID | null;
+  is_active: boolean;
+}
+
+export interface ProductCategoryInsert {
+  id?: UUID;
+  name: string;
+  description?: string | null;
+  color?: string | null;
+  user_id: UUID;
+  tenant_id?: UUID | null;
+  is_active?: boolean;
+  created_by?: UUID | null;
+}
+
+export interface ProductCategoryUpdate {
+  name?: string;
+  description?: string | null;
+  color?: string | null;
+  is_active?: boolean;
+  updated_at?: string;
+}
+
+// ============================================================================
+// PRODUCTS
+// ============================================================================
+
 export interface Product extends TenantEntity {
   sku: string;
   barcode: string | null;
   name: string;
   description: string | null;
-  category: string | null;
+  category: string | null; // Legacy field - deprecated
+  category_id: UUID | null; // New category reference
   brand: string | null;
   unit_of_measure: string;
   cost_price: Decimal;
@@ -438,7 +480,8 @@ export interface ProductInsert {
   barcode?: string | null;
   name: string;
   description?: string | null;
-  category?: string | null;
+  category?: string | null; // Legacy field - deprecated
+  category_id?: UUID | null; // New category reference
   brand?: string | null;
   unit_of_measure?: string;
   cost_price?: Decimal;
@@ -458,7 +501,8 @@ export interface ProductUpdate {
   barcode?: string | null;
   name?: string;
   description?: string | null;
-  category?: string | null;
+  category?: string | null; // Legacy field - deprecated
+  category_id?: UUID | null; // New category reference
   brand?: string | null;
   unit_of_measure?: string;
   cost_price?: Decimal;

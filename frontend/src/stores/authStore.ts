@@ -67,6 +67,7 @@ export interface AuthState {
   setLoading: (loading: boolean) => void
   setError: (error: string | null) => void
   clearError: () => void
+  forceReset: () => void
   
   // Utility functions
   hasPermission: (permission: string) => boolean
@@ -151,8 +152,14 @@ export const useAuthStore = create<AuthState>()(
           if (demoUsers[email as keyof typeof demoUsers] && password === 'password123') {
             const demoUser = demoUsers[email as keyof typeof demoUsers]
             
+            const demoUserIds = {
+              'owner': '11111111-1111-1111-1111-111111111111',
+              'dev': '22222222-2222-2222-2222-222222222222', 
+              'employee': '33333333-3333-3333-3333-333333333333'
+            }
+            
             const authUser: AuthUser = {
-              id: `demo-${demoUser.role}`,
+              id: demoUserIds[demoUser.role as keyof typeof demoUserIds],
               email,
               user_metadata: { full_name: demoUser.name },
               tenant_id: '55555555-5555-5555-5555-555555555555', // Toko Modern Indo
@@ -360,7 +367,13 @@ export const useAuthStore = create<AuthState>()(
         
         try {
           // First check if we have persisted demo user state
-          if (currentState.user && currentState.user.id.startsWith('demo-')) {
+          const demoUserIds = [
+            '11111111-1111-1111-1111-111111111111', // owner
+            '22222222-2222-2222-2222-222222222222', // dev  
+            '33333333-3333-3333-3333-333333333333'  // employee
+          ];
+          
+          if (currentState.user && demoUserIds.includes(currentState.user.id)) {
             console.log('Restoring demo user session:', currentState.user.email)
             set({ 
               isLoading: false, 
@@ -512,6 +525,18 @@ export const useAuthStore = create<AuthState>()(
       setError: (error) => set({ error }),
       clearError: () => set({ error: null }),
 
+      // Force clear auth cache - for debugging
+      forceReset: () => {
+        set({
+          user: null,
+          session: null,
+          tenant: null,
+          isLoading: false,
+          isInitialized: false,
+          error: null
+        })
+      },
+
       // Utility functions
       hasPermission: (permission: string) => {
         const { user } = get()
@@ -537,7 +562,7 @@ export const useAuthStore = create<AuthState>()(
       }
     }),
     {
-      name: 'auth-storage-v2', // Changed version to force cache refresh
+      name: 'auth-storage-v3', // Changed version to force cache refresh with UUID fix
       partialize: (state) => ({
         user: state.user,
         session: state.session,
@@ -581,6 +606,7 @@ export const useAuthActions = () => {
     setTenant: store.setTenant,
     setLoading: store.setLoading,
     setError: store.setError,
-    clearError: store.clearError
+    clearError: store.clearError,
+    forceReset: store.forceReset
   }
 }

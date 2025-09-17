@@ -1,7 +1,21 @@
 /**
  * ProductFormSimple Component
  * Simple form for creating products with minimal validation
- * Integrates with productStore and authStore
+ * Integrates with productSt        const productUpdate: ProductUpdate = {
+          name: formData.name,
+          sku: formData.sku,
+          description: formData.description || null,
+          category: formData.category || null, // Legacy field
+          category_id: formData.category_id, // New field
+          cost_price: formData.cost_price ? parseFloat(formData.cost_price) : 0,
+          selling_price: formData.selling_price ? parseFloat(formData.selling_price) : 0,
+          stock_quantity: formData.stock_quantity ? parseInt(formData.stock_quantity) : 0,
+          minimum_stock: formData.minimum_stock ? parseInt(formData.minimum_stock) : 0,
+          maximum_stock: formData.maximum_stock ? parseInt(formData.maximum_stock) : null,
+          location: formData.location || null,
+          unit_of_measure: 'pcs',
+          is_active: true,
+        };ore
  * Date: 2025-09-14
  */
 
@@ -18,6 +32,7 @@ import { Loader2, Save, X } from 'lucide-react';
 import { useProductActions } from '../../../stores/productStore';
 import { useProductStore } from '../../../stores/productStore';
 import { useAuthStore } from '../../../stores/authStore';
+import { CategoryDropdownSimple } from './CategoryDropdownSimple';
 import type { ProductInsert } from '../../../types/database';
 
 // ============================================================================
@@ -50,7 +65,8 @@ export const ProductFormSimple: React.FC<ProductFormSimpleProps> = ({
     name: '',
     sku: '',
     description: '',
-    category: '',
+    category: '', // Legacy - for backward compatibility
+    category_id: null as string | null, // New category reference
     cost_price: '',
     selling_price: '',
     stock_quantity: '',
@@ -68,7 +84,8 @@ export const ProductFormSimple: React.FC<ProductFormSimpleProps> = ({
         name: selectedProduct.name || '',
         sku: selectedProduct.sku || '',
         description: selectedProduct.description || '',
-        category: selectedProduct.category || '',
+        category: selectedProduct.category || '', // Legacy field
+        category_id: selectedProduct.category_id || null, // New field
         cost_price: selectedProduct.cost_price?.toString() || '',
         selling_price: selectedProduct.selling_price?.toString() || '',
         stock_quantity: selectedProduct.stock_quantity?.toString() || '',
@@ -83,7 +100,8 @@ export const ProductFormSimple: React.FC<ProductFormSimpleProps> = ({
         name: '',
         sku: '',
         description: '',
-        category: '',
+        category: '', // Legacy field
+        category_id: null, // New field
         cost_price: '',
         selling_price: '',
         stock_quantity: '',
@@ -144,7 +162,8 @@ export const ProductFormSimple: React.FC<ProductFormSimpleProps> = ({
           name: formData.name,
           sku: formData.sku,
           description: formData.description || null,
-          category: formData.category || null,
+          category: formData.category || null, // Legacy field
+          category_id: formData.category_id, // New field
           cost_price: formData.cost_price ? parseFloat(formData.cost_price) : 0,
           selling_price: formData.selling_price ? parseFloat(formData.selling_price) : 0,
           stock_quantity: formData.stock_quantity ? parseInt(formData.stock_quantity) : 0,
@@ -169,7 +188,8 @@ export const ProductFormSimple: React.FC<ProductFormSimpleProps> = ({
             name: '',
             sku: '',
             description: '',
-            category: '',
+            category: '', // Legacy field
+            category_id: null, // New field
             cost_price: '',
             selling_price: '',
             stock_quantity: '',
@@ -235,11 +255,10 @@ export const ProductFormSimple: React.FC<ProductFormSimpleProps> = ({
           <div className="grid grid-cols-3 gap-4">
             <div>
               <label htmlFor="category" className="block text-sm font-medium mb-1">Category</label>
-              <Input
-                id="category"
-                value={formData.category}
-                onChange={(e) => handleInputChange('category', e.target.value)}
-                placeholder="Enter category"
+              <CategoryDropdownSimple
+                value={formData.category_id}
+                onValueChange={(categoryId: string | null) => setFormData(prev => ({ ...prev, category_id: categoryId }))}
+                placeholder="Select category..."
               />
             </div>
             
