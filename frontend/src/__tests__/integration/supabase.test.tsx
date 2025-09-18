@@ -516,7 +516,6 @@ describe('Supabase Client Integration', () => {
           schema: 'public',
           table: 'products'
         }, (payload) => {
-          console.log('Product change:', payload);
         })
         .subscribe();
 

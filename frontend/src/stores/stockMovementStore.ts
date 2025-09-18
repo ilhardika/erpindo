@@ -155,7 +155,6 @@ export const useStockMovementStore = create<StockMovementState & StockMovementAc
                 throw error;
               }
 
-              console.log('stockMovementStore: loadMovements success', { count: data?.length });
               return { data: data || [], count: count || 0 };
             },
             { maxAttempts: 2 },
@@ -198,7 +197,6 @@ export const useStockMovementStore = create<StockMovementState & StockMovementAc
 
           const result = await withRetry(
             async () => {
-              console.log('stockMovementStore: createMovement called', movementData);
               
               const { data, error } = await supabase
                 .from('stock_movements')
@@ -218,7 +216,6 @@ export const useStockMovementStore = create<StockMovementState & StockMovementAc
                 throw error;
               }
 
-              console.log('stockMovementStore: createMovement success', data);
               return { data, error: null };
             },
             { maxAttempts: 2 },

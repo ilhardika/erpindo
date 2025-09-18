@@ -97,7 +97,6 @@ export const StockOpnameDetailPage: React.FC<StockOpnameDetailPageProps> = ({ cl
 
   const handleEdit = () => {
     // Navigate to edit mode
-    console.log('Edit opname');
   };
 
   const handleStart = async () => {

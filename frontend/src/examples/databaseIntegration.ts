@@ -28,7 +28,6 @@ export function CustomerManagementExample() {
         { operation: 'create_customer', table: 'customers' }
       );
       
-      console.log('Customer created successfully:', result.data);
     } catch (error) {
       const parsedError = handleError(error, { 
         operation: 'create_customer', 
@@ -50,7 +49,6 @@ export function CustomerManagementExample() {
         sortOrder: 'asc'
       });
       
-      console.log('Customers loaded:', result.data);
     } catch (error) {
       const parsedError = handleError(error);
       console.error('Failed to load customers:', formatError(parsedError));
@@ -97,7 +95,6 @@ export function ProductCatalogExample() {
 
   // Handle real-time updates
   if (lastChange?.eventType === 'UPDATE') {
-    console.log('Product updated:', lastChange.new);
     // Refetch or update local state
     refetch();
   }
@@ -201,10 +198,8 @@ export function ConnectionMonitorExample() {
 
   const handleOfflineOperation = async (operation: () => Promise<any>) => {
     if (!isOnline) {
-      console.log('Device is offline, waiting for connection...');
       try {
         await waitForConnection();
-        console.log('Connection restored, retrying operation...');
       } catch (error) {
         console.error('Connection timeout, operation cancelled');
         throw new Error('No internet connection available');
@@ -253,7 +248,6 @@ export function validateTypeIntegration() {
     refetch: query.refetch as Function
   };
 
-  console.log('Type validation passed ✓');
   return true;
 }
 
@@ -271,7 +265,6 @@ export function performanceTest() {
   const endTime = performance.now();
   const initTime = endTime - startTime;
   
-  console.log(`Hook initialization time: ${initTime.toFixed(2)}ms`);
   
   return {
     initTime,

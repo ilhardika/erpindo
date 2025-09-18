@@ -190,7 +190,6 @@ export const useStockOpnameStore = create<StockOpnameState & StockOpnameActions>
                 throw error;
               }
 
-              console.log('stockOpnameStore: loadOpnames success', { count: data?.length });
               return { data: data || [], count: count || 0 };
             },
             { maxAttempts: 2 },
@@ -239,7 +238,6 @@ export const useStockOpnameStore = create<StockOpnameState & StockOpnameActions>
                 throw error;
               }
 
-              console.log('stockOpnameStore: loadOpnameItems success', { count: data?.length });
               return { data: data || [] };
             },
             { maxAttempts: 2 },
@@ -284,7 +282,6 @@ export const useStockOpnameStore = create<StockOpnameState & StockOpnameActions>
 
           const result = await withRetry(
             async () => {
-              console.log('stockOpnameStore: createOpname called', opnameData);
               
               const { data, error } = await supabase
                 .from('stock_opname')
@@ -302,7 +299,6 @@ export const useStockOpnameStore = create<StockOpnameState & StockOpnameActions>
                 throw error;
               }
 
-              console.log('stockOpnameStore: createOpname success', data);
               return { data, error: null };
             },
             { maxAttempts: 2 },
@@ -345,7 +341,6 @@ export const useStockOpnameStore = create<StockOpnameState & StockOpnameActions>
 
           const result = await withRetry(
             async () => {
-              console.log('stockOpnameStore: updateOpname called', { id, opnameData });
               
               const { data, error } = await supabase
                 .from('stock_opname')
@@ -362,7 +357,6 @@ export const useStockOpnameStore = create<StockOpnameState & StockOpnameActions>
                 throw error;
               }
 
-              console.log('stockOpnameStore: updateOpname success', data);
               return { data, error: null };
             },
             { maxAttempts: 2 },
@@ -407,7 +401,6 @@ export const useStockOpnameStore = create<StockOpnameState & StockOpnameActions>
 
           const result = await withRetry(
             async () => {
-              console.log('stockOpnameStore: deleteOpname called', { id });
               
               const { error } = await supabase
                 .from('stock_opname')
@@ -419,7 +412,6 @@ export const useStockOpnameStore = create<StockOpnameState & StockOpnameActions>
                 throw error;
               }
 
-              console.log('stockOpnameStore: deleteOpname success');
               return { data: true, error: null };
             },
             { maxAttempts: 2 },
@@ -500,7 +492,6 @@ export const useStockOpnameStore = create<StockOpnameState & StockOpnameActions>
                 throw error;
               }
 
-              console.log('stockOpnameStore: addProductToOpname success', data);
               return { data, error: null };
             },
             { maxAttempts: 2 },
@@ -564,7 +555,6 @@ export const useStockOpnameStore = create<StockOpnameState & StockOpnameActions>
                 throw error;
               }
 
-              console.log('stockOpnameStore: updateOpnameItem success', data);
               return { data, error: null };
             },
             { maxAttempts: 2 },
@@ -618,7 +608,6 @@ export const useStockOpnameStore = create<StockOpnameState & StockOpnameActions>
                 throw error;
               }
 
-              console.log('stockOpnameStore: removeOpnameItem success');
               return { data: true, error: null };
             },
             { maxAttempts: 2 },

@@ -61,12 +61,10 @@ export const useProductCategoryStore = create<ProductCategoryStore>((set, get) =
       return;
     }
 
-    console.log('ProductCategoryStore: Loading categories for user:', user.id, 'user object:', user);
     set({ loading: true, error: null });
 
     try {
       // Test query without RLS first
-      console.log('ProductCategoryStore: Attempting query...');
       
       const { data, error } = await supabase
         .from('product_categories')
@@ -74,14 +72,12 @@ export const useProductCategoryStore = create<ProductCategoryStore>((set, get) =
         .eq('user_id', user.id)
         .order('name', { ascending: true });
 
-      console.log('ProductCategoryStore: Supabase response:', { data, error, userIdUsed: user.id });
 
       if (error) {
         console.error('ProductCategoryStore: Supabase error details:', error);
         throw error;
       }
 
-      console.log('ProductCategoryStore: Successfully loaded', data?.length || 0, 'categories');
       set({ 
         categories: data || [],
         loading: false 

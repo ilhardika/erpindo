@@ -193,12 +193,12 @@ export const MODULES: ModulePermission[] = [
     category: 'erp',
   },
   {
-    id: 'customers-suppliers',
-    name: 'Customers & Suppliers',
+    id: 'customers-management',
+    name: 'Customers',
     icon: 'Users',
-    path: '/customers-suppliers',
-    description: 'Manage customer segmentation, supplier details, purchase history',
-    roles: ['owner', 'staff'],
+    path: '/customers',
+    description: 'Manage customer segmentation, add/edit details, view purchase history (T041-T045)',
+    roles: ['owner', 'dev', 'staff'],
     category: 'erp',
   },
   {
@@ -298,6 +298,14 @@ export const ACTIONS: Record<string, UserRole[]> = {
   'products:delete': ['owner', 'dev'],
   'products:manage-stock': ['owner', 'dev'],
 
+  // Customers Management Actions (T041-T045)
+  'customers:view': ['owner', 'dev', 'staff'],
+  'customers:create': ['owner', 'dev'],
+  'customers:edit': ['owner', 'dev'],
+  'customers:delete': ['owner', 'dev'],
+  'customers:manage-segmentation': ['owner', 'dev', 'staff'],
+  'customers:view-purchase-history': ['owner', 'dev', 'staff'],
+
   // Sales & Purchasing Actions
   'sales:create-sales-order': ['owner', 'staff'],
   'sales:create-purchase-request': ['owner', 'staff'],
@@ -313,10 +321,7 @@ export const ACTIONS: Record<string, UserRole[]> = {
   'inventory:stock-opname': ['owner', 'staff'],
   'inventory:view-stock-mutation': ['owner', 'staff'],
 
-  // Customer & Supplier Actions
-  'customers:manage-segmentation': ['owner', 'staff'],
-  'customers:add-edit-details': ['owner', 'staff'],
-  'customers:view-purchase-history': ['owner', 'staff'],
+  // Supplier Actions
   'suppliers:add-edit-details': ['owner', 'staff'],
   'suppliers:view-payment-history': ['owner', 'staff'],
 

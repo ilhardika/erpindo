@@ -87,7 +87,6 @@ export const InventoryPage: React.FC<InventoryPageProps> = ({ className }) => {
   };
 
   const handleViewProduct = (product: Product) => {
-    console.log('handleViewProduct called with:', product);
     // Navigate to product detail page
     navigate(`/products/${product.id}`);
   };
@@ -103,7 +102,6 @@ export const InventoryPage: React.FC<InventoryPageProps> = ({ className }) => {
   };
 
   const handleCreateOpname = () => {
-    console.log('Create opname');
     // setShowOpnameForm(true);
   };
 
@@ -113,13 +111,11 @@ export const InventoryPage: React.FC<InventoryPageProps> = ({ className }) => {
   };
 
   const handleViewOpname = (opnameId: string) => {
-    console.log('handleViewOpname called with ID:', opnameId);
     // Navigate to opname detail page in view mode
     navigate(`/inventory/opname/${opnameId}`);
   };
 
   const handleViewMovement = (movementId: string) => {
-    console.log('handleViewMovement called with ID:', movementId);
     // Navigate to movement detail page  
     navigate(`/inventory/movements/${movementId}`);
   };

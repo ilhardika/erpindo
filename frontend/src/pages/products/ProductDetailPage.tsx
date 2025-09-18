@@ -76,10 +76,8 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ className 
       
       // Only load movements if we don't have any yet or very few
       if (movements.length === 0) {
-        console.log('Loading movements (first time)...');
         await loadMovements();
       } else {
-        console.log('Using existing movements:', movements.length);
       }
       
       setIsLoading(false);
@@ -93,7 +91,6 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ className 
     if (product) {
       const filtered = getProductMovements(product.id);
       setProductMovements(filtered);
-      console.log('Updated product movements:', product.id, filtered.length);
     }
   }, [product?.id, movements.length, getProductMovements]); // Use movements.length instead of movements array
 
@@ -114,7 +111,6 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ className 
 
   const handleStockAdjustment = () => {
     // Navigate to stock adjustment form
-    console.log('Open stock adjustment form');
   };
 
   // ========================================================================

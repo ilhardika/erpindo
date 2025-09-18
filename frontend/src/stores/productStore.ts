@@ -49,7 +49,6 @@ const createStockMovement = async (
       return false;
     }
 
-    console.log('Stock movement created:', { productId, movementType, quantity });
     return true;
   } catch (error) {
     console.error('createStockMovement failed:', error);
@@ -176,8 +175,6 @@ export const useProductStore = create<ProductStore>()(
 
           // Get current user's tenant_id
           const { user } = useAuthStore.getState();
-          console.log('ProductStore: Current user:', user);
-          console.log('ProductStore: tenant_id:', user?.tenant_id);
           
           if (!user?.tenant_id) {
             throw new Error('User tenant not found');
@@ -189,8 +186,6 @@ export const useProductStore = create<ProductStore>()(
             .select('*', { count: 'exact' })
             .eq('company_id', user.tenant_id);
 
-          console.log('ProductStore: Querying with company_id:', user.tenant_id);
-          console.log('ProductStore: Full query object:', query);
 
           // Apply filters
           if (filters.search) {
@@ -225,20 +220,10 @@ export const useProductStore = create<ProductStore>()(
           const from = (currentPage - 1) * pageSize;
           const to = from + pageSize - 1;
           
-          console.log('ProductStore: Pagination params:', { 
-            currentPage, 
-            pageSize, 
-            from, 
-            to, 
-            filters,
-            sort 
-          });
-          
           query = query.range(from, to);
 
           const { data, count, error } = await query;
 
-          console.log('ProductStore: Query result:', { data, count, error });
 
           if (error) {
             throw error;
@@ -250,7 +235,6 @@ export const useProductStore = create<ProductStore>()(
             loading: false,
           });
 
-          console.log('ProductStore: Products loaded:', data?.length || 0);
 
         } catch (error) {
           console.error('Error loading products:', error);
@@ -284,7 +268,6 @@ export const useProductStore = create<ProductStore>()(
             created_by: user.id.startsWith('demo-') ? null : user.id // Set null for demo users to avoid FK constraint
           };
 
-          console.log('ProductStore: Creating product with data:', dataWithCompany);
 
           const { data, error } = await supabase
             .from('products')
@@ -345,7 +328,6 @@ export const useProductStore = create<ProductStore>()(
 
           const result = await withRetry(
             async () => {
-              console.log('productStore: updateProduct called', { id, productData });
               
               const { data, error } = await supabase
                 .from('products')
@@ -362,7 +344,6 @@ export const useProductStore = create<ProductStore>()(
                 throw error;
               }
 
-              console.log('productStore: updateProduct success', data);
               return { data, error: null };
             },
             { maxAttempts: 2 },
@@ -426,7 +407,6 @@ export const useProductStore = create<ProductStore>()(
 
           const result = await withRetry(
             async () => {
-              console.log('productStore: deleteProduct called', { id });
               
               const { error } = await supabase
                 .from('products')
@@ -438,7 +418,6 @@ export const useProductStore = create<ProductStore>()(
                 throw error;
               }
 
-              console.log('productStore: deleteProduct success');
               return { data: true, error: null };
             },
             { maxAttempts: 2 },

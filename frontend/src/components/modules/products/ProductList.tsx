@@ -61,10 +61,8 @@ export const ProductList: React.FC<ProductListProps> = ({
   useEffect(() => {
     // Only load products on first mount or when products array is empty
     if (products.length === 0) {
-      console.log('ProductList: Loading products (initial load)');
       loadProducts();
     } else {
-      console.log('ProductList: Using existing products:', products.length);
     }
   }, []); // Empty dependency array - only run on mount
 

@@ -187,13 +187,22 @@ export const useAuthStore = create<AuthState>()(
               }
             }
 
-            // Simulate session
+            // Simulate session with proper JWT claims for RLS
             const session = {
               access_token: 'demo-access-token',
               refresh_token: 'demo-refresh-token',
               expires_in: 3600,
               token_type: 'bearer',
-              user: authUser
+              user: {
+                ...authUser,
+                // Add company_id to user metadata for RLS compatibility
+                user_metadata: {
+                  ...authUser.user_metadata,
+                  company_id: '55555555-5555-5555-5555-555555555555',
+                  tenant_id: '55555555-5555-5555-5555-555555555555',
+                  role: demoUser.role
+                }
+              }
             }
 
             set({
@@ -204,9 +213,6 @@ export const useAuthStore = create<AuthState>()(
               error: null
             })
 
-            console.log('AuthStore: Demo user logged in:', authUser);
-            console.log('AuthStore: Tenant:', tenant);
-            console.log('AuthStore: tenant_id:', authUser.tenant_id);
 
             return { success: true, user: authUser }
           }
@@ -374,7 +380,6 @@ export const useAuthStore = create<AuthState>()(
           ];
           
           if (currentState.user && demoUserIds.includes(currentState.user.id)) {
-            console.log('Restoring demo user session:', currentState.user.email)
             set({ 
               isLoading: false, 
               isInitialized: true,

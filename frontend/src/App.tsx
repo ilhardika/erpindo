@@ -7,6 +7,8 @@ import LoginPage from '@/pages/auth/LoginPage'
 import DashboardPage from '@/pages/dashboard/DashboardPage'
 import ProductsPage from '@/pages/products/ProductsPage'
 import ProductDetailPage from '@/pages/products/ProductDetailPage'
+import CustomersPage from '@/pages/customers/CustomersPage'
+import CustomerDetailPage from '@/pages/customers/CustomerDetailPage'
 import InventoryPage from '@/pages/inventory/InventoryPage'
 import StockMovementDetailPage from '@/pages/inventory/StockMovementDetailPage'
 import StockOpnameDetailPage from '@/pages/inventory/StockOpnameDetailPage'
@@ -63,6 +65,20 @@ function App() {
           <Route path="products/:id" element={
             <ProtectedRoute allowedRoles={['owner', 'dev', 'employee']} requiredPermissions={['products:view']}>
               <ProductDetailPage />
+            </ProtectedRoute>
+          } />
+
+          {/* Customers */}
+          <Route path="customers" element={
+            <ProtectedRoute allowedRoles={['owner', 'dev', 'employee']} requiredPermissions={['customers:view']}>
+              <CustomersPage />
+            </ProtectedRoute>
+          } />
+          
+          {/* Customer Detail */}
+          <Route path="customers/:id" element={
+            <ProtectedRoute allowedRoles={['owner', 'dev', 'employee']} requiredPermissions={['customers:view']}>
+              <CustomerDetailPage />
             </ProtectedRoute>
           } />
 

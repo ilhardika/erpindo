@@ -125,11 +125,11 @@
 
 ### Core Modules - Customers
 
-- [ ] T041 [P] Customer data store in `frontend/src/stores/customerStore.ts`
-- [ ] T042 [P] Customer list component in `frontend/src/components/modules/customers/CustomerList.tsx`
-- [ ] T043 [P] Customer form component in `frontend/src/components/modules/customers/CustomerForm.tsx`
-- [ ] T044 Customer service operations in `frontend/src/services/customerService.ts`
-- [ ] T045 Customer management page in `frontend/src/pages/customers/CustomersPage.tsx`
+- [x] T041 [P] Customer data store in `frontend/src/stores/customerStore.ts`
+- [x] T042 [P] Customer list component in `frontend/src/components/modules/customers/CustomerList.tsx`
+- [x] T043 [P] Customer form component in `frontend/src/components/modules/customers/CustomerForm.tsx`
+- [x] T044 Customer service operations in `frontend/src/services/customerService.ts`
+- [x] T045 Customer management page in `frontend/src/pages/customers/CustomersPage.tsx`
 
 ### Core Modules - Basic POS
 

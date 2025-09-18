@@ -35,8 +35,6 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ className }) => {
   useEffect(() => {
     const isEdit = searchParams.get('edit') === 'true';
     if (isEdit) {
-      console.log('ProductsPage: Edit mode detected from URL');
-      console.log('ProductsPage: Selected product:', selectedProduct);
       setShowForm(true);
       // Remove the edit parameter from URL
       setSearchParams({});
@@ -54,21 +52,17 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ className }) => {
   };
 
   const handleFormSuccess = () => {
-    console.log('Product created, closing form and refreshing list');
     setShowForm(false);
     selectProduct(null); // Clear selection
     // ProductList will automatically refresh via store reactivity
   };
 
   const handleEditProduct = (product: Product) => {
-    console.log('ProductsPage: handleEditProduct called with:', product);
     selectProduct(product); // Set product for editing
-    console.log('ProductsPage: selectProduct called, showing form');
     setShowForm(true);
   };
 
   const handleViewProduct = (product: Product) => {
-    console.log('ProductsPage: handleViewProduct called with:', product);
     navigate(`/products/${product.id}`);
   };
 
