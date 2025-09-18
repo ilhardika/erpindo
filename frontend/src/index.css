@@ -118,3 +118,40 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Custom responsive table styles */
+@layer components {
+  .responsive-table {
+    @apply w-full;
+  }
+  
+  .responsive-table-container {
+    @apply overflow-x-auto;
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted)) transparent;
+  }
+  
+  .responsive-table-container::-webkit-scrollbar {
+    height: 8px;
+  }
+  
+  .responsive-table-container::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .responsive-table-container::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--muted));
+    border-radius: 4px;
+  }
+  
+  .responsive-table-container::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--muted-foreground));
+  }
+
+  /* Improve table row hover on mobile */
+  @media (max-width: 640px) {
+    .responsive-table tbody tr:hover {
+      @apply bg-muted/30;
+    }
+  }
+}

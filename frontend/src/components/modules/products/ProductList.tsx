@@ -1,28 +1,11 @@
-﻿import React, { useEffect } from 'react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '../../ui/table';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '../../ui/card';
-import { Button } from '../../ui/button';
+import React, { useEffect } from 'react';
+import DataTable from '../../ui/data-table';
+import type { Column, TableAction } from '../../ui/data-table';
 import { Badge } from '../../ui/badge';
-import { Input } from '../../ui/input';
-import { Pagination } from '../../ui/pagination';
 import {
-  Plus,
   Edit,
   Trash2,
   Eye,
-  Search,
   AlertTriangle,
   TrendingUp,
 } from 'lucide-react';
@@ -48,9 +31,10 @@ export const ProductList: React.FC<ProductListProps> = ({
     error, 
     currentPage, 
     pageSize, 
-    totalCount,
+    totalCount, 
     filters 
   } = useProductStore();
+  
   const { 
     loadProducts, 
     deleteProduct, 
@@ -58,11 +42,10 @@ export const ProductList: React.FC<ProductListProps> = ({
     setPagination 
   } = useProductActions();
 
+  // Load products on mount
   useEffect(() => {
-    // Only load products on first mount or when products array is empty
     if (products.length === 0) {
       loadProducts();
-    } else {
     }
   }, []); // Empty dependency array - only run on mount
 
@@ -83,6 +66,11 @@ export const ProductList: React.FC<ProductListProps> = ({
   };
 
   const handleDelete = async (product: Product) => {
+    if (!product || !product.name) {
+      console.error('Invalid product for deletion:', product);
+      return;
+    }
+    
     if (window.confirm(`Are you sure you want to delete "${product.name}"?`)) {
       await deleteProduct(product.id);
     }
@@ -108,180 +96,149 @@ export const ProductList: React.FC<ProductListProps> = ({
     }
   };
 
-  if (error) {
-    return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="text-center text-red-600">
-            Error loading products: {error}
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  return (
-    <Card>
-      <CardHeader>
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <CardTitle>Products</CardTitle>
-          
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Search products..."
-                value={filters.search || ''}
-                onChange={(e) => handleSearch(e.target.value)}
-                className="pl-10 w-[250px]"
-              />
-            </div>
-
-            {onCreateProduct && (
-              <Button onClick={onCreateProduct}>
-                <Plus className="w-4 h-4 mr-2" />
-                Add Product
-              </Button>
+  // Define columns for DataTable
+  const columns: Column<Product>[] = [
+    {
+      key: 'name',
+      title: 'Product',
+      className: 'min-w-[200px]',
+      render: (value, product) => {
+        const productName = product?.name || value || 'Unnamed Product';
+        const productDescription = product?.description;
+        
+        return (
+          <div className="font-medium">
+            <div className="font-semibold">{productName}</div>
+            {productDescription && (
+              <div className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                {productDescription}
+              </div>
             )}
           </div>
-        </div>
-      </CardHeader>
+        );
+      },
+    },
+    {
+      key: 'category',
+      title: 'Category',
+      className: 'min-w-[100px]',
+      render: (value, product) => {
+        const categoryValue = value || product?.category || 'Uncategorized';
+        return (
+          <Badge variant="secondary">
+            {categoryValue}
+          </Badge>
+        );
+      },
+    },
+    {
+      key: 'selling_price',
+      title: 'Price',
+      className: 'min-w-[100px]',
+      render: (value, product) => {
+        const sellingPrice = value || product?.selling_price || 0;
+        return (
+          <div className="font-semibold text-green-600">
+            {formatCurrency(sellingPrice)}
+          </div>
+        );
+      },
+    },
+    {
+      key: 'stock_quantity',
+      title: 'Stock',
+      className: 'min-w-[120px]',
+      render: (value, product) => {
+        const stockQuantity = value || product?.stock_quantity || 0;
+        const stockStatus = getStockStatus(stockQuantity);
+        return (
+          <div className="flex items-center gap-2">
+            {getStockIcon(stockQuantity)}
+            <div>
+              <div className="font-medium">{stockQuantity}</div>
+              <Badge variant={stockStatus.variant} className="text-xs">
+                {stockStatus.label}
+              </Badge>
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      key: 'created_at',
+      title: 'Created',
+      className: 'min-w-[120px]',
+      render: (value, product) => {
+        const createdAt = value || product?.created_at;
+        return (
+          <div className="text-sm text-muted-foreground">
+            {createdAt ? formatDate(createdAt) : 'N/A'}
+          </div>
+        );
+      },
+    },
+  ];
 
-      <CardContent>
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Product</TableHead>
-                <TableHead>SKU</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Stock</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead className="w-24">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
+  // Define actions for DataTable
+  const actions: TableAction<Product>[] = [
+    ...(onViewProduct ? [{
+      label: 'View',
+      icon: <Eye className="w-4 h-4 mr-2" />,
+      onClick: (product: Product) => onViewProduct(product),
+    }] : []),
+    ...(onEditProduct ? [{
+      label: 'Edit',
+      icon: <Edit className="w-4 h-4 mr-2" />,
+      onClick: (product: Product) => onEditProduct(product),
+    }] : []),
+    {
+      label: 'Delete',
+      icon: <Trash2 className="w-4 h-4 mr-2" />,
+      onClick: handleDelete,
+      className: 'text-red-600 hover:text-red-700',
+    },
+  ];
 
-            <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell colSpan={8}>
-                    <div className="flex items-center justify-center py-8">
-                      Loading...
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : products.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={8}>
-                    <div className="text-center py-8 text-muted-foreground">
-                      {filters.search ? 'No products found matching your search.' : 'No products found. Create your first product!'}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                products.map((product: Product) => {
-                  const stockStatus = getStockStatus(product.stock_quantity, 10);
-                  
-                  return (
-                    <TableRow key={product.id}>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">{product.name}</div>
-                          {product.description && (
-                            <div className="text-sm text-muted-foreground line-clamp-1">
-                              {product.description}
-                            </div>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <code className="text-sm">{product.sku}</code>
-                      </TableCell>
-                      <TableCell>
-                        {product.category ? (
-                          <Badge variant="outline">
-                            {product.category}
-                          </Badge>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="font-medium">
-                          {formatCurrency(product.selling_price)}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          {getStockIcon(product.stock_quantity, 10)}
-                          <span className="font-mono text-sm">
-                            {product.stock_quantity}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={stockStatus.variant}>
-                          {stockStatus.label}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-sm text-muted-foreground">
-                          {formatDate(product.created_at)}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          {onViewProduct && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => onViewProduct(product)}
-                              className="h-8 w-8 p-0"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                          )}
-                          {onEditProduct && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => onEditProduct(product)}
-                              className="h-8 w-8 p-0"
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                          )}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDelete(product)}
-                            className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
-        </div>
-
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          totalCount={totalCount}
-          pageSize={pageSize}
-          onPageChange={handlePageChange}
-          onPageSizeChange={handlePageSizeChange}
-          alwaysShow={true}
-        />
-      </CardContent>
-    </Card>
+  return (
+    <DataTable
+        title="Products"
+        data={products}
+        columns={columns}
+        loading={loading}
+        error={error || undefined}
+        
+        // Identifiers
+        getItemId={(product) => product?.id || 'unknown'}
+        
+        // Search
+        searchable
+        searchPlaceholder="Search products..."
+        searchValue={filters.search || ''}
+        onSearchChange={handleSearch}
+        
+        // Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalCount={totalCount}
+        pageSize={pageSize}
+        onPageChange={handlePageChange}
+        onPageSizeChange={handlePageSizeChange}
+        showPagination
+        alwaysShowPagination
+        
+        // Actions
+        actions={actions}
+        primaryAction={onCreateProduct ? {
+          label: 'Add Product',
+          onClick: onCreateProduct,
+        } : undefined}
+        
+        // Empty states
+        emptyMessage="No products found. Create your first product!"
+        
+        // Other
+        onRefresh={loadProducts}
+      />
   );
 };
 

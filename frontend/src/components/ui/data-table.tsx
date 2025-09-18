@@ -36,7 +36,7 @@ import {
   DropdownMenuTrigger,
 } from './dropdown-menu';
 import { Alert, AlertDescription } from './alert';
-import { Pagination } from './pagination';
+// import { Pagination } from './pagination';
 import {
   Search,
   Filter,
@@ -45,6 +45,12 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
+  ChevronsLeftIcon,
+  ChevronsRightIcon,
+  ChevronRight,
+  ChevronLast,
+  ChevronLeft,
+  ChevronFirst,
 } from 'lucide-react';
 
 // ============================================================================
@@ -233,14 +239,14 @@ export const DataTable = <T,>({
     <Card className={className}>
       {(title || searchable || filterable || primaryAction || onRefresh || (bulkActions.length > 0 && selectedItems.length > 0)) && (
         <CardHeader>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              {title && <CardTitle>{title}</CardTitle>}
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              {title && <CardTitle className="text-lg sm:text-xl">{title}</CardTitle>}
               
               {/* Bulk Actions */}
               {bulkActions.length > 0 && selectedItems.length > 0 && (
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-sm text-muted-foreground whitespace-nowrap">
                     {selectedItems.length} selected
                   </span>
                   {bulkActions.map((action, index) => (
@@ -255,23 +261,23 @@ export const DataTable = <T,>({
                       className={action.className}
                     >
                       {action.icon}
-                      {action.label}
+                      <span className="hidden sm:inline ml-2">{action.label}</span>
                     </Button>
                   ))}
                 </div>
               )}
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full lg:w-auto">
               {/* Search */}
               {searchable && (
-                <div className="relative">
+                <div className="relative flex-1 sm:flex-initial">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     placeholder={searchPlaceholder}
                     value={searchValue}
                     onChange={(e) => onSearchChange?.(e.target.value)}
-                    className="pl-10 w-[250px]"
+                    className="pl-10 w-full sm:w-[200px] lg:w-[250px]"
                   />
                 </div>
               )}
@@ -279,7 +285,7 @@ export const DataTable = <T,>({
               {/* Filter */}
               {filterable && filterOptions.length > 0 && (
                 <Select value={filterValue} onValueChange={onFilterChange}>
-                  <SelectTrigger className="w-[180px]">
+                  <SelectTrigger className="w-full sm:w-[160px] lg:w-[180px]">
                     <Filter className="w-4 h-4 mr-2" />
                     <SelectValue placeholder="Filter..." />
                   </SelectTrigger>
@@ -301,16 +307,21 @@ export const DataTable = <T,>({
                   size="sm"
                   onClick={onRefresh}
                   disabled={loading}
+                  className="px-3"
                 >
                   <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                  <span className="hidden sm:inline ml-2">Refresh</span>
                 </Button>
               )}
 
               {/* Primary Action */}
               {primaryAction && (
-                <Button onClick={primaryAction.onClick}>
+                <Button 
+                  onClick={primaryAction.onClick}
+                  className="w-full sm:w-auto"
+                >
                   {primaryAction.icon}
-                  {primaryAction.label}
+                  <span className="ml-2">{primaryAction.label}</span>
                 </Button>
               )}
             </div>
@@ -325,18 +336,20 @@ export const DataTable = <T,>({
           </Alert>
         )}
 
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                {selectable && (
-                  <TableHead className="w-12">
-                    <Checkbox
-                      checked={isAllSelected}
-                      onCheckedChange={handleSelectAll}
-                    />
-                  </TableHead>
-                )}
+        {/* Responsive table wrapper with horizontal scroll */}
+        <div className="rounded-md border overflow-hidden">
+          <div className="responsive-table-container">
+            <Table className="responsive-table min-w-full">
+              <TableHeader>
+                <TableRow>
+                  {selectable && (
+                    <TableHead className="w-12 sticky left-0 bg-background z-10">
+                      <Checkbox
+                        checked={isAllSelected}
+                        onCheckedChange={handleSelectAll}
+                      />
+                    </TableHead>
+                  )}
                 
                 {columns.map((column) => (
                   <TableHead 
@@ -352,7 +365,7 @@ export const DataTable = <T,>({
                 ))}
                 
                 {actions.length > 0 && (
-                  <TableHead className="w-12"></TableHead>
+                  <TableHead className="w-12 text-right">Actions</TableHead>
                 )}
               </TableRow>
             </TableHeader>
@@ -401,14 +414,15 @@ export const DataTable = <T,>({
                       ))}
                       
                       {actions.length > 0 && (
-                        <TableCell>
+                        <TableCell className="text-right">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                                 <MoreHorizontal className="w-4 h-4" />
+                                <span className="sr-only">Open menu</span>
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
+                            <DropdownMenuContent align="end" className="w-[160px]">
                               {actions.map((action, actionIndex) => (
                                 <DropdownMenuItem
                                   key={actionIndex}
@@ -429,19 +443,73 @@ export const DataTable = <T,>({
               )}
             </TableBody>
           </Table>
+          </div>
         </div>
 
-        {/* Pagination */}
+        {/* Responsive Pagination */}
         {showPagination && (
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            totalCount={totalCount}
-            pageSize={pageSize}
-            onPageChange={onPageChange}
-            onPageSizeChange={onPageSizeChange}
-            alwaysShow={alwaysShowPagination}
-          />
+          <div className="flex flex-col sm:flex-row items-center sm:items-center justify-between gap-4 p-4 border-t">
+            <div className="text-sm text-muted-foreground order-2 sm:order-1">
+              {totalCount === 0 ? (
+                'No results'
+              ) : (
+                <>
+                  <span className="hidden sm:inline">
+                    Showing {(currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, totalCount)} of {totalCount} results
+                  </span>
+                  <span className="sm:hidden">
+                    {(currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, totalCount)} of {totalCount}
+                  </span>
+                </>
+              )}
+            </div>
+            
+            <div className="flex items-center gap-2 order-1 sm:order-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onPageChange(1)}
+                disabled={currentPage === 1}
+                className="w-9 h-9 p-0"
+              >
+                <ChevronFirst />
+              </Button>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onPageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="w-9 h-9 p-0"
+              >
+                <ChevronLeft />
+              </Button>
+              
+              <span className="text-sm whitespace-nowrap px-3 py-2 min-w-[60px] text-center">
+                <span className="font-medium">{currentPage}/{totalPages}</span>
+              </span>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onPageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="w-9 h-9 p-0"
+              >
+                <ChevronRight />
+              </Button>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onPageChange(totalPages)}
+                disabled={currentPage === totalPages}
+                className="w-9 h-9 p-0"
+              >
+                <ChevronLast />
+              </Button>
+            </div>
+          </div>
         )}
       </CardContent>
     </Card>

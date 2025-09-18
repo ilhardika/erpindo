@@ -224,7 +224,6 @@ export const useProductStore = create<ProductStore>()(
 
           const { data, count, error } = await query;
 
-
           if (error) {
             throw error;
           }

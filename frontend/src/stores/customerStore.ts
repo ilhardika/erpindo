@@ -16,12 +16,30 @@ import type { Customer, CustomerInsert, CustomerUpdate } from '../types/database
 // TYPES & INTERFACES
 // ============================================================================
 
+export interface CustomerFilters {
+  search?: string;
+  customer_type?: 'regular' | 'vip' | 'wholesale';
+  is_active?: boolean;
+}
+
+export interface CustomerSort {
+  field: keyof Customer;
+  direction: 'asc' | 'desc';
+}
+
 interface CustomerStore {
   // State
   customers: Customer[];
   selectedCustomer: Customer | null;
   loading: boolean;
   error: string | null;
+  
+  // Filters and pagination
+  filters: CustomerFilters;
+  sort: CustomerSort;
+  currentPage: number;
+  pageSize: number;
+  totalCount: number;
   
   // Actions
   loadCustomers: () => Promise<void>;
@@ -30,6 +48,12 @@ interface CustomerStore {
   deleteCustomer: (id: string) => Promise<boolean>;
   setSelectedCustomer: (customer: Customer | null) => void;
   clearError: () => void;
+  
+  // Filters and sorting
+  setFilters: (filters: Partial<CustomerFilters>) => void;
+  setSort: (sort: CustomerSort) => void;
+  setPagination: (page: number, pageSize?: number) => void;
+  clearFilters: () => void;
   
   // Search & Filter
   searchCustomers: (query: string) => Customer[];
@@ -51,8 +75,15 @@ export const useCustomerStore = create<CustomerStore>()(
       selectedCustomer: null,
       loading: false,
       error: null,
+      
+      // Filters and pagination
+      filters: {},
+      sort: { field: 'name', direction: 'asc' },
+      currentPage: 1,
+      pageSize: 10,
+      totalCount: 0,
 
-      // Load all customers for current company
+      // Load customers with filters and pagination
       loadCustomers: async () => {
         try {
           set({ loading: true, error: null });
@@ -62,16 +93,41 @@ export const useCustomerStore = create<CustomerStore>()(
             throw new Error('User not authenticated or missing tenant');
           }
 
-          const { data, error } = await supabase
+          const { filters, sort, currentPage, pageSize } = get();
+
+          // Build query with filters
+          let query = supabase
             .from('customers')
-            .select('*')
-            .eq('company_id', user.tenant_id)
-            .order('name', { ascending: true });
+            .select('*', { count: 'exact' })
+            .eq('company_id', user.tenant_id);
+
+          // Apply filters
+          if (filters.search) {
+            query = query.or(`name.ilike.%${filters.search}%,email.ilike.%${filters.search}%,phone.ilike.%${filters.search}%`);
+          }
+
+          if (filters.customer_type) {
+            query = query.eq('customer_type', filters.customer_type);
+          }
+
+          if (filters.is_active !== undefined) {
+            query = query.eq('is_active', filters.is_active);
+          }
+
+          // Apply sorting
+          query = query.order(sort.field, { ascending: sort.direction === 'asc' });
+
+          // Apply pagination
+          const start = (currentPage - 1) * pageSize;
+          query = query.range(start, start + pageSize - 1);
+
+          const { data, error, count } = await query;
 
           if (error) throw error;
 
           set({ 
             customers: data || [],
+            totalCount: count || 0,
             loading: false 
           });
         } catch (error) {
@@ -317,6 +373,47 @@ export const useCustomerStore = create<CustomerStore>()(
           .filter(customer => customer.is_active)
           .slice(0, limit);
       },
+
+      // ========================================================================
+      // FILTERS AND PAGINATION
+      // ========================================================================
+
+      setFilters: (newFilters: Partial<CustomerFilters>) => {
+        set((state) => ({
+          filters: { ...state.filters, ...newFilters },
+          currentPage: 1, // Reset to first page when filters change
+        }));
+        
+        // Reload customers with new filters
+        get().loadCustomers();
+      },
+
+      setSort: (sort: CustomerSort) => {
+        set({ sort, currentPage: 1 });
+        
+        // Reload customers with new sort
+        get().loadCustomers();
+      },
+
+      setPagination: (page: number, newPageSize?: number) => {
+        set((state) => ({
+          currentPage: page,
+          pageSize: newPageSize || state.pageSize,
+        }));
+        
+        // Reload customers with new pagination
+        get().loadCustomers();
+      },
+
+      clearFilters: () => {
+        set({
+          filters: {},
+          currentPage: 1,
+        });
+        
+        // Reload customers without filters
+        get().loadCustomers();
+      },
     }),
     {
       name: 'customer-store',
@@ -365,6 +462,7 @@ export const useCustomerOperations = () => {
   const updateCustomerWithFeedback = async (id: string, updates: CustomerUpdate) => {
     const success = await store.updateCustomer(id, updates);
     if (success && !store.error) {
+      // Could add toast notification here
     }
     return success;
   };
@@ -372,16 +470,47 @@ export const useCustomerOperations = () => {
   const deleteCustomerWithFeedback = async (id: string) => {
     const success = await store.deleteCustomer(id);
     if (success && !store.error) {
+      // Could add toast notification here
     }
     return success;
   };
 
   return {
-    create: createCustomerWithFeedback,
-    update: updateCustomerWithFeedback,
-    delete: deleteCustomerWithFeedback,
+    createCustomer: createCustomerWithFeedback,
+    updateCustomer: updateCustomerWithFeedback,
+    deleteCustomer: deleteCustomerWithFeedback,
     loading: store.loading,
     error: store.error,
-    clearError: store.clearError,
+  };
+};
+
+/**
+ * Hook to get customer actions (similar to useProductActions for consistency)
+ */
+export const useCustomerActions = () => {
+  const {
+    loadCustomers,
+    createCustomer,
+    updateCustomer,
+    deleteCustomer,
+    setSelectedCustomer,
+    setFilters,
+    setSort,
+    setPagination,
+    clearFilters,
+    clearError,
+  } = useCustomerStore();
+
+  return {
+    loadCustomers,
+    createCustomer,
+    updateCustomer,
+    deleteCustomer,
+    setSelectedCustomer,
+    setFilters,
+    setSort,
+    setPagination,
+    clearFilters,
+    clearError,
   };
 };
