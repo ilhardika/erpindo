@@ -146,7 +146,7 @@ const initialState: ProductState = {
   filters: {},
   sort: { field: 'created_at', direction: 'desc' },
   currentPage: 1,
-  pageSize: 20,
+  pageSize: 50, // Temporarily increase to see all products
   totalCount: 0,
   
   // Form state
@@ -224,6 +224,16 @@ export const useProductStore = create<ProductStore>()(
           // Apply pagination
           const from = (currentPage - 1) * pageSize;
           const to = from + pageSize - 1;
+          
+          console.log('ProductStore: Pagination params:', { 
+            currentPage, 
+            pageSize, 
+            from, 
+            to, 
+            filters,
+            sort 
+          });
+          
           query = query.range(from, to);
 
           const { data, count, error } = await query;

@@ -1,649 +1,465 @@
 /**
  * ProductForm Component
- * Form for creating and editing products with validation
- * Uses react-hook-form with zod validation and integrates with productStore
- * Date: 2025-09-14
+ * Mobile-first responsive form for creating/editing products
+ * Uses consistent design system with reusable components
+ * Date: 2025-09-18
  */
 
-import React, { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import React, { useState, useEffect } from 'react';
 import { Button } from '../../ui/button';
+import { Input } from '../../ui/input';
+import { Textarea } from '../../ui/textarea';
 import {
-  Save,
-  X,
-  Package,
-  DollarSign,
-  FileText,
-  AlertTriangle,
-  Loader2,
-} from 'lucide-react';
-import { useProductStore, useProductActions } from '../../../stores/productStore';
+  DetailLayout,
+  DetailHeader,
+  DetailCard,
+  DetailGrid,
+} from '../../ui/data-detail';
+import { Loader2, Save, X, Package, DollarSign, Hash, MapPin } from 'lucide-react';
+import { useProductActions } from '../../../stores/productStore';
+import { useProductStore } from '../../../stores/productStore';
 import { useAuthStore } from '../../../stores/authStore';
-import type { Product, ProductInsert, ProductUpdate } from '../../../types/database';
-
-// ============================================================================
-// VALIDATION SCHEMA
-// ============================================================================
-
-const productSchema = z.object({
-  name: z
-    .string()
-    .min(1, 'Product name is required')
-    .min(2, 'Product name must be at least 2 characters')
-    .max(100, 'Product name must be less than 100 characters'),
-  
-  sku: z
-    .string()
-    .min(1, 'SKU is required')
-    .min(2, 'SKU must be at least 2 characters'),
-  
-  barcode: z
-    .string()
-    .optional()
-    .refine((val) => !val || /^\d{12,13}$/.test(val), {
-      message: 'Barcode must be 12 or 13 digits',
-    }),
-  
-  description: z
-    .string()
-    .optional(),
-  
-  category: z
-    .string()
-    .optional(),
-  
-  brand: z
-    .string()
-    .optional(),
-    
-  unit_of_measure: z
-    .string()
-    .min(1, 'Unit of measure is required'),
-  
-  selling_price: z
-    .number()
-    .min(0, 'Selling price cannot be negative')
-    .max(999999999, 'Selling price is too large'),
-  
-  cost_price: z
-    .number()
-    .min(0, 'Cost price cannot be negative')
-    .max(999999999, 'Cost price is too large')
-    .optional(),
-  
-  stock_quantity: z
-    .number()
-    .int('Stock quantity must be a whole number')
-    .min(0, 'Stock quantity cannot be negative'),
-  
-  minimum_stock: z
-    .number()
-    .int('Minimum stock must be a whole number')
-    .min(0, 'Minimum stock cannot be negative'),
-    
-  maximum_stock: z
-    .number()
-    .int('Maximum stock must be a whole number')
-    .min(0, 'Maximum stock cannot be negative')
-    .optional(),
-  
-  location: z
-    .string()
-    .optional(),
-  
-  is_active: z.boolean().default(true),
-});
-
-type ProductFormData = z.infer<typeof productSchema>;
+import { CategoryDropdown } from '../../ui/crud-dropdown';
+import type { ProductInsert, ProductUpdate } from '../../../types/database';
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
 interface ProductFormProps {
-  open: boolean;
-  onClose: () => void;
-  onSuccess?: (product: Product) => void;
+  onSuccess?: () => void;
+  onCancel?: () => void;
+  className?: string;
+}
+
+interface FormData {
+  name: string;
+  sku: string;
+  description: string;
+  category: string;
+  category_id: string | null;
+  cost_price: string;
+  selling_price: string;
+  stock_quantity: string;
+  minimum_stock: string;
+  maximum_stock: string;
+  location: string;
+  barcode: string;
+  brand: string;
+  unit_of_measure: string;
 }
 
 // ============================================================================
-// CONSTANTS
+// FORM FIELD COMPONENT
 // ============================================================================
 
-const COMMON_CATEGORIES = [
-  'Electronics',
-  'Clothing',
-  'Food & Beverage',
-  'Health & Beauty',
-  'Home & Garden',
-  'Sports & Outdoors',
-  'Automotive',
-  'Books',
-  'Toys & Games',
-  'Office Supplies',
-];
+interface FormFieldProps {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  type?: 'text' | 'number' | 'textarea';
+  required?: boolean;
+  icon?: React.ReactNode;
+  className?: string;
+}
 
-const COMMON_UNITS = [
-  'pcs',
-  'kg',
-  'g',
-  'liter',
-  'ml',
-  'meter',
-  'cm',
-  'box',
-  'pack',
-  'set',
-];
+const FormField: React.FC<FormFieldProps> = ({
+  label,
+  value,
+  onChange,
+  placeholder,
+  type = 'text',
+  required = false,
+  icon,
+  className,
+}) => {
+  return (
+    <div className={`space-y-2 ${className || ''}`}>
+      <label className="text-sm font-medium text-foreground">
+        {label}
+        {required && <span className="text-red-500 ml-1">*</span>}
+      </label>
+      <div className="relative">
+        {icon && (
+          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
+            {icon}
+          </div>
+        )}
+        {type === 'textarea' ? (
+          <Textarea
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder={placeholder}
+            className={icon ? 'pl-10' : ''}
+            rows={3}
+          />
+        ) : (
+          <Input
+            type={type}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder={placeholder}
+            className={icon ? 'pl-10' : ''}
+          />
+        )}
+      </div>
+    </div>
+  );
+};
 
 // ============================================================================
-// COMPONENT
+// MAIN COMPONENT
 // ============================================================================
 
 export const ProductForm: React.FC<ProductFormProps> = ({
-  open,
-  onClose,
   onSuccess,
+  onCancel,
+  className,
 }) => {
-  // Store state
-  const {
-    selectedProduct,
-    isEditing,
-    saving,
-    error,
-  } = useProductStore();
-
   const { user } = useAuthStore();
-
-  const {
-    createProduct,
-    updateProduct,
-    hideForm,
-    clearError,
-  } = useProductActions();
-
-  // Form setup
-  const form = useForm<ProductFormData>({
-    resolver: zodResolver(productSchema),
-    defaultValues: {
-      name: '',
-      sku: '',
-      barcode: '',
-      description: '',
-      category: '',
-      brand: '',
-      unit_of_measure: 'pcs',
-      selling_price: 0,
-      cost_price: 0,
-      stock_quantity: 0,
-      minimum_stock: 0,
-      maximum_stock: 0,
-      location: '',
-      is_active: true,
-    },
+  const { createProduct, updateProduct } = useProductActions();
+  const { selectedProduct } = useProductStore();
+  
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const isEditing = Boolean(selectedProduct);
+  
+  const [formData, setFormData] = useState<FormData>({
+    name: '',
+    sku: '',
+    description: '',
+    category: '',
+    category_id: null,
+    cost_price: '',
+    selling_price: '',
+    stock_quantity: '',
+    minimum_stock: '',
+    maximum_stock: '',
+    location: '',
+    barcode: '',
+    brand: '',
+    unit_of_measure: 'pcs',
   });
 
-  // ========================================================================
-  // EFFECTS
-  // ========================================================================
-
+  // Populate form when selectedProduct changes (for editing)
   useEffect(() => {
-    if (isEditing && selectedProduct) {
-      // Populate form with selected product data
-      form.reset({
-        name: selectedProduct.name,
-        sku: selectedProduct.sku,
-        barcode: selectedProduct.barcode || '',
+    if (selectedProduct) {
+      setFormData({
+        name: selectedProduct.name || '',
+        sku: selectedProduct.sku || '',
         description: selectedProduct.description || '',
         category: selectedProduct.category || '',
-        brand: selectedProduct.brand || '',
-        unit_of_measure: selectedProduct.unit_of_measure,
-        selling_price: selectedProduct.selling_price,
-        cost_price: selectedProduct.cost_price || 0,
-        stock_quantity: selectedProduct.stock_quantity,
-        minimum_stock: selectedProduct.minimum_stock,
-        maximum_stock: selectedProduct.maximum_stock || 0,
+        category_id: selectedProduct.category_id || null,
+        cost_price: selectedProduct.cost_price?.toString() || '',
+        selling_price: selectedProduct.selling_price?.toString() || '',
+        stock_quantity: selectedProduct.stock_quantity?.toString() || '',
+        minimum_stock: selectedProduct.minimum_stock?.toString() || '',
+        maximum_stock: selectedProduct.maximum_stock?.toString() || '',
         location: selectedProduct.location || '',
-        is_active: selectedProduct.is_active,
-      });
-    } else {
-      // Reset form for new product
-      form.reset({
-        name: '',
-        sku: '',
-        barcode: '',
-        description: '',
-        category: '',
-        brand: '',
-        unit_of_measure: 'pcs',
-        selling_price: 0,
-        cost_price: 0,
-        stock_quantity: 0,
-        minimum_stock: 0,
-        maximum_stock: 0,
-        location: '',
-        is_active: true,
+        barcode: selectedProduct.barcode || '',
+        brand: selectedProduct.brand || '',
+        unit_of_measure: selectedProduct.unit_of_measure || 'pcs',
       });
     }
-  }, [isEditing, selectedProduct, form]);
+  }, [selectedProduct]);
 
-  useEffect(() => {
-    if (!open) {
-      clearError();
-      form.clearErrors();
+  // ========================================================================
+  // FORM HANDLERS
+  // ========================================================================
+
+  const updateField = (field: keyof FormData, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
     }
-  }, [open, form, clearError]);
-
-  // ========================================================================
-  // HANDLERS
-  // ========================================================================
-
-  const handleClose = () => {
-    form.reset();
-    hideForm();
-    onClose();
   };
 
-  const onSubmit = async (data: ProductFormData) => {
-    try {
-      let success = false;
-      let result: Product | null = null;
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
 
+    if (!formData.name.trim()) {
+      newErrors.name = 'Product name is required';
+    }
+    if (!formData.sku.trim()) {
+      newErrors.sku = 'SKU is required';
+    }
+    if (!formData.selling_price || parseFloat(formData.selling_price) <= 0) {
+      newErrors.selling_price = 'Valid selling price is required';
+    }
+    if (!formData.cost_price || parseFloat(formData.cost_price) <= 0) {
+      newErrors.cost_price = 'Valid cost price is required';
+    }
+    if (parseFloat(formData.selling_price) < parseFloat(formData.cost_price)) {
+      newErrors.selling_price = 'Selling price should be higher than cost price';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+
+    if (!user?.tenant_id) {
+      console.error('No tenant ID found');
+      return;
+    }
+
+    setLoading(true);
+    
+    try {
       if (isEditing && selectedProduct) {
         // Update existing product
-        const updateData: ProductUpdate = { ...data };
-        success = await updateProduct(selectedProduct.id, updateData);
+        const productUpdate: ProductUpdate = {
+          name: formData.name,
+          sku: formData.sku,
+          description: formData.description || null,
+          category: formData.category || null,
+          category_id: formData.category_id,
+          cost_price: parseFloat(formData.cost_price),
+          selling_price: parseFloat(formData.selling_price),
+          stock_quantity: parseInt(formData.stock_quantity) || 0,
+          minimum_stock: parseInt(formData.minimum_stock) || 0,
+          maximum_stock: formData.maximum_stock ? parseInt(formData.maximum_stock) : null,
+          location: formData.location || null,
+          barcode: formData.barcode || null,
+          brand: formData.brand || null,
+          unit_of_measure: formData.unit_of_measure,
+          is_active: true,
+        };
+
+        const success = await updateProduct(selectedProduct.id, productUpdate);
         if (success) {
-          result = { ...selectedProduct, ...updateData } as Product;
+          onSuccess?.();
         }
       } else {
         // Create new product
-        const insertData: ProductInsert = {
-          ...data,
-          company_id: user?.tenant_id || '', // Use tenant_id from auth store
+        const productInsert: ProductInsert = {
+          company_id: user.tenant_id,
+          name: formData.name,
+          sku: formData.sku,
+          description: formData.description || null,
+          category: formData.category || null,
+          category_id: formData.category_id,
+          cost_price: parseFloat(formData.cost_price),
+          selling_price: parseFloat(formData.selling_price),
+          stock_quantity: parseInt(formData.stock_quantity) || 0,
+          minimum_stock: parseInt(formData.minimum_stock) || 0,
+          maximum_stock: formData.maximum_stock ? parseInt(formData.maximum_stock) : null,
+          location: formData.location || null,
+          barcode: formData.barcode || null,
+          brand: formData.brand || null,
+          unit_of_measure: formData.unit_of_measure,
+          is_active: true,
         };
-        success = await createProduct(insertData);
+
+        const success = await createProduct(productInsert);
         if (success) {
-          result = { ...insertData, id: 'temp-id' } as Product; // Real ID would come from database
+          onSuccess?.();
         }
       }
-
-      if (success && result) {
-        onSuccess?.(result);
-        handleClose();
-      }
     } catch (error) {
-      console.error('Form submission error:', error);
+      console.error('Error saving product:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const generateSKU = () => {
-    const name = form.getValues('name');
-    const category = form.getValues('category');
-    
-    if (!name) return;
-
-    const namePrefix = name.substring(0, 3).toUpperCase();
-    const categoryPrefix = category ? category.substring(0, 2).toUpperCase() : 'GN';
-    const timestamp = Date.now().toString().slice(-4);
-    
-    const sku = `${namePrefix}-${categoryPrefix}-${timestamp}`;
-    form.setValue('sku', sku);
+  const handleCancel = () => {
+    onCancel?.();
   };
-
-  const calculateMargin = () => {
-    const sellingPrice = form.watch('selling_price');
-    const costPrice = form.watch('cost_price');
-    
-    if (!sellingPrice || !costPrice || costPrice === 0) return null;
-    
-    const margin = ((sellingPrice - costPrice) / sellingPrice) * 100;
-    return margin.toFixed(1);
-  };
-
-  // Don't render if not open
-  if (!open) return null;
 
   // ========================================================================
   // RENDER
   // ========================================================================
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="p-6 border-b">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Package className="w-5 h-5" />
-              <h2 className="text-2xl font-bold">
-                {isEditing ? 'Edit Product' : 'Create New Product'}
-              </h2>
-            </div>
-            <Button variant="ghost" onClick={handleClose}>
-              <X className="w-4 h-4" />
-            </Button>
-          </div>
-          <p className="text-gray-600 mt-2">
-            {isEditing
-              ? 'Update the product information below.'
-              : 'Fill in the details to create a new product.'}
-          </p>
-        </div>
-
-        {/* Error Alert */}
-        {error && (
-          <div className="m-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4 text-red-600" />
-            <span className="text-red-800">{error}</span>
-          </div>
-        )}
-
-        {/* Form */}
-        <form onSubmit={form.handleSubmit(onSubmit)} className="p-6 space-y-6">
-          {/* Basic Information */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <FileText className="w-4 h-4" />
-              <h3 className="text-lg font-semibold">Basic Information</h3>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Product Name *
-                </label>
-                <input
-                  {...form.register('name')}
-                  className="w-full p-2 border rounded-md"
-                  placeholder="Enter product name"
-                />
-                {form.formState.errors.name && (
-                  <p className="text-red-600 text-sm mt-1">
-                    {form.formState.errors.name.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  SKU *
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    {...form.register('sku')}
-                    className="flex-1 p-2 border rounded-md"
-                    placeholder="Product SKU"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={generateSKU}
-                    disabled={!form.watch('name')}
-                  >
-                    Generate
-                  </Button>
-                </div>
-                {form.formState.errors.sku && (
-                  <p className="text-red-600 text-sm mt-1">
-                    {form.formState.errors.sku.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Barcode
-                </label>
-                <input
-                  {...form.register('barcode')}
-                  className="w-full p-2 border rounded-md"
-                  placeholder="12 or 13 digit barcode"
-                />
-                {form.formState.errors.barcode && (
-                  <p className="text-red-600 text-sm mt-1">
-                    {form.formState.errors.barcode.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Category
-                </label>
-                <select
-                  {...form.register('category')}
-                  className="w-full p-2 border rounded-md"
-                >
-                  <option value="">Select category</option>
-                  {COMMON_CATEGORIES.map((category) => (
-                    <option key={category} value={category}>
-                      {category}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Brand
-                </label>
-                <input
-                  {...form.register('brand')}
-                  className="w-full p-2 border rounded-md"
-                  placeholder="Product brand"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Unit of Measure *
-                </label>
-                <select
-                  {...form.register('unit_of_measure')}
-                  className="w-full p-2 border rounded-md"
-                >
-                  {COMMON_UNITS.map((unit) => (
-                    <option key={unit} value={unit}>
-                      {unit}
-                    </option>
-                  ))}
-                </select>
-                {form.formState.errors.unit_of_measure && (
-                  <p className="text-red-600 text-sm mt-1">
-                    {form.formState.errors.unit_of_measure.message}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Description
-              </label>
-              <textarea
-                {...form.register('description')}
-                className="w-full p-2 border rounded-md"
-                rows={3}
-                placeholder="Product description"
-              />
-            </div>
-          </div>
-
-          {/* Pricing */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <DollarSign className="w-4 h-4" />
-              <h3 className="text-lg font-semibold">Pricing & Cost</h3>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Selling Price *
-                </label>
-                <input
-                  {...form.register('selling_price', { valueAsNumber: true })}
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  className="w-full p-2 border rounded-md"
-                  placeholder="0.00"
-                />
-                {form.formState.errors.selling_price && (
-                  <p className="text-red-600 text-sm mt-1">
-                    {form.formState.errors.selling_price.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Cost Price
-                </label>
-                <input
-                  {...form.register('cost_price', { valueAsNumber: true })}
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  className="w-full p-2 border rounded-md"
-                  placeholder="0.00"
-                />
-                {form.formState.errors.cost_price && (
-                  <p className="text-red-600 text-sm mt-1">
-                    {form.formState.errors.cost_price.message}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {calculateMargin() && (
-              <div className="p-3 bg-gray-100 rounded-lg">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Profit Margin:</span>
-                  <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-sm">
-                    {calculateMargin()}%
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Inventory */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Package className="w-4 h-4" />
-              <h3 className="text-lg font-semibold">Inventory</h3>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Current Stock *
-                </label>
-                <input
-                  {...form.register('stock_quantity', { valueAsNumber: true })}
-                  type="number"
-                  min="0"
-                  className="w-full p-2 border rounded-md"
-                  placeholder="0"
-                />
-                {form.formState.errors.stock_quantity && (
-                  <p className="text-red-600 text-sm mt-1">
-                    {form.formState.errors.stock_quantity.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Minimum Stock
-                </label>
-                <input
-                  {...form.register('minimum_stock', { valueAsNumber: true })}
-                  type="number"
-                  min="0"
-                  className="w-full p-2 border rounded-md"
-                  placeholder="0"
-                />
-                {form.formState.errors.minimum_stock && (
-                  <p className="text-red-600 text-sm mt-1">
-                    {form.formState.errors.minimum_stock.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Maximum Stock
-                </label>
-                <input
-                  {...form.register('maximum_stock', { valueAsNumber: true })}
-                  type="number"
-                  min="0"
-                  className="w-full p-2 border rounded-md"
-                  placeholder="0"
-                />
-                {form.formState.errors.maximum_stock && (
-                  <p className="text-red-600 text-sm mt-1">
-                    {form.formState.errors.maximum_stock.message}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Location
-              </label>
-              <input
-                {...form.register('location')}
-                className="w-full p-2 border rounded-md"
-                placeholder="Warehouse location"
-              />
-            </div>
-
-            <div className="flex items-center gap-2">
-              <input
-                {...form.register('is_active')}
-                type="checkbox"
-                className="w-4 h-4"
-              />
-              <label className="text-sm font-medium">
-                Active Product (available for sale)
-              </label>
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div className="flex justify-end gap-2 pt-4 border-t">
+    <DetailLayout className={className} maxWidth="lg">
+      <DetailHeader
+        title={isEditing ? 'Edit Product' : 'Add New Product'}
+        subtitle={isEditing ? `Editing: ${selectedProduct?.name}` : 'Create a new product for your inventory'}
+        actions={
+          <div className="flex items-center gap-2">
             <Button
               type="button"
               variant="outline"
-              onClick={handleClose}
-              disabled={saving}
+              onClick={handleCancel}
+              disabled={loading}
             >
               <X className="w-4 h-4 mr-2" />
               Cancel
             </Button>
             <Button
               type="submit"
-              disabled={saving}
-              className="flex items-center gap-2"
+              form="product-form"
+              disabled={loading}
             >
-              {saving ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
+              {loading ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
               ) : (
-                <Save className="w-4 h-4" />
+                <Save className="w-4 h-4 mr-2" />
               )}
               {isEditing ? 'Update Product' : 'Create Product'}
             </Button>
           </div>
-        </form>
-      </div>
-    </div>
+        }
+      />
+
+      <form id="product-form" onSubmit={handleSubmit} className="space-y-6">
+        {/* Basic Information */}
+        <DetailCard
+          title="Basic Information"
+          icon={<Package className="w-5 h-5" />}
+        >
+          <DetailGrid columns={2}>
+            <FormField
+              label="Product Name"
+              value={formData.name}
+              onChange={(value) => updateField('name', value)}
+              placeholder="Enter product name"
+              required
+              icon={<Package className="w-4 h-4" />}
+            />
+            <FormField
+              label="SKU"
+              value={formData.sku}
+              onChange={(value) => updateField('sku', value)}
+              placeholder="Enter SKU"
+              required
+              icon={<Hash className="w-4 h-4" />}
+            />
+            <FormField
+              label="Barcode"
+              value={formData.barcode}
+              onChange={(value) => updateField('barcode', value)}
+              placeholder="Enter barcode (optional)"
+            />
+            <FormField
+              label="Brand"
+              value={formData.brand}
+              onChange={(value) => updateField('brand', value)}
+              placeholder="Enter brand (optional)"
+            />
+          </DetailGrid>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">
+                Category
+              </label>
+              <CategoryDropdown
+                value={formData.category}
+                onValueChange={(value) => updateField('category', value || '')}
+                placeholder="Select category"
+                className="w-full"
+              />
+            </div>
+            <FormField
+              label="Unit of Measure"
+              value={formData.unit_of_measure}
+              onChange={(value) => updateField('unit_of_measure', value)}
+              placeholder="e.g., pcs, kg, liter"
+            />
+          </div>
+
+          <FormField
+            label="Description"
+            value={formData.description}
+            onChange={(value) => updateField('description', value)}
+            placeholder="Enter product description (optional)"
+            type="textarea"
+            className="mt-4"
+          />
+        </DetailCard>
+
+        {/* Pricing Information */}
+        <DetailCard
+          title="Pricing Information"
+          icon={<DollarSign className="w-5 h-5" />}
+        >
+          <DetailGrid columns={2}>
+            <FormField
+              label="Cost Price"
+              value={formData.cost_price}
+              onChange={(value) => updateField('cost_price', value)}
+              placeholder="0"
+              type="number"
+              required
+              icon={<DollarSign className="w-4 h-4" />}
+            />
+            <FormField
+              label="Selling Price"
+              value={formData.selling_price}
+              onChange={(value) => updateField('selling_price', value)}
+              placeholder="0"
+              type="number"
+              required
+              icon={<DollarSign className="w-4 h-4" />}
+            />
+          </DetailGrid>
+          {errors.selling_price && (
+            <p className="text-sm text-red-500 mt-2">{errors.selling_price}</p>
+          )}
+        </DetailCard>
+
+        {/* Stock Information */}
+        <DetailCard
+          title="Stock Information"
+          icon={<Package className="w-5 h-5" />}
+        >
+          <DetailGrid columns={3}>
+            <FormField
+              label="Initial Stock"
+              value={formData.stock_quantity}
+              onChange={(value) => updateField('stock_quantity', value)}
+              placeholder="0"
+              type="number"
+            />
+            <FormField
+              label="Minimum Stock"
+              value={formData.minimum_stock}
+              onChange={(value) => updateField('minimum_stock', value)}
+              placeholder="0"
+              type="number"
+            />
+            <FormField
+              label="Maximum Stock"
+              value={formData.maximum_stock}
+              onChange={(value) => updateField('maximum_stock', value)}
+              placeholder="Optional"
+              type="number"
+            />
+          </DetailGrid>
+          
+          <FormField
+            label="Location"
+            value={formData.location}
+            onChange={(value) => updateField('location', value)}
+            placeholder="e.g., Warehouse A, Shelf 1"
+            icon={<MapPin className="w-4 h-4" />}
+            className="mt-4"
+          />
+        </DetailCard>
+
+        {/* Show validation errors */}
+        {Object.keys(errors).length > 0 && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <h4 className="text-sm font-medium text-red-800 mb-2">Please fix the following errors:</h4>
+            <ul className="text-sm text-red-700 space-y-1">
+              {Object.values(errors).map((error, index) => (
+                <li key={index}>• {error}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </form>
+    </DetailLayout>
   );
 };
 

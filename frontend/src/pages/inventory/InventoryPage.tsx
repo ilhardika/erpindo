@@ -25,7 +25,7 @@ import {
   Activity,
 } from 'lucide-react';
 import { ProductList } from '../../components/modules/products/ProductList';
-import { ProductFormSimple } from '../../components/modules/products/ProductFormSimple';
+import { ProductForm } from '../../components/modules/products/ProductForm';
 import { StockMovementHistory } from '../../components/modules/inventory/StockMovementHistory';
 import { StockOpnameList } from '../../components/modules/inventory/StockOpnameList';
 import { useProductStore, useProductActions } from '../../stores/productStore';
@@ -145,7 +145,7 @@ export const InventoryPage: React.FC<InventoryPageProps> = ({ className }) => {
     return (
       <div className={`h-full ${className || ''}`}>
         <div className="p-6">
-          <ProductFormSimple
+          <ProductForm
             onSuccess={handleProductFormSuccess}
             onCancel={handleProductFormClose}
           />

@@ -1,20 +1,22 @@
 /**
  * ProductDetailPage Component
  * Detailed view of a single product with stock movement history
- * Shows comprehensive product information and inventory tracking
- * Date: 2025-09-14
+ * Mobile-first responsive design using reusable detail components
+ * Date: 2025-09-18
  */
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
+import {
+  DetailLayout,
+  DetailHeader,
+  DetailCard,
+  DetailField,
+  DetailGrid,
+  MetricCard,
+} from '../../components/ui/data-detail';
 import {
   ArrowLeft,
   Edit,
@@ -27,13 +29,14 @@ import {
   CheckCircle,
   Activity,
   Calendar,
-  User,
   DollarSign,
+  Tag,
+  Building,
+  Hash,
 } from 'lucide-react';
 import { useProductStore, useProductActions } from '../../stores/productStore';
-import { useStockMovementStore } from '../../stores/stockMovementStore';
+import { useStockMovementStore, useStockMovementActions, type StockMovement } from '../../stores/stockMovementStore';
 import { useAuthStore } from '../../stores/authStore';
-import type { Product, StockMovement } from '../../types/database';
 
 // ============================================================================
 // TYPES
@@ -57,6 +60,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ className 
   const { products, selectedProduct } = useProductStore();
   const { selectProduct } = useProductActions();
   const { movements, loadMovements } = useStockMovementStore();
+  const { getProductMovements } = useStockMovementActions();
   const { user } = useAuthStore();
 
   // Find current product
@@ -68,41 +72,43 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ className 
 
   useEffect(() => {
     const loadProductDetail = async () => {
-      if (id && !product) {
-        // Load product if not in store
-        console.log('Loading product:', id);
-      }
+      setIsLoading(true);
       
-      if (product) {
-        // Load stock movements for this product
-        await loadMovements({
-          product_id: product.id,
-          limit: 50
-        });
-        
-        // Filter movements for this product
-        const filtered = movements.filter(m => m.product_id === product.id);
-        setProductMovements(filtered);
+      // Only load movements if we don't have any yet or very few
+      if (movements.length === 0) {
+        console.log('Loading movements (first time)...');
+        await loadMovements();
+      } else {
+        console.log('Using existing movements:', movements.length);
       }
       
       setIsLoading(false);
     };
 
     loadProductDetail();
-  }, [id, product, loadMovements, movements]);
+  }, [id]); // Only depend on id to prevent infinite loop
+
+  // Separate effect to get filtered movements when movements or product changes
+  useEffect(() => {
+    if (product) {
+      const filtered = getProductMovements(product.id);
+      setProductMovements(filtered);
+      console.log('Updated product movements:', product.id, filtered.length);
+    }
+  }, [product?.id, movements.length, getProductMovements]); // Use movements.length instead of movements array
 
   // ========================================================================
   // HANDLERS
   // ========================================================================
 
   const handleBack = () => {
-    navigate('/inventory');
+    navigate('/products');
   };
 
   const handleEdit = () => {
     if (product) {
       selectProduct(product);
-      navigate('/inventory?edit=true');
+      navigate('/products?edit=true');
     }
   };
 
@@ -218,221 +224,235 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ className 
   }
 
   return (
-    <div className={`h-full ${className || ''}`}>
-      <div className="p-6">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
-            <Button variant="outline" onClick={handleBack}>
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
-            </Button>
-            <div>
-              <h1 className="text-3xl font-bold">{product.name}</h1>
-              <p className="text-gray-600">SKU: {product.sku}</p>
+    <DetailLayout className={className}>
+      <DetailHeader
+        title={product.name}
+        subtitle={`SKU: ${product.sku}`}
+        badge={getStockStatusBadge()}
+        backAction={
+          <Button variant="outline" onClick={handleBack}>
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back
+          </Button>
+        }
+        actions={
+          <Button onClick={handleEdit}>
+            <Edit className="w-4 h-4 mr-2" />
+            Edit Product
+          </Button>
+        }
+      />
+
+      {/* Key Metrics */}
+      <DetailGrid columns={4} className="mb-6">
+        <MetricCard
+          label="Current Stock"
+          value={product.stock_quantity}
+          subValue={product.unit_of_measure}
+          icon={<Package className="w-5 h-5" />}
+          variant={getStockStatus() === 'normal' ? 'success' : getStockStatus() === 'low-stock' ? 'warning' : 'danger'}
+        />
+        <MetricCard
+          label="Selling Price"
+          value={formatCurrency(product.selling_price)}
+          icon={<DollarSign className="w-5 h-5" />}
+          variant="success"
+        />
+        <MetricCard
+          label="Cost Price"
+          value={formatCurrency(product.cost_price)}
+          icon={<DollarSign className="w-5 h-5" />}
+        />
+        <MetricCard
+          label="Total Value"
+          value={formatCurrency(product.stock_quantity * product.cost_price)}
+          subValue="Stock Value"
+          icon={<Activity className="w-5 h-5" />}
+        />
+      </DetailGrid>
+
+      {/* Product Information Grid */}
+      <DetailGrid columns={3} className="mb-6">
+        {/* Basic Information */}
+        <DetailCard
+          title="Product Information"
+          icon={<Package className="w-5 h-5" />}
+          className="lg:col-span-2"
+        >
+          <DetailGrid columns={2}>
+            <DetailField
+              label="Product Name"
+              value={product.name}
+              variant="highlight"
+            />
+            <DetailField
+              label="SKU"
+              value={product.sku}
+              icon={<Hash className="w-4 h-4" />}
+            />
+            {product.barcode && (
+              <DetailField
+                label="Barcode"
+                value={product.barcode}
+                icon={<Barcode className="w-4 h-4" />}
+              />
+            )}
+            <DetailField
+              label="Category"
+              value={product.category || 'No category'}
+              icon={<Tag className="w-4 h-4" />}
+            />
+            <DetailField
+              label="Brand"
+              value={product.brand || 'No brand'}
+              icon={<Building className="w-4 h-4" />}
+            />
+            <DetailField
+              label="Unit of Measure"
+              value={product.unit_of_measure}
+            />
+            {product.location && (
+              <DetailField
+                label="Location"
+                value={product.location}
+                icon={<MapPin className="w-4 h-4" />}
+              />
+            )}
+            <DetailField
+              label="Status"
+              value={
+                <Badge variant={product.is_active ? "default" : "secondary"}>
+                  {product.is_active ? 'Active' : 'Inactive'}
+                </Badge>
+              }
+            />
+          </DetailGrid>
+          
+          {product.description && (
+            <div className="mt-6 pt-6 border-t">
+              <DetailField
+                label="Description"
+                value={product.description}
+              />
+            </div>
+          )}
+        </DetailCard>
+
+        {/* Stock & Pricing Summary */}
+        <DetailCard
+          title="Stock & Pricing"
+          icon={<Activity className="w-5 h-5" />}
+          actions={
+            (user?.role === 'owner' || user?.role === 'dev') && (
+              <Button 
+                size="sm"
+                variant="outline"
+                onClick={handleStockAdjustment}
+              >
+                <Activity className="w-4 h-4 mr-2" />
+                Adjust Stock
+              </Button>
+            )
+          }
+        >
+          <div className="space-y-6">
+            <DetailField
+              label="Current Stock"
+              value={`${product.stock_quantity} ${product.unit_of_measure}`}
+              variant="highlight"
+            />
+            
+            <DetailGrid columns={2}>
+              <DetailField
+                label="Min Stock"
+                value={product.minimum_stock}
+                variant="highlight"
+              />
+              {product.maximum_stock && (
+                <DetailField
+                  label="Max Stock"
+                  value={product.maximum_stock}
+                  variant="highlight"
+                />
+              )}
+            </DetailGrid>
+
+            <div className="pt-4 border-t space-y-4">
+              <DetailField
+                label="Cost Price"
+                value={formatCurrency(product.cost_price)}
+                icon={<DollarSign className="w-4 h-4" />}
+              />
+              
+              <DetailField
+                label="Selling Price"
+                value={formatCurrency(product.selling_price)}
+                icon={<DollarSign className="w-4 h-4" />}
+                variant="currency"
+              />
+
+              <DetailField
+                label="Total Stock Value"
+                value={formatCurrency(product.stock_quantity * product.cost_price)}
+                variant="highlight"
+              />
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            {getStockStatusBadge()}
-            <Button onClick={handleEdit}>
-              <Edit className="w-4 h-4 mr-2" />
-              Edit Product
-            </Button>
+        </DetailCard>
+      </DetailGrid>
+
+      {/* Stock Movement History */}
+      <DetailCard
+        title="Stock Movement History"
+        icon={<Activity className="w-5 h-5" />}
+        badge={<Badge variant="secondary">{productMovements.length}</Badge>}
+      >
+        {productMovements.length === 0 ? (
+          <div className="text-center py-8">
+            <Activity className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+            <p className="text-muted-foreground">No stock movements found for this product.</p>
           </div>
-        </div>
-
-        {/* Product Information Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          {/* Basic Information */}
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Package className="w-5 h-5" />
-                Product Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-600">Name</label>
-                  <p className="text-lg font-semibold">{product.name}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-600">SKU</label>
-                  <p className="text-lg">{product.sku}</p>
-                </div>
-                {product.barcode && (
-                  <div>
-                    <label className="text-sm font-medium text-gray-600">Barcode</label>
-                    <p className="flex items-center gap-2">
-                      <Barcode className="w-4 h-4" />
-                      {product.barcode}
+        ) : (
+          <div className="space-y-3">
+            {productMovements.slice(0, 10).map((movement) => (
+              <div key={movement.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg gap-3">
+                <div className="flex items-center gap-3">
+                  {getMovementIcon(movement.movement_type)}
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium capitalize">{movement.movement_type} Movement</p>
+                    <p className="text-sm text-muted-foreground flex items-center gap-1">
+                      <Calendar className="w-3 h-3" />
+                      {formatDate(movement.created_at)}
                     </p>
+                    {movement.notes && (
+                      <p className="text-sm text-muted-foreground mt-1 break-words">{movement.notes}</p>
+                    )}
                   </div>
-                )}
-                <div>
-                  <label className="text-sm font-medium text-gray-600">Category</label>
-                  <p>{product.category || 'No category'}</p>
                 </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-600">Brand</label>
-                  <p>{product.brand || 'No brand'}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-600">Unit</label>
-                  <p>{product.unit_of_measure}</p>
-                </div>
-                {product.location && (
-                  <div>
-                    <label className="text-sm font-medium text-gray-600">Location</label>
-                    <p className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4" />
-                      {product.location}
-                    </p>
-                  </div>
-                )}
-                <div>
-                  <label className="text-sm font-medium text-gray-600">Status</label>
-                  <Badge variant={product.is_active ? "default" : "secondary"}>
-                    {product.is_active ? 'Active' : 'Inactive'}
-                  </Badge>
+                <div className="text-right sm:text-right flex-shrink-0">
+                  <p className={`text-lg font-semibold ${
+                    movement.movement_type === 'in' ? 'text-green-600' : 'text-red-600'
+                  }`}>
+                    {movement.movement_type === 'in' ? '+' : '-'}{movement.quantity}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {movement.reference_type && `Ref: ${movement.reference_type}`}
+                  </p>
                 </div>
               </div>
-              
-              {product.description && (
-                <div>
-                  <label className="text-sm font-medium text-gray-600">Description</label>
-                  <p className="text-gray-800 mt-1">{product.description}</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Stock & Pricing Summary */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Activity className="w-5 h-5" />
-                Stock & Pricing
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <label className="text-sm font-medium text-gray-600">Current Stock</label>
-                <p className="text-3xl font-bold text-blue-600">{product.stock_quantity}</p>
-                <p className="text-sm text-gray-500">{product.unit_of_measure}</p>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-600">Min Stock</label>
-                  <p className="text-lg font-semibold text-red-600">{product.minimum_stock}</p>
-                </div>
-                {product.maximum_stock && (
-                  <div>
-                    <label className="text-sm font-medium text-gray-600">Max Stock</label>
-                    <p className="text-lg font-semibold text-green-600">{product.maximum_stock}</p>
-                  </div>
-                )}
-              </div>
-
-              <hr />
-
-              <div>
-                <label className="text-sm font-medium text-gray-600">Cost Price</label>
-                <p className="text-lg font-semibold flex items-center gap-1">
-                  <DollarSign className="w-4 h-4" />
-                  {formatCurrency(product.cost_price)}
-                </p>
-              </div>
-              
-              <div>
-                <label className="text-sm font-medium text-gray-600">Selling Price</label>
-                <p className="text-xl font-bold text-green-600 flex items-center gap-1">
-                  <DollarSign className="w-5 h-5" />
-                  {formatCurrency(product.selling_price)}
-                </p>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-gray-600">Total Value</label>
-                <p className="text-lg font-semibold">
-                  {formatCurrency(product.stock_quantity * product.cost_price)}
-                </p>
-              </div>
-
-              {(user?.role === 'owner' || user?.role === 'dev') && (
-                <Button 
-                  className="w-full"
-                  variant="outline"
-                  onClick={handleStockAdjustment}
-                >
-                  <Activity className="w-4 h-4 mr-2" />
-                  Adjust Stock
+            ))}
+            
+            {productMovements.length > 10 && (
+              <div className="text-center pt-4">
+                <Button variant="outline">
+                  View All Movements ({productMovements.length})
                 </Button>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Stock Movement History */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Activity className="w-5 h-5" />
-              Stock Movement History
-              <Badge variant="secondary">{productMovements.length}</Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {productMovements.length === 0 ? (
-              <div className="text-center py-8">
-                <Activity className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600">No stock movements found for this product.</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {productMovements.slice(0, 10).map((movement) => (
-                  <div key={movement.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center gap-3">
-                      {getMovementIcon(movement.type)}
-                      <div>
-                        <p className="font-medium capitalize">{movement.type} Movement</p>
-                        <p className="text-sm text-gray-600 flex items-center gap-1">
-                          <Calendar className="w-3 h-3" />
-                          {formatDate(movement.created_at)}
-                        </p>
-                        {movement.notes && (
-                          <p className="text-sm text-gray-500 mt-1">{movement.notes}</p>
-                        )}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className={`text-lg font-semibold ${
-                        movement.type === 'in' ? 'text-green-600' : 'text-red-600'
-                      }`}>
-                        {movement.type === 'in' ? '+' : '-'}{movement.quantity}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        Balance: {movement.balance_after}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-                
-                {productMovements.length > 10 && (
-                  <div className="text-center pt-4">
-                    <Button variant="outline">
-                      View All Movements ({productMovements.length})
-                    </Button>
-                  </div>
-                )}
               </div>
             )}
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+          </div>
+        )}
+      </DetailCard>
+    </DetailLayout>
   );
 };
 

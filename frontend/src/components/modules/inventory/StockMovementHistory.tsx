@@ -42,7 +42,6 @@ import {
   User,
   FileText,
   Eye,
-  MoreHorizontal,
 } from 'lucide-react';
 import { useStockMovementStore, useStockMovementSelectors, useStockMovementActions } from '../../../stores/stockMovementStore';
 import { formatDate } from '@/utils/formatters';
@@ -415,7 +414,7 @@ export const StockMovementHistory: React.FC<StockMovementHistoryProps> = ({
                       <div className="flex items-center gap-2">
                         <User className="w-4 h-4 text-gray-400" />
                         <span className="text-sm">
-                          {movement.creator?.name || 'System'}
+                          {movement.created_by || 'System'}
                         </span>
                       </div>
                     </TableCell>

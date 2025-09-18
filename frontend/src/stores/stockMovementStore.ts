@@ -108,6 +108,7 @@ export const useStockMovementStore = create<StockMovementState & StockMovementAc
             throw new Error('User not authenticated');
           }
 
+          const companyId = user.tenant_id;
           const { filters, currentPage, pageSize } = get();
           
           const result = await withRetry(
@@ -116,10 +117,9 @@ export const useStockMovementStore = create<StockMovementState & StockMovementAc
                 .from('stock_movements')
                 .select(`
                   *,
-                  product:products(name, sku, unit_of_measure),
-                  creator:users(name, email)
+                  product:products(name, sku, unit_of_measure)
                 `)
-                .eq('company_id', user.tenant_id)
+                .eq('company_id', companyId)
                 .order('created_at', { ascending: false });
 
               // Apply filters
@@ -189,9 +189,12 @@ export const useStockMovementStore = create<StockMovementState & StockMovementAc
           set({ saving: true, error: null });
           
           const { user } = useAuthStore.getState();
-          if (!user?.tenant_id) {
+          if (!user?.tenant_id || !user?.id) {
             throw new Error('User not authenticated');
           }
+
+          const companyId = user.tenant_id;
+          const userId = user.id;
 
           const result = await withRetry(
             async () => {
@@ -201,13 +204,12 @@ export const useStockMovementStore = create<StockMovementState & StockMovementAc
                 .from('stock_movements')
                 .insert({
                   ...movementData,
-                  company_id: user.tenant_id,
-                  created_by: user.id,
+                  company_id: companyId,
+                  created_by: userId,
                 })
                 .select(`
                   *,
-                  product:products(name, sku, unit_of_measure),
-                  creator:users(name, email)
+                  product:products(name, sku, unit_of_measure)
                 `)
                 .single();
 

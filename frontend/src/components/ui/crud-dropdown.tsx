@@ -1,7 +1,7 @@
 /**
- * CategoryDropdownSimple Component - Inline CRUD
- * Dropdown with inline CRUD operations for product categories
- * Only requires category name - no dialogs, colors, or descriptions
+ * CategoryDropdown Component - General Reusable Component
+ * Dropdown with inline CRUD operations for categories
+ * Simplified interface with only name field - reusable across app
  * Date: 2025-09-17
  */
 
@@ -12,9 +12,9 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../../ui/select';
-import { Button } from '../../ui/button';
-import { Input } from '../../ui/input';
+} from './select';
+import { Button } from './button';
+import { Input } from './input';
 import {
   Plus,
   Edit,
@@ -22,21 +22,23 @@ import {
   Check,
   X,
 } from 'lucide-react';
-import { useProductCategoryStore, useProductCategoryActions } from '../../../stores/productCategoryStore';
-import type { ProductCategory } from '../../../types/database';
+import { useProductCategoryStore, useProductCategoryActions } from '../../stores/productCategoryStore';
+import type { ProductCategory } from '../../types/database';
 
 interface CategoryDropdownProps {
   value?: string | null;
   onValueChange: (categoryId: string | null) => void;
   placeholder?: string;
   disabled?: boolean;
+  className?: string;
 }
 
-export const CategoryDropdownSimple: React.FC<CategoryDropdownProps> = ({
+export const CategoryDropdown: React.FC<CategoryDropdownProps> = ({
   value,
   onValueChange,
   placeholder = "Select category",
   disabled = false,
+  className,
 }) => {
   // State
   const [isCreating, setIsCreating] = useState(false);
@@ -106,7 +108,7 @@ export const CategoryDropdownSimple: React.FC<CategoryDropdownProps> = ({
   };
 
   const handleDelete = async (categoryId: string) => {
-    if (confirm('Are you sure you want to delete this category?')) {
+    if (window.confirm('Are you sure you want to delete this category?')) {
       const success = await deleteCategory(categoryId);
       if (success && value === categoryId) {
         onValueChange(null);
@@ -123,13 +125,13 @@ export const CategoryDropdownSimple: React.FC<CategoryDropdownProps> = ({
   }
 
   return (
-    <div className="space-y-2">
+    <div className={`space-y-2 ${className || ''}`}>
       <Select 
         value={value || 'no-category'} 
         onValueChange={(val) => onValueChange(val === 'no-category' ? null : val)}
         disabled={disabled}
       >
-        <SelectTrigger>
+        <SelectTrigger className="w-full">
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent>

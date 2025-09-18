@@ -4,11 +4,12 @@
  * Date: 2025-09-14
  */
 
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ProductList } from '../../components/modules/products/ProductList';
-import { ProductFormSimple } from '../../components/modules/products/ProductFormSimple';
+import { ProductForm } from '../../components/modules/products/ProductForm';
 import { useProductActions } from '../../stores/productStore';
+import { useProductStore } from '../../stores/productStore';
 import type { Product } from '../../types/database';
 
 // ============================================================================
@@ -26,7 +27,21 @@ interface ProductsPageProps {
 export const ProductsPage: React.FC<ProductsPageProps> = ({ className }) => {
   const [showForm, setShowForm] = useState(false);
   const { selectProduct } = useProductActions();
+  const { selectedProduct } = useProductStore();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Check for edit parameter on mount
+  useEffect(() => {
+    const isEdit = searchParams.get('edit') === 'true';
+    if (isEdit) {
+      console.log('ProductsPage: Edit mode detected from URL');
+      console.log('ProductsPage: Selected product:', selectedProduct);
+      setShowForm(true);
+      // Remove the edit parameter from URL
+      setSearchParams({});
+    }
+  }, [searchParams, setSearchParams, selectedProduct]);
 
   const handleCreateProduct = () => {
     selectProduct(null); // Clear any selected product
@@ -61,7 +76,7 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ className }) => {
     return (
       <div className={`h-full ${className || ''}`}>
         <div className="p-6">
-          <ProductFormSimple
+          <ProductForm
             onSuccess={handleFormSuccess}
             onCancel={handleFormClose}
           />
