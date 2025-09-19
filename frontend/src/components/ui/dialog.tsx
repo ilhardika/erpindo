@@ -2,6 +2,10 @@ import * as React from "react"
 
 import { cn } from "../../lib/utils"
 
+export interface DialogTriggerProps extends React.HTMLAttributes<HTMLButtonElement> {
+  asChild?: boolean
+}
+
 export interface DialogProps {
   open?: boolean
   onOpenChange?: (open: boolean) => void
@@ -52,6 +56,29 @@ const Dialog: React.FC<DialogProps> = ({ open, onOpenChange, children }) => {
   )
 }
 
+const DialogTrigger = React.forwardRef<HTMLButtonElement, DialogTriggerProps>(
+  ({ className, children, asChild, ...props }, ref) => {
+    if (asChild && React.isValidElement(children)) {
+      return React.cloneElement(children, {
+        ...props,
+        ref,
+        className: cn(children.props.className, className)
+      });
+    }
+    
+    return (
+      <button
+        ref={ref}
+        className={cn("", className)}
+        {...props}
+      >
+        {children}
+      </button>
+    );
+  }
+);
+DialogTrigger.displayName = "DialogTrigger";
+
 const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(
   ({ className, children, ...props }, ref) => (
     <div
@@ -97,6 +124,7 @@ DialogFooter.displayName = "DialogFooter"
 
 export {
   Dialog,
+  DialogTrigger,
   DialogContent,
   DialogHeader,
   DialogTitle,

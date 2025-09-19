@@ -10,7 +10,7 @@ import { devtools } from 'zustand/middleware';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from './authStore';
 import { parseError } from '../utils/errorHandling';
-import type { Customer, CustomerInsert, CustomerUpdate } from '../types/database';
+import type { Customer, CustomerInsert, CustomerUpdate } from '@/types/database';
 
 // ============================================================================
 // TYPES & INTERFACES

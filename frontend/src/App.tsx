@@ -12,6 +12,7 @@ import CustomerDetailPage from '@/pages/customers/CustomerDetailPage'
 import InventoryPage from '@/pages/inventory/InventoryPage'
 import StockMovementDetailPage from '@/pages/inventory/StockMovementDetailPage'
 import StockOpnameDetailPage from '@/pages/inventory/StockOpnameDetailPage'
+import POSPage from '@/pages/pos/POSPage'
 
 // Placeholder pages for other routes
 const PlaceholderPage: React.FC<{ title: string }> = ({ title }) => (
@@ -84,8 +85,8 @@ function App() {
 
           {/* POS */}
           <Route path="pos" element={
-            <ProtectedRoute requiredPermissions={['orders.create']}>
-              <PlaceholderPage title="Kasir (POS)" />
+            <ProtectedRoute allowedRoles={['owner', 'dev', 'employee']} requiredPermissions={['orders:create']}>
+              <POSPage />
             </ProtectedRoute>
           } />
 
@@ -138,51 +139,44 @@ function App() {
             </ProtectedRoute>
           } />
 
-          {/* Customers */}
-          <Route path="customers" element={
-            <ProtectedRoute allowedRoles={['owner', 'dev']} requiredPermissions={['customers.manage']}>
-              <PlaceholderPage title="Manajemen Pelanggan" />
-            </ProtectedRoute>
-          } />
-
           {/* Orders */}
           <Route path="orders" element={
-            <ProtectedRoute requiredPermissions={['orders.view']}>
+            <ProtectedRoute requiredPermissions={['orders:view']}>
               <PlaceholderPage title="Pesanan" />
             </ProtectedRoute>
           } />
 
           {/* Invoices */}
           <Route path="invoices" element={
-            <ProtectedRoute allowedRoles={['owner', 'dev']} requiredPermissions={['orders.manage']}>
+            <ProtectedRoute allowedRoles={['owner', 'dev']} requiredPermissions={['orders:edit']}>
               <PlaceholderPage title="Faktur" />
             </ProtectedRoute>
           } />
 
           {/* Reports */}
           <Route path="reports" element={
-            <ProtectedRoute allowedRoles={['owner', 'dev']} requiredPermissions={['reports.view']}>
+            <ProtectedRoute allowedRoles={['owner', 'dev']} requiredPermissions={['reports:view']}>
               <PlaceholderPage title="Laporan" />
             </ProtectedRoute>
           } />
 
           {/* Payments */}
           <Route path="payments" element={
-            <ProtectedRoute allowedRoles={['owner', 'dev']} requiredPermissions={['orders.manage']}>
+            <ProtectedRoute allowedRoles={['owner', 'dev']} requiredPermissions={['orders:edit']}>
               <PlaceholderPage title="Pembayaran" />
             </ProtectedRoute>
           } />
 
           {/* User Management */}
           <Route path="users" element={
-            <ProtectedRoute requiredRole="owner" requiredPermissions={['users.manage']}>
+            <ProtectedRoute requiredRole="owner" requiredPermissions={['users:manage']}>
               <PlaceholderPage title="Manajemen User" />
             </ProtectedRoute>
           } />
 
           {/* Company Management */}
           <Route path="company" element={
-            <ProtectedRoute requiredRole="owner" requiredPermissions={['tenant.manage']}>
+            <ProtectedRoute requiredRole="owner" requiredPermissions={['tenant:manage']}>
               <PlaceholderPage title="Pengaturan Perusahaan" />
             </ProtectedRoute>
           } />

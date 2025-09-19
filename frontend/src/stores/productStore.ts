@@ -10,7 +10,7 @@ import { devtools } from 'zustand/middleware';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from './authStore';
 import { parseError, withRetry } from '../utils/errorHandling';
-import type { Product, ProductInsert, ProductUpdate } from '../types/database';
+import type { Product, ProductInsert, ProductUpdate } from '@/types/database';
 
 // ============================================================================
 // HELPER FUNCTIONS
@@ -104,6 +104,10 @@ export interface ProductActions {
   updateProduct: (id: string, product: ProductUpdate) => Promise<boolean>;
   deleteProduct: (id: string) => Promise<boolean>;
   
+  // Search operations
+  searchProducts: (query: string) => Promise<Product[]>;
+  getProductByBarcode: (barcode: string) => Promise<Product | null>;
+  
   // Selection
   selectProduct: (product: Product | null) => void;
   
@@ -162,6 +166,57 @@ export const useProductStore = create<ProductStore>()(
   devtools(
     (set, get) => ({
       ...initialState,
+
+      // ========================================================================
+      // SEARCH OPERATIONS
+      // ========================================================================
+
+      searchProducts: async (query: string) => {
+        try {
+          const { user } = useAuthStore.getState();
+          if (!user?.tenant_id) {
+            throw new Error('User tenant not found');
+          }
+
+          const { data, error } = await supabase
+            .from('products')
+            .select('*')
+            .eq('company_id', user.tenant_id)
+            .eq('is_active', true)
+            .or(`name.ilike.%${query}%,sku.ilike.%${query}%,description.ilike.%${query}%,barcode.ilike.%${query}%`)
+            .order('name', { ascending: true })
+            .limit(20);
+
+          if (error) throw error;
+          return data || [];
+        } catch (error) {
+          console.error('Error searching products:', error);
+          return [];
+        }
+      },
+
+      getProductByBarcode: async (barcode: string) => {
+        try {
+          const { user } = useAuthStore.getState();
+          if (!user?.tenant_id) {
+            throw new Error('User tenant not found');
+          }
+
+          const { data, error } = await supabase
+            .from('products')
+            .select('*')
+            .eq('company_id', user.tenant_id)
+            .eq('barcode', barcode)
+            .eq('is_active', true)
+            .single();
+
+          if (error && error.code !== 'PGRST116') throw error; // PGRST116 = not found
+          return data || null;
+        } catch (error) {
+          console.error('Error getting product by barcode:', error);
+          return null;
+        }
+      },
 
       // ========================================================================
       // DATA OPERATIONS

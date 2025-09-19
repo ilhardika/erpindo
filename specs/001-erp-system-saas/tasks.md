@@ -133,12 +133,12 @@
 
 ### Core Modules - Basic POS
 
-- [ ] T046 [P] POS store for cart management in `frontend/src/stores/posStore.ts`
-- [ ] T047 [P] Product search component in `frontend/src/components/modules/pos/ProductSearch.tsx`
-- [ ] T048 [P] Shopping cart component in `frontend/src/components/modules/pos/ShoppingCart.tsx`
-- [ ] T049 [P] Payment interface component in `frontend/src/components/modules/pos/PaymentInterface.tsx`
-- [ ] T050 POS transaction service in `frontend/src/services/posService.ts`
-- [ ] T051 POS page with complete flow in `frontend/src/pages/pos/POSPage.tsx`
+- [x] T046 [P] POS store for cart management in `frontend/src/stores/posStore.ts`
+- [x] T047 [P] Product search component in `frontend/src/components/modules/pos/ProductSearch.tsx`
+- [x] T048 [P] Shopping cart component in `frontend/src/components/modules/pos/ShoppingCart.tsx`
+- [x] T049 [P] Payment interface component in `frontend/src/components/modules/pos/PaymentInterface.tsx`
+- [x] T050 POS transaction service in `frontend/src/services/posService.ts`
+- [x] T051 POS page with complete flow in `frontend/src/pages/pos/POSPage.tsx`
 
 ### Dashboard & Analytics
 
