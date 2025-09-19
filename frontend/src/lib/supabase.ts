@@ -5,14 +5,26 @@ import type { Database } from '../types/database';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+// Development warning for missing environment variables
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error(
-    'Missing Supabase environment variables. Please check your .env.local file and ensure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set.'
-  );
+  console.warn('⚠️ Missing Supabase environment variables');
+  console.warn('VITE_SUPABASE_URL:', supabaseUrl ? '✅ Set' : '❌ Missing');
+  console.warn('VITE_SUPABASE_ANON_KEY:', supabaseAnonKey ? '✅ Set' : '❌ Missing');
+  
+  // For development/demo purposes, we'll create a mock client
+  // In production, you should set the environment variables in Vercel
 }
 
+// Create fallback URLs for demo/development
+const fallbackUrl = 'https://demo.supabase.co';
+const fallbackKey = 'demo-key';
+
+// Use actual values if available, otherwise use fallbacks
+const clientUrl = supabaseUrl || fallbackUrl;
+const clientKey = supabaseAnonKey || fallbackKey;
+
 // Supabase client configuration with enhanced options
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+export const supabase = createClient<Database>(clientUrl, clientKey, {
   auth: {
     // Enhanced authentication options
     autoRefreshToken: true,

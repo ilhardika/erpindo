@@ -109,6 +109,17 @@ export const LoginPage: React.FC = () => {
           <p className="mt-2 text-sm text-gray-600">
             Sistem manajemen bisnis terintegrasi untuk UMKM Indonesia
           </p>
+          
+          {/* Environment Info */}
+          <div className="mt-3 text-xs text-gray-500 bg-gray-100 rounded p-2">
+            <div>Environment: {import.meta.env.MODE}</div>
+            <div>Mode: {import.meta.env.VITE_SUPABASE_URL ? 'Production' : 'Demo'}</div>
+            {!import.meta.env.VITE_SUPABASE_URL && (
+              <div className="text-orange-600 mt-1">
+                ⚠️ Demo Mode - Gunakan kredensial di bawah untuk login
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Error Alert */}

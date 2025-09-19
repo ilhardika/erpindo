@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
-import { useAuthActions } from '@/stores/authStore'
+import { useAuthActions, useAuth } from '@/stores/authStore'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
 import LoginPage from '@/pages/auth/LoginPage'
@@ -23,13 +23,48 @@ const PlaceholderPage: React.FC<{ title: string }> = ({ title }) => (
   </div>
 )
 
+// Debug component to show loading states
+const AppLoadingScreen: React.FC<{ stage: string; details?: string }> = ({ stage, details }) => (
+  <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="text-center max-w-md">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+      <h1 className="text-2xl font-bold text-gray-900 mb-2">ERPindo</h1>
+      <p className="text-gray-600 mb-2">{stage}</p>
+      {details && <p className="text-sm text-gray-500">{details}</p>}
+      <div className="mt-4 text-xs text-gray-400">
+        Environment: {import.meta.env.MODE}<br/>
+        Supabase URL: {import.meta.env.VITE_SUPABASE_URL ? '✅ Set' : '❌ Missing'}<br/>
+        Supabase Key: {import.meta.env.VITE_SUPABASE_ANON_KEY ? '✅ Set' : '❌ Missing'}
+      </div>
+    </div>
+  </div>
+)
+
 function App() {
   const { initializeAuth } = useAuthActions()
+  const { isLoading, isInitialized } = useAuth()
+  const [initStage, setInitStage] = useState('Memulai aplikasi...')
 
   // Initialize authentication on app start
   useEffect(() => {
-    initializeAuth()
+    const initApp = async () => {
+      try {
+        setInitStage('Memeriksa autentikasi...')
+        await initializeAuth()
+        setInitStage('Siap!')
+      } catch (error) {
+        console.error('Failed to initialize app:', error)
+        setInitStage('Error: ' + (error as Error).message)
+      }
+    }
+    
+    initApp()
   }, [initializeAuth])
+
+  // Show loading screen during initialization
+  if (!isInitialized || isLoading) {
+    return <AppLoadingScreen stage={initStage} />
+  }
 
   return (
     <Router>

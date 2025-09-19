@@ -372,6 +372,23 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true })
         
         try {
+          // Check if we have environment variables
+          const hasSupabaseConfig = import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY
+          
+          if (!hasSupabaseConfig) {
+            console.warn('🚀 Running in demo mode - Supabase not configured')
+            // Initialize demo mode
+            set({ 
+              user: null,
+              session: null,
+              tenant: null,
+              isLoading: false, 
+              isInitialized: true,
+              error: null
+            })
+            return
+          }
+
           // First check if we have persisted demo user state
           const demoUserIds = [
             '11111111-1111-1111-1111-111111111111', // owner
