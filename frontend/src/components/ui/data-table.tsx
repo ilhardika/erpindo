@@ -45,8 +45,6 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
-  ChevronsLeftIcon,
-  ChevronsRightIcon,
   ChevronRight,
   ChevronLast,
   ChevronLeft,
@@ -133,9 +131,7 @@ interface DataTableProps<T = any> {
   totalCount: number;
   pageSize: number;
   onPageChange: (page: number) => void;
-  onPageSizeChange: (pageSize: number) => void;
   showPagination?: boolean;
-  alwaysShowPagination?: boolean;
   
   // Other
   emptyMessage?: string;
@@ -188,9 +184,7 @@ export const DataTable = <T,>({
   totalCount,
   pageSize,
   onPageChange,
-  onPageSizeChange,
   showPagination = true,
-  alwaysShowPagination = true,
   
   // Other
   emptyMessage = 'No data available',

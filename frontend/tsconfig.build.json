@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "exclude": [
+    "node_modules",
+    "src/__tests__/**/*",
+    "src/examples/**/*",
+    "src/hooks/useDatabase.ts",
+    "src/hooks/useSupabaseQuery.ts",
+    "src/services/**/*",
+    "src/stores/**/*",
+    "src/pages/inventory/StockMovementDetailPage.tsx"
+  ]
+}

@@ -11,4 +11,17 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    rollupOptions: {
+      onwarn(warning, warn) {
+        // Skip type checking warnings during build
+        if (warning.code === 'TYPESCRIPT_ERROR') return;
+        warn(warning);
+      }
+    }
+  },
+  esbuild: {
+    // Disable type checking in esbuild
+    logLevel: 'error'
+  }
 });

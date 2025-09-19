@@ -61,10 +61,6 @@ export const ProductList: React.FC<ProductListProps> = ({
     setPagination(page, pageSize);
   };
 
-  const handlePageSizeChange = (newPageSize: number) => {
-    setPagination(1, newPageSize);
-  };
-
   const handleDelete = async (product: Product) => {
     if (!product || !product.name) {
       console.error('Invalid product for deletion:', product);
@@ -222,9 +218,7 @@ export const ProductList: React.FC<ProductListProps> = ({
         totalCount={totalCount}
         pageSize={pageSize}
         onPageChange={handlePageChange}
-        onPageSizeChange={handlePageSizeChange}
         showPagination
-        alwaysShowPagination
         
         // Actions
         actions={actions}

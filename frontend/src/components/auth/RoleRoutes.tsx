@@ -193,7 +193,7 @@ export const useNavigationGuard = () => {
 
     // Check role access
     if (requiredRoles.length > 0) {
-      const hasRoleAccess = user && requiredRoles.includes(user.role || 'employee')
+      const hasRoleAccess = user && requiredRoles.includes(user.role as 'owner' | 'employee' | 'admin' || 'employee')
       if (!hasRoleAccess) {
         return {
           canAccess: false,

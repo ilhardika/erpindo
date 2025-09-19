@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Outlet, useNavigate } from 'react-router-dom'
-import { Menu, X } from 'lucide-react'
+import { X } from 'lucide-react'
 import { useAuth } from '@/stores/authStore'
 import { Sidebar } from './Sidebar'
 import { Header } from './Header'

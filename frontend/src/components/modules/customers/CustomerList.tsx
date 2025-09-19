@@ -60,10 +60,6 @@ export const CustomerList: React.FC<CustomerListProps> = ({
     setPagination(page, pageSize);
   };
 
-  const handlePageSizeChange = (newPageSize: number) => {
-    setPagination(1, newPageSize);
-  };
-
   const handleDelete = async (customer: Customer) => {
     if (window.confirm(`Yakin ingin menghapus pelanggan "${customer.name}"?`)) {
       await deleteCustomer(customer.id);
@@ -218,9 +214,7 @@ export const CustomerList: React.FC<CustomerListProps> = ({
       totalCount={totalCount}
       pageSize={pageSize}
       onPageChange={handlePageChange}
-      onPageSizeChange={handlePageSizeChange}
       showPagination
-      alwaysShowPagination
       
       // Actions
       actions={actions}
