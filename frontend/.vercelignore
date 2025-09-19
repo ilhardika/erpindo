@@ -1,0 +1,8 @@
+src/__tests__/
+src/examples/
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+.env.local
+.env.development

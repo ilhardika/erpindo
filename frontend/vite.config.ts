@@ -17,6 +17,14 @@ export default defineConfig({
         // Skip type checking warnings during build
         if (warning.code === 'TYPESCRIPT_ERROR') return;
         warn(warning);
+      },
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          supabase: ['@supabase/supabase-js'],
+          ui: ['@radix-ui/react-dropdown-menu', '@radix-ui/react-select', '@radix-ui/react-checkbox'],
+          utils: ['lucide-react', 'zustand', 'react-hook-form', 'zod']
+        }
       }
     }
   },
