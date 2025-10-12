@@ -51,13 +51,16 @@ _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 ### Documentation (this feature)
 
 ```
-specs/[###-feature]/
-├── plan.md              # This file (/speckit.plan command output)
-├── research.md          # Phase 0 output (/speckit.plan command)
-├── data-model.md        # Phase 1 output (/speckit.plan command)
-├── quickstart.md        # Phase 1 output (/speckit.plan command)
-├── contracts/           # Phase 1 output (/speckit.plan command)
-└── tasks.md             # Phase 2 output (/speckit.tasks command - NOT created by /speckit.plan)
+specs/002-erp-system-saas/
+├── plan.md              # This file - Complete implementation plan
+├── research.md          # Technical research and decisions
+├── data-model.md        # Database schema and RLS policies
+├── quickstart.md        # Development setup guide
+├── tasks.md             # Detailed task breakdown by phase
+├── contracts/           # API specifications
+│   └── api-spec.yaml    # OpenAPI 3.0 contract
+└── checklists/          # Quality validation checklists
+    └── requirements.md  # Specification quality checklist
 ```
 
 ### Source Code (repository root)
@@ -135,4 +138,158 @@ _No constitutional violations requiring justification_
 - `/quickstart.md` - Development setup and workflow guide
 - `/.github/copilot-instructions.md` - Updated agent context
 
-**Ready for Phase 2**: The implementation plan is complete and ready for task breakdown via `/speckit.tasks`
+**Ready for Implementation**: The implementation plan is complete and ready for development execution.
+
+## 🧭 Development Roadmap (Implementation Phases)
+
+### Phase 0 — Pre-Requisites (Setup & Validation)
+
+**Status**: 🎯 **CURRENT FOCUS**  
+**Goal**: Pastikan semua environment dan tools siap sebelum development dimulai.
+
+**Tasks**:
+
+- ✅ Verify project setup (Next.js, Tailwind CSS, shadcn/ui, Lucide React)
+- 🔄 Connect Supabase (MCP server) dan cek koneksi database
+- 🔄 Setup .env.local dengan credentials Supabase
+- 🔄 Ensure folder structure clean: /components, /modules, /lib, /hooks, /utils
+- ⏳ Setup ESLint, Prettier, dan commit convention (lint-staged + husky)
+- ✅ Verify DRY, KISS, SOLID, YAGNI, dan Separation of Concerns principles are enforced
+- ⏳ Confirm shadcn/ui component directory dan consistent naming convention
+
+**Prerequisites Met**: Project architecture designed, data model defined, API contracts specified
+
+---
+
+### Phase 1 — Authentication & Role-Based Dashboard
+
+**Goal**: Implementasi sistem login dan dashboard yang berbeda untuk setiap role.
+
+**Roles**:
+
+- **Dev** – akses penuh ke seluruh sistem & modul
+- **Owner** – akses terbatas ke modul perusahaan
+- **Staff** – akses dasar untuk operasional harian
+
+**Tasks**:
+
+- Setup Supabase Auth (email/password)
+- Create Role & Permission tables di Supabase
+- Implement server-side role-based route protection
+- Generate dashboard layout untuk tiap role:
+  - `DashboardDev` (4 system modules)
+  - `DashboardOwner` (3 company modules)
+  - `DashboardStaff` (10 ERP modules)
+- Setup sidebar & topbar navigation yang menyesuaikan role
+- Dummy data testing untuk validasi hak akses
+
+**Output**: Bisa login sebagai Dev / Owner / Staff, dan melihat dashboard sesuai hak akses
+
+**Route Structure**:
+
+```
+/login                    # Authentication page
+/dashboard/system/*       # Dev modules (4)
+/dashboard/company/*      # Owner modules (3)
+/dashboard/erp/*         # Staff modules (10)
+```
+
+---
+
+### Phase 2 — Staff ERP Modules
+
+**Goal**: Bangun semua ERP modules untuk Staff dengan full permission (untuk pengujian awal).
+
+**Modules** (prioritized order):
+
+1. **Dashboard** - Role-based main dashboard
+2. **POS (Cashier)** - Point of Sale dengan payment processing
+3. **Sales & Purchasing** - Sales Orders, Purchase requests, Invoices
+4. **Inventory/Warehouse** - Stock management, transfers, stock opname
+5. **Customers & Suppliers** - Customer segmentation, supplier management
+6. **HR/Employee Management** - Employee records, attendance, salary
+7. **Finance** - Cash transactions, journal entries, financial reports
+8. **Vehicles** - Vehicle management, delivery assignments
+9. **Salesman** - Commission tracking, top products/customers
+10. **Promotions** - Discount management, bundling promotions
+
+**Tasks**:
+
+- CRUD + Supabase integration untuk setiap module
+- Implement role-based access (Staff hanya akses module Staff)
+- Component reusability following DRY principles
+- Mobile-responsive layouts with shadcn/ui
+
+**Route Pattern**: `/dashboard/erp/{module-slug}`
+
+---
+
+### Phase 3 — Owner ERP Modules
+
+**Goal**: Buat module khusus untuk Owner role (management-level).
+
+**Modules**:
+
+1. **Employee Management** - Add/edit/remove employees, assign roles dan module access
+2. **Subscription & Billing** - View/manage subscription plan, payments, billing history, change plan
+3. **Company Data & Reporting** - View company-wide reports (sales, inventory, finance)
+
+**Tasks**:
+
+- Buat halaman & komponen modular
+- Integrasi database Supabase dengan RLS policies
+- Role-based access & permission validation
+- Owner bisa melihat data Staff, tapi tidak sebaliknya
+- Subscription plan integration dengan module access control
+
+**Route Pattern**: `/dashboard/company/{module-slug}`
+
+---
+
+### Phase 4 — Dev ERP Modules
+
+**Goal**: Buat module untuk Dev role (system-level).
+
+**Modules**:
+
+1. **Subscription Plan Management** - Create, update, delete plans dengan pricing dan features
+2. **Company Management** - Add/manage registered companies, activate/deactivate accounts
+3. **Global User Management** - View all registered users (owners dan staff) across companies
+4. **System Monitoring** - View subscription status, usage analytics, system health
+
+**Tasks**:
+
+- CRUD & permission setup untuk tiap module
+- Tambahkan Dev-only dashboard metrics
+- Integrasi ke Supabase schema system
+- Multi-tenant management capabilities
+- System-wide analytics and monitoring
+
+**Route Pattern**: `/dashboard/system/{module-slug}`
+
+---
+
+### Implementation Guidelines
+
+**Development Priorities**:
+
+1. **Phase 0** (Current): Environment setup and validation
+2. **Phase 1**: Authentication foundation (critical path)
+3. **Phase 2**: Core ERP functionality (highest user value)
+4. **Phase 3**: Management layer (business value)
+5. **Phase 4**: System administration (platform completion)
+
+**Technical Standards**:
+
+- All phases must follow constitutional principles (Clean Code, DRY, SOLID, KISS)
+- Component reusability enforced across all modules
+- Consistent shadcn/ui patterns and Lucide icons
+- Mobile-first responsive design
+- Supabase RLS for multi-tenant data isolation
+
+**Quality Gates**:
+
+- Each phase includes manual testing and validation
+- Role-based access verification before phase completion
+- Performance validation (dashboard load <3s, permission updates <30s)
+- Constitution compliance check at each milestone

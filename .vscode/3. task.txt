@@ -1,0 +1,75 @@
+/speckit.plan
+
+Here’s our 5-phase development roadmap for the ERP project.
+Focus now on Phase 0, but keep all other phases for long-term planning.
+
+🧭 Development Roadmap
+Phase 0 — Pre-Requisites (Setup & Validation)
+Goal: Pastikan semua environment dan tools siap sebelum development dimulai.
+Tasks:
+- Verify project setup (Next.js, Tailwind CSS, shadcn/ui, Lucide React).
+- Connect Supabase (MCP server) dan cek koneksi database.
+- Setup .env.local dengan credentials Supabase.
+- Ensure folder structure clean: /components, /modules, /lib, /hooks, /utils.
+- Setup ESLint, Prettier, dan commit convention (lint-staged + husky).
+- Verify DRY, KISS, SOLID, YAGNI, dan Separation of Concerns principles are enforced.
+- Confirm shadcn/ui component directory dan consistent naming convention.
+
+Phase 1 — Authentication & Role-Based Dashboard
+Goal: Implementasi sistem login dan dashboard yang berbeda untuk setiap role.
+Roles:
+Dev – akses penuh ke seluruh sistem & modul.
+Owner – akses terbatas ke modul perusahaan.
+Staff – akses dasar untuk operasional harian.
+Tasks:
+- Setup Supabase Auth (email/password).
+- Create Role & Permission tables di Supabase.
+- Implement server-side role-based route protection.
+- Generate dashboard layout untuk tiap role:
+- DashboardDev
+- DashboardOwner
+- DashboardStaff
+- Setup sidebar & topbar navigation yang menyesuaikan role.
+- Dummy data testing untuk validasi hak akses.
+Output: Bisa login sebagai Dev / Owner / Staff, dan melihat dashboard sesuai hak akses.
+
+Phase 2 — Staff ERP Modules
+Goal: Bangun semua ERP modules untuk Staff dengan full permission (untuk pengujian awal).
+Modules (contoh urutan):
+Dashboard
+POS
+Sales & Purchasing
+Inventory/Warehouse
+Customers & Suppliers
+HR/Employee Management
+Finance
+Vehicles
+Salesman
+Reports
+Tasks:
+- CRUD + Supabase integration untuk setiap module.
+- Implement role-based access (Staff hanya akses module Staff).
+
+Phase 3 — Owner ERP Modules
+Goal: Buat module khusus untuk Owner role (management-level).
+Modules:
+Employee Management
+Subscription Management
+Company Overview
+Tasks:
+- Buat halaman & komponen modular.
+- Integrasi database Supabase.
+- Role-based access & permission validation.
+- Owner bisa melihat data Staff, tapi tidak sebaliknya.
+
+Phase 4 — Dev ERP Modules
+Goal: Buat module untuk Dev role (system-level).
+Modules:
+Subscription Plan Management
+Company Management
+Global User Management
+System Monitoring
+Tasks:
+- CRUD & permission setup untuk tiap module.
+- Tambahkan Dev-only dashboard metrics.
+- Integrasi ke Supabase schema system.
