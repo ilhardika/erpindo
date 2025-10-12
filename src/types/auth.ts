@@ -22,3 +22,22 @@ export type LoginCredentials = {
   email: string
   password: string
 }
+
+export type Company = {
+  id: string
+  name: string
+  is_active: boolean
+}
+
+export type UserProfile = User & {
+  companies?: Company
+}
+
+export type AuthContextType = {
+  user: import('@supabase/supabase-js').User | null
+  userProfile: UserProfile | null
+  loading: boolean
+  signIn: (email: string, password: string) => Promise<void>
+  signOut: () => Promise<void>
+  refreshProfile: () => void
+}
