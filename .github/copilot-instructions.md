@@ -4,6 +4,9 @@ Auto-generated from all feature plans. Last updated: 2025-10-12
 
 ## Active Technologies
 
+- TypeScript 5.x with Next.js 15.5.4 + React 19+, Supabase JS Client, shadcn/ui, Tailwind CSS v4, Lucide React (002-erp-system-saas)
+- Supabase PostgreSQL with Row Level Security (RLS) for multi-tenant isolation (002-erp-system-saas)
+
 - TypeScript 5.x with Next.js 14+ (App Router) + Next.js, React 18+, Supabase JS Client, shadcn/ui, Tailwind CSS, Lucide React (002-erp-system-saas)
 
 ## Project Structure
@@ -23,6 +26,8 @@ npm test; npm run lint
 TypeScript 5.x with Next.js 14+ (App Router): Follow standard conventions
 
 ## Recent Changes
+
+- 002-erp-system-saas: Added TypeScript 5.x with Next.js 15.5.4 + React 19+, Supabase JS Client, shadcn/ui, Tailwind CSS v4, Lucide React
 
 - 002-erp-system-saas: Added TypeScript 5.x with Next.js 14+ (App Router) + Next.js, React 18+, Supabase JS Client, shadcn/ui, Tailwind CSS, Lucide React
 
