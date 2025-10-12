@@ -1,0 +1,73 @@
+# ERPindo Development Plan
+
+## 1. Core Principles
+
+- Follow **DRY (Don’t Repeat Yourself)** principle  
+- Follow **KISS (Keep It Simple, Stupid)** principle  
+- Follow **SOLID** principles  
+- Follow **Separation of Concerns** (UI, logic, and data separated)  
+- Code must be **scalable**, **maintainable**, and **reusable**  
+- UI components follow **shadcn/ui** pattern  
+- Follow **YAGNI (You Aren’t Gonna Need It)** — only build what’s necessary  
+- Ensure **Consistency** in naming, structure, and formatting  
+- **Before creating any new file, component, or page, always check if it already exists**  
+  - If it exists → reuse or extend it  
+  - If not → create a new one following the project structure  
+
+---
+
+## 2. Tech Stack
+
+- **Frontend Framework:** Next.js (App Router)
+- **Styling:** Tailwind CSS + shadcn/ui
+- **Icons:** Lucide React
+- **Database:** Supabase (PostgreSQL)
+- **Auth & Session:** Custom email/password (no verification), managed hierarchically (Dev → Owner → Staff)
+- **Deployment:** Vercel (production ready)
+- **Backend Integration:** MCP Server (Supabase)
+- **Language:** TypeScript
+
+---
+
+## 3. Key Features Implemented
+
+### 🧩 Detailed Permission System
+- Role-based action permissions yang sangat spesifik  
+- Category-based module organization (system/company/erp)  
+- Login credential system (Dev, Owner, Staff) dengan hierarchical access  
+- No email verification, all accounts created from higher role  
+
+### 🎨 UI/UX Improvements
+- shadcn/ui with white primary and black secondary color scheme  
+- Lucide icons for modern and consistent visuals  
+- Minimalist, modern, and responsive layout  
+- Mobile-friendly and production-ready UI  
+- Sidebar dashboard navigation layout  
+
+---
+
+## 4. Database & Data Handling
+
+- Use **Supabase** as main database (connected via MCP server)
+- Define tables for:
+  - `users` → role, company_id, permissions
+  - `companies` → company info, plan, subscription
+  - `subscriptions` → plan type, billing, status
+  - `employees` → staff data under each company
+  - `modules` → module access & metadata
+- Store initial seed data for Dev role and default system modules
+- Ensure RLS (Row Level Security) to isolate data per company (multi-tenant structure)
+
+---
+
+## 5. Scalability & Production Notes
+
+- All components and hooks must be modular and reusable  
+- Use centralized state management (if needed) with React Context or Zustand  
+- Optimize images, lazy-load heavy modules  
+- All environment variables stored in `.env.local`  
+- Supabase credentials securely managed via MCP connection  
+- System is **production-ready** and designed for future SaaS scaling  
+
+---
+

@@ -1,50 +1,65 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+# ERPindo Development Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Clean Code & DRY Principle
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+Follow **Clean Code** principles and **DRY (Don't Repeat Yourself)** principle. Code must be readable, maintainable, and avoid duplication. Every component, function, and module should have a single, clear purpose.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### II. KISS & SOLID Principles
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+Follow **KISS (Keep It Simple, Stupid)** and **SOLID** principles. Solutions should be simple, classes should have single responsibilities, and code should be open for extension but closed for modification.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### III. Separation of Concerns (NON-NEGOTIABLE)
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+UI, logic, and data must be completely separated. Business logic stays in services/hooks, UI components are purely presentational, and data access is isolated in dedicated layers.
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+### IV. Scalability & Reusability
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+Code must be **scalable**, **maintainable**, and **reusable**. Components should be modular, hooks should be composable, and utilities should be framework-agnostic where possible.
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+### V. YAGNI & Consistency
+
+Follow **YAGNI (You Aren't Gonna Need It)** — only build what's necessary. Ensure **Consistency** in naming, structure, and formatting across the entire codebase.
+
+## Technology Standards
+
+### Tech Stack Requirements
+
+- **Frontend Framework:** Next.js (App Router) with TypeScript
+- **Styling:** Tailwind CSS + shadcn/ui components only
+- **Icons:** Lucide React exclusively
+- **Database:** Supabase (PostgreSQL) via MCP Server
+- **Authentication:** Custom email/password (no verification), hierarchical management
+- **Deployment:** Vercel production-ready configuration
+
+### UI/UX Standards
+
+- shadcn/ui components with white primary and black secondary color scheme
+- Lucide icons for all visual elements
+- Modern, minimalist, and responsive design
+- Mobile-friendly layouts with sidebar dashboard navigation
+- Consistent component patterns and naming conventions
+
+## Development Workflow
+
+### Code Reuse Policy (CRITICAL)
+
+**Before creating any new file, component, or page, always check if it already exists**:
+
+- If it exists → reuse or extend it following established patterns
+- If not → create following the project structure and naming conventions
+- No duplicate components or utilities allowed
+
+### Multi-Tenant Architecture
+
+- All data must be isolated per company using Row Level Security (RLS)
+- Role-based permissions: System Owner (Dev) → Company Owner → Staff
+- Hierarchical account creation without email verification
+- Category-based module organization (system/company/erp)
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+Development must follow these principles without exception. All code reviews must verify compliance with Clean Code, SOLID, and separation of concerns. Any complexity must be justified and documented.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.0.0 | **Ratified**: October 12, 2025 | **Last Amended**: October 12, 2025

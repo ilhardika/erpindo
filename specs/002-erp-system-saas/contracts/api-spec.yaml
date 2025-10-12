@@ -1,0 +1,539 @@
+openapi: 3.0.0
+info:
+  title: ERPindo API
+  version: 1.0.0
+  description: Multi-tenant ERP SaaS API with hierarchical role-based access control
+
+paths:
+  /api/auth/login:
+    post:
+      summary: User authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+              required:
+                - email
+                - password
+      responses:
+        200:
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: "#/components/schemas/User"
+                  session:
+                    type: object
+                    properties:
+                      token:
+                        type: string
+                      expires_at:
+                        type: string
+                        format: date-time
+        401:
+          description: Invalid credentials
+        403:
+          description: Account inactive
+
+  /api/auth/logout:
+    post:
+      summary: User logout
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Logout successful
+
+  /api/users:
+    get:
+      summary: Get users (filtered by role)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: company_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: role
+          in: query
+          schema:
+            type: string
+            enum: [dev, owner, staff]
+      responses:
+        200:
+          description: Users retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+
+    post:
+      summary: Create user (hierarchical creation)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                name:
+                  type: string
+                role:
+                  type: string
+                  enum: [owner, staff]
+                company_id:
+                  type: string
+                  format: uuid
+                password:
+                  type: string
+              required:
+                - email
+                - name
+                - role
+                - password
+      responses:
+        201:
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        403:
+          description: Insufficient permissions
+        409:
+          description: Email already exists
+
+  /api/users/{id}:
+    put:
+      summary: Update user
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                is_active:
+                  type: boolean
+      responses:
+        200:
+          description: User updated
+        403:
+          description: Insufficient permissions
+        404:
+          description: User not found
+
+    delete:
+      summary: Deactivate user
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: User deactivated
+        403:
+          description: Insufficient permissions
+
+  /api/companies:
+    get:
+      summary: Get companies (dev role only)
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Companies retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Company"
+
+    post:
+      summary: Create company (dev role only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                subscription_plan_id:
+                  type: string
+                  format: uuid
+                owner_email:
+                  type: string
+                  format: email
+                owner_name:
+                  type: string
+                owner_password:
+                  type: string
+              required:
+                - name
+                - subscription_plan_id
+                - owner_email
+                - owner_name
+                - owner_password
+      responses:
+        201:
+          description: Company created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Company"
+
+  /api/companies/{id}/activate:
+    patch:
+      summary: Activate/deactivate company
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                is_active:
+                  type: boolean
+              required:
+                - is_active
+      responses:
+        200:
+          description: Company status updated
+
+  /api/subscription-plans:
+    get:
+      summary: Get subscription plans
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Plans retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SubscriptionPlan"
+
+    post:
+      summary: Create subscription plan (dev role only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSubscriptionPlan"
+      responses:
+        201:
+          description: Plan created
+
+  /api/modules:
+    get:
+      summary: Get available modules (filtered by role and permissions)
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Modules retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Module"
+
+  /api/permissions:
+    get:
+      summary: Get user permissions
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: user_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Permissions retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ModulePermission"
+
+    post:
+      summary: Grant module permissions (owner role only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: string
+                  format: uuid
+                module_id:
+                  type: string
+                  format: uuid
+                can_read:
+                  type: boolean
+                can_create:
+                  type: boolean
+                can_update:
+                  type: boolean
+                can_delete:
+                  type: boolean
+              required:
+                - user_id
+                - module_id
+      responses:
+        201:
+          description: Permission granted
+
+  /api/permissions/{id}:
+    put:
+      summary: Update module permissions
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                can_read:
+                  type: boolean
+                can_create:
+                  type: boolean
+                can_update:
+                  type: boolean
+                can_delete:
+                  type: boolean
+      responses:
+        200:
+          description: Permission updated
+
+    delete:
+      summary: Revoke module permission
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Permission revoked
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        role:
+          type: string
+          enum: [dev, owner, staff]
+        company_id:
+          type: string
+          format: uuid
+          nullable: true
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+
+    Company:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        subscription_plan_id:
+          type: string
+          format: uuid
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+
+    SubscriptionPlan:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        price_monthly:
+          type: number
+          format: decimal
+        price_yearly:
+          type: number
+          format: decimal
+        max_users:
+          type: integer
+        is_active:
+          type: boolean
+
+    CreateSubscriptionPlan:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        price_monthly:
+          type: number
+          format: decimal
+        price_yearly:
+          type: number
+          format: decimal
+        max_users:
+          type: integer
+        module_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+      required:
+        - name
+        - price_monthly
+        - max_users
+        - module_ids
+
+    Module:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        slug:
+          type: string
+        category:
+          type: string
+          enum: [system, company, erp]
+        description:
+          type: string
+        icon:
+          type: string
+        route_path:
+          type: string
+        is_active:
+          type: boolean
+        sort_order:
+          type: integer
+
+    ModulePermission:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        module_id:
+          type: string
+          format: uuid
+        module:
+          $ref: "#/components/schemas/Module"
+        can_read:
+          type: boolean
+        can_create:
+          type: boolean
+        can_update:
+          type: boolean
+        can_delete:
+          type: boolean
+        granted_at:
+          type: string
+          format: date-time
