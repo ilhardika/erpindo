@@ -155,17 +155,17 @@ src/
 
 ```typescript
 // In page components
-import { redirect } from "next/navigation";
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import { redirect } from 'next/navigation'
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 
 export default async function ProtectedPage() {
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = createServerComponentClient({ cookies })
   const {
     data: { session },
-  } = await supabase.auth.getSession();
+  } = await supabase.auth.getSession()
 
   if (!session) {
-    redirect("/login");
+    redirect('/login')
   }
 
   // Component content
@@ -198,15 +198,15 @@ export function ModuleComponent() {
 
 ```typescript
 // Using Supabase client with RLS
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 
-const supabase = createClientComponentClient();
+const supabase = createClientComponentClient()
 
 // Automatically filtered by RLS policies
 const { data: users } = await supabase
-  .from("users")
-  .select("*")
-  .eq("company_id", companyId);
+  .from('users')
+  .select('*')
+  .eq('company_id', companyId)
 ```
 
 ### 4. Building for Production

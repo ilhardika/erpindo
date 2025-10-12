@@ -32,7 +32,7 @@ paths:
                 type: object
                 properties:
                   user:
-                    $ref: "#/components/schemas/User"
+                    $ref: '#/components/schemas/User'
                   session:
                     type: object
                     properties:
@@ -79,7 +79,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/User"
+                  $ref: '#/components/schemas/User'
 
     post:
       summary: Create user (hierarchical creation)
@@ -116,7 +116,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/User"
+                $ref: '#/components/schemas/User'
         403:
           description: Insufficient permissions
         409:
@@ -183,7 +183,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Company"
+                  $ref: '#/components/schemas/Company'
 
     post:
       summary: Create company (dev role only)
@@ -220,7 +220,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Company"
+                $ref: '#/components/schemas/Company'
 
   /api/companies/{id}/activate:
     patch:
@@ -262,7 +262,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/SubscriptionPlan"
+                  $ref: '#/components/schemas/SubscriptionPlan'
 
     post:
       summary: Create subscription plan (dev role only)
@@ -273,7 +273,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateSubscriptionPlan"
+              $ref: '#/components/schemas/CreateSubscriptionPlan'
       responses:
         201:
           description: Plan created
@@ -291,7 +291,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Module"
+                  $ref: '#/components/schemas/Module'
 
   /api/permissions:
     get:
@@ -312,7 +312,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/ModulePermission"
+                  $ref: '#/components/schemas/ModulePermission'
 
     post:
       summary: Grant module permissions (owner role only)
@@ -525,7 +525,7 @@ components:
           type: string
           format: uuid
         module:
-          $ref: "#/components/schemas/Module"
+          $ref: '#/components/schemas/Module'
         can_read:
           type: boolean
         can_create:
