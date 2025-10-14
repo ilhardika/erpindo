@@ -1,6 +1,5 @@
 'use client'
 
-import { withRoleGuard } from '@/components/auth/route-guard'
 import { DashboardHeader } from '@/components/layout/dashboard-layout'
 import {
   Card,
@@ -21,12 +20,9 @@ import {
   Plus,
   Settings,
 } from 'lucide-react'
-import { useAuth } from '@/lib/auth/auth-provider'
 import Link from 'next/link'
 
 function CompanyDashboard() {
-  const { userProfile } = useAuth()
-
   const companyStats = [
     {
       title: 'Active Employees',
@@ -86,8 +82,8 @@ function CompanyDashboard() {
   return (
     <div className="space-y-6">
       <DashboardHeader
-        title={`Welcome back, ${userProfile?.name}`}
-        description={`Company Owner Dashboard - ${userProfile?.companies?.name || 'Your Company'}`}
+        title="Welcome back, Owner"
+        description="Company Owner Dashboard - Manage your business"
       >
         <div className="flex gap-2">
           <Button asChild>
@@ -248,4 +244,4 @@ function CompanyDashboard() {
   )
 }
 
-export default withRoleGuard(CompanyDashboard, 'owner')
+export default CompanyDashboard

@@ -25,8 +25,7 @@ import {
   LogOut,
 } from 'lucide-react'
 import Link from 'next/link'
-import { useAuth } from '@/lib/auth/auth-provider'
-import { useLogout } from '@/hooks/use-auth'
+import { supabase } from '@/lib/supabase/client'
 import { ModuleCategory, Module } from '@/types/modules'
 
 interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -57,8 +56,10 @@ const iconMap = {
 }
 
 export function Sidebar({ className, modules }: SidebarProps) {
-  const { userProfile } = useAuth()
-  const { logout } = useLogout()
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    window.location.href = '/login'
+  }
 
   const groupedModules = modules.reduce(
     (acc, module) => {
@@ -100,66 +101,62 @@ export function Sidebar({ className, modules }: SidebarProps) {
 
   return (
     <div
-      className={cn('pb-12 w-64 min-w-64 flex flex-col h-screen', className)}
+      className={cn(
+        'w-64 min-w-64 flex flex-col h-screen bg-background border-r',
+        className
+      )}
     >
-      <div className="space-y-4 py-4 flex-1">
-        {/* Header */}
-        <div className="px-3 py-2">
-          <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight">
-            ERPindo
-          </h2>
-          {userProfile && (
-            <div className="px-4 text-xs text-muted-foreground">
-              <p className="font-medium">{userProfile.name}</p>
-              <p className="capitalize">{userProfile.role}</p>
-              {userProfile.companies?.name && (
-                <p>{userProfile.companies.name}</p>
-              )}
-            </div>
-          )}
+      {/* Header */}
+      <div className="px-3 py-4">
+        <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight">
+          ERPindo
+        </h2>
+        <div className="text-xs text-muted-foreground px-4">
+          <p className="font-medium">Welcome User</p>
+          <p className="capitalize">ERP System</p>
         </div>
+      </div>
 
-        <Separator />
+      <Separator />
 
-        {/* Navigation */}
-        <div className="px-3">
-          <ScrollArea className="h-[300px] px-1">
-            <div className="space-y-4">
-              {Object.entries(groupedModules).map(
-                ([category, categoryModules]) => {
-                  if (categoryModules.length === 0) return null
+      {/* Navigation - Flex 1 untuk mengambil sisa ruang */}
+      <div className="flex-1 px-3 py-4">
+        <ScrollArea className="h-full px-1">
+          <div className="space-y-4">
+            {Object.entries(groupedModules).map(
+              ([category, categoryModules]) => {
+                if (categoryModules.length === 0) return null
 
-                  return (
-                    <div key={category}>
-                      <h3 className="mb-2 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                        {getCategoryTitle(category as ModuleCategory)}
-                      </h3>
-                      <div className="space-y-1">
-                        {categoryModules
-                          .sort((a, b) => a.sort_order - b.sort_order)
-                          .map(renderModuleItem)}
-                      </div>
+                return (
+                  <div key={category}>
+                    <h3 className="mb-2 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                      {getCategoryTitle(category as ModuleCategory)}
+                    </h3>
+                    <div className="space-y-1">
+                      {categoryModules
+                        .sort((a, b) => a.sort_order - b.sort_order)
+                        .map(renderModuleItem)}
                     </div>
-                  )
-                }
-              )}
-            </div>
-          </ScrollArea>
-        </div>
+                  </div>
+                )
+              }
+            )}
+          </div>
+        </ScrollArea>
+      </div>
 
-        <Separator />
+      <Separator />
 
-        {/* Footer */}
-        <div className="px-3">
-          <Button
-            variant="ghost"
-            className="w-full justify-start gap-2 h-9 px-3 text-muted-foreground hover:text-foreground"
-            onClick={() => logout()}
-          >
-            <LogOut className="h-4 w-4" />
-            <span className="text-sm">Sign Out</span>
-          </Button>
-        </div>
+      {/* Sign Out - Selalu di bawah */}
+      <div className="p-3">
+        <Button
+          variant="ghost"
+          className="w-full justify-start gap-2 h-10 px-3 text-muted-foreground hover:text-foreground hover:bg-muted"
+          onClick={handleLogout}
+        >
+          <LogOut className="h-4 w-4" />
+          <span className="text-sm">Sign Out</span>
+        </Button>
       </div>
     </div>
   )

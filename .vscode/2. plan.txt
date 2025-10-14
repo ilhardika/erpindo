@@ -10,9 +10,6 @@
 - UI components follow **shadcn/ui** pattern  
 - Follow **YAGNI (You Aren’t Gonna Need It)** — only build what’s necessary  
 - Ensure **Consistency** in naming, structure, and formatting  
-- **Before creating any new file, component, or page, always check if it already exists**  
-  - If it exists → reuse or extend it  
-  - If not → create a new one following the project structure  
 
 ---
 

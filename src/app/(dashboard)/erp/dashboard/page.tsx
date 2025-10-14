@@ -1,6 +1,6 @@
 'use client'
 
-import { RouteGuard } from '@/components/auth/route-guard'
+import { SimpleAuthGuard } from '@/components/auth/auth-guard'
 import { DashboardHeader } from '@/components/layout/dashboard-layout'
 import {
   Card,
@@ -19,12 +19,9 @@ import {
   Clock,
   CheckSquare,
 } from 'lucide-react'
-import { useAuth } from '@/lib/auth/auth-provider'
 import Link from 'next/link'
 
 function ERPDashboard() {
-  const { userProfile } = useAuth()
-
   const workStats = [
     {
       title: "Today's Sales",
@@ -82,10 +79,10 @@ function ERPDashboard() {
   ]
 
   return (
-    <RouteGuard>
+    <SimpleAuthGuard>
       <div className="space-y-6">
         <DashboardHeader
-          title={`Good morning, ${userProfile?.name}`}
+          title="Good morning, Staff"
           description="Your ERP workspace - manage daily business operations"
         >
           <div className="flex gap-2">
@@ -239,7 +236,7 @@ function ERPDashboard() {
           </CardContent>
         </Card>
       </div>
-    </RouteGuard>
+    </SimpleAuthGuard>
   )
 }
 

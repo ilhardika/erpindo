@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { withRoleGuard } from '@/components/auth/route-guard'
 import { DashboardHeader } from '@/components/layout/dashboard-layout'
 import {
   Card,
@@ -31,7 +30,7 @@ import {
 //   SelectValue,
 // } from '@/components/ui/select'
 import { Plus, Users, Mail, Calendar, Building2 } from 'lucide-react'
-import { useAuth } from '@/lib/auth/auth-provider'
+// Removed complex auth - using SimpleAuthGuard instead
 
 interface User {
   id: string
@@ -48,7 +47,7 @@ interface User {
 }
 
 function UserManagement() {
-  const { userProfile } = useAuth()
+  // Removed complex auth hook
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -59,8 +58,8 @@ function UserManagement() {
     email: '',
     password: '',
     name: '',
-    role: userProfile?.role === 'dev' ? 'owner' : 'staff',
-    company_id: userProfile?.company_id || '',
+    role: 'staff',
+    company_id: '',
   })
   const [formLoading, setFormLoading] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
@@ -116,8 +115,8 @@ function UserManagement() {
         email: '',
         password: '',
         name: '',
-        role: userProfile?.role === 'dev' ? 'owner' : 'staff',
-        company_id: userProfile?.company_id || '',
+        role: 'staff',
+        company_id: '',
       })
     } catch (err) {
       setFormError(err instanceof Error ? err.message : 'Failed to create user')
@@ -126,17 +125,16 @@ function UserManagement() {
     }
   }
 
-  const canCreateUsers =
-    userProfile?.role === 'dev' || userProfile?.role === 'owner'
-  const targetRole = userProfile?.role === 'dev' ? 'owner' : 'staff'
+  const canCreateUser = true // Simplified for system users page
+  const targetRole = 'owner' // Default role
 
   return (
     <div className="space-y-6">
       <DashboardHeader
         title="User Management"
-        description={`Manage ${targetRole} accounts ${userProfile?.role === 'owner' ? 'in your company' : 'across the system'}`}
+        description="Manage user accounts across the system"
       >
-        {canCreateUsers && (
+        {canCreateUser && (
           <Dialog
             open={isCreateDialogOpen}
             onOpenChange={setIsCreateDialogOpen}
@@ -299,4 +297,4 @@ function UserManagement() {
   )
 }
 
-export default withRoleGuard(UserManagement, 'owner')
+export default UserManagement

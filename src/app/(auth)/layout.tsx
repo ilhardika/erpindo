@@ -5,17 +5,10 @@ export const metadata: Metadata = {
   description: 'Sign in to ERPindo ERP System',
 }
 
-import { AuthDebugger } from '@/components/debug/auth-debugger'
-
 export default function AuthLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  return (
-    <>
-      <AuthDebugger />
-      {children}
-    </>
-  )
+  return <>{children}</>
 }

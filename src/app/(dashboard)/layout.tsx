@@ -1,9 +1,11 @@
 'use client'
 
-import { RouteGuard } from '@/components/auth/route-guard'
+import { SimpleAuthGuard } from '@/components/auth/auth-guard'
 import { DashboardLayout } from '@/components/layout/dashboard-layout'
-import { useUserModules } from '@/hooks/use-user-modules'
-import { Loader2 } from 'lucide-react'
+import { useCallback, useEffect, useState } from 'react'
+import { Module } from '@/types/modules'
+import { getCurrentUserRole } from '@/lib/auth/utils'
+import { getModulesByRole } from '@/lib/modules/utils'
 
 export default function DashboardLayoutWrapper({
   children,
@@ -11,32 +13,33 @@ export default function DashboardLayoutWrapper({
   children: React.ReactNode
 }) {
   return (
-    <RouteGuard>
+    <SimpleAuthGuard>
       <DashboardContent>{children}</DashboardContent>
-    </RouteGuard>
+    </SimpleAuthGuard>
   )
 }
 
 function DashboardContent({ children }: { children: React.ReactNode }) {
-  const { modules, loading, error } = useUserModules()
+  const [modules, setModules] = useState<Module[]>([])
 
-  if (loading) {
+  const getUserRoleAndSetModules = useCallback(async () => {
+    try {
+      const role = await getCurrentUserRole()
+      setModules(getModulesByRole(role))
+    } catch (error) {
+      console.error('Error fetching user role:', error)
+      setModules(getModulesByRole('staff'))
+    }
+  }, [])
+
+  useEffect(() => {
+    getUserRoleAndSetModules()
+  }, [getUserRoleAndSetModules])
+
+  if (modules.length === 0) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600">
-            Error Loading Modules
-          </h1>
-          <p className="text-muted-foreground mt-2">{error}</p>
-        </div>
+        <div>Loading modules...</div>
       </div>
     )
   }

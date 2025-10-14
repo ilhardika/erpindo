@@ -1,6 +1,5 @@
 'use client'
 
-import { withRoleGuard } from '@/components/auth/route-guard'
 import { DashboardHeader } from '@/components/layout/dashboard-layout'
 import {
   Card,
@@ -24,11 +23,7 @@ import {
   Clock,
 } from 'lucide-react'
 import Link from 'next/link'
-import { useAuth } from '@/lib/auth/auth-provider'
-
 function SystemDashboard() {
-  const { userProfile } = useAuth()
-
   const systemModules = [
     {
       title: 'User Management',
@@ -108,7 +103,7 @@ function SystemDashboard() {
     <div className="space-y-6">
       <DashboardHeader
         title="System Administration Dashboard"
-        description={`Welcome back, ${userProfile?.name}! Monitor and manage the ERPindo platform.`}
+        description="Welcome back, Developer! Monitor and manage the ERPindo platform."
       />
 
       {/* System Stats */}
@@ -310,4 +305,4 @@ function SystemDashboard() {
   )
 }
 
-export default withRoleGuard(SystemDashboard, 'dev')
+export default SystemDashboard
