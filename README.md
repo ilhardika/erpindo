@@ -1,22 +1,43 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ERPindo - Main Development Branch
 
-## Getting Started
+This repository uses **main** as the primary development branch.
 
-First, run the development server:
+## Branch Structure:
+
+- `main` - Primary development branch (contains complete Phase 1 ERP)
+- All future development will be done on `main`
+- No feature branches - direct commits to `main`
+
+## Current Status:
+
+- ✅ Complete Phase 1 ERP System Implementation
+- ✅ Multi-tenant authentication with Supabase
+- ✅ Role-based dashboards and permissions
+- ✅ Mobile responsive design
+- ✅ Enhanced login UX with auto-fill demo accounts
+
+## Technology Stack
+
+- **Frontend**: Next.js 15+ with App Router, React 19, TypeScript
+- **Backend**: Supabase (PostgreSQL + Authentication + Real-time)
+- **Styling**: Tailwind CSS v4 with shadcn/ui components
+
+## Quick Start:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev  # Runs on http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Development Workflow:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+git pull origin main
+# Make changes...
+git add .
+git commit -m "your changes"
+git push origin main
+```
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
