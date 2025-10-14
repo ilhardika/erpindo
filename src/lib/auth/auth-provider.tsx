@@ -96,10 +96,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Strict prevention of duplicate calls
     if (isProfileFetching) {
+      console.log(
+        '🔄 [AuthProvider] Profile fetch already in progress, skipping...'
+      )
       return
     }
 
     if (userProfile?.id === userId) {
+      console.log('✅ [AuthProvider] Profile already loaded for user:', userId)
       setLoading(false)
       return
     }
@@ -153,6 +157,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Cache the profile
       profileCacheRef.current = { userId, profile: profileData }
       setUserProfile(profileData)
+      console.log(
+        '✅ [AuthProvider] Profile loaded successfully:',
+        profileData.role
+      )
+
+      // Always set loading to false after successful profile fetch
+      setLoading(false)
+      setIsProfileFetching(false)
     } catch (error) {
       console.error('❌ [AuthProvider] Error fetching user profile:', error)
       console.error('❌ [AuthProvider] Error details:', {
@@ -169,11 +181,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }, 2000)
       } else {
         setUserProfile(null)
-        setLoading(false)
-        setIsProfileFetching(false)
-      }
-    } finally {
-      if (process.env.NODE_ENV !== 'production') {
         setLoading(false)
         setIsProfileFetching(false)
       }
