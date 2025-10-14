@@ -107,6 +107,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setIsProfileFetching(true)
 
+      console.log('🔍 [AuthProvider] Fetching profile for user:', userId)
+
       const { data, error } = await supabase
         .from('users')
         .select(
@@ -122,7 +124,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq('id', userId)
         .single()
 
+      console.log('🔍 [AuthProvider] Profile query result:', { data, error })
+
       if (error || !data) {
+        console.error('❌ [AuthProvider] Profile query failed:', error)
         throw error || new Error('User not found')
       }
 
@@ -150,10 +155,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUserProfile(profileData)
     } catch (error) {
       console.error('❌ [AuthProvider] Error fetching user profile:', error)
-      setUserProfile(null)
+      console.error('❌ [AuthProvider] Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        userId,
+        timestamp: new Date().toISOString(),
+      })
+
+      // In production, try one more time after a short delay
+      if (process.env.NODE_ENV === 'production') {
+        console.log('🔄 [AuthProvider] Retrying profile fetch in 2 seconds...')
+        setTimeout(() => {
+          fetchUserProfile(userId)
+        }, 2000)
+      } else {
+        setUserProfile(null)
+        setLoading(false)
+        setIsProfileFetching(false)
+      }
     } finally {
-      setLoading(false)
-      setIsProfileFetching(false)
+      if (process.env.NODE_ENV !== 'production') {
+        setLoading(false)
+        setIsProfileFetching(false)
+      }
     }
   }
 
