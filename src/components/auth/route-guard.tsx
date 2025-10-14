@@ -36,19 +36,26 @@ export function RouteGuard({
     }
   }, [loading, redirectTo, router])
 
-  // Add timeout to prevent infinite loading - increased timeout
+  // Add timeout to prevent infinite loading - increased timeout for production
   useEffect(() => {
     const timeout = setTimeout(() => {
       if (loading) {
         console.warn(
           '⚠️ [RouteGuard] Auth loading timeout reached, forcing check'
         )
+        console.log('🔍 [RouteGuard] Debug state:', {
+          loading,
+          isAuthenticated,
+          hasUser: !!user,
+          hasProfile: !!userProfile,
+          requiredRole,
+        })
         setTimeoutReached(true)
       }
-    }, 3000) // Reduced to 3 seconds but still reasonable
+    }, 5000) // Increased to 5 seconds for slower connections
 
     return () => clearTimeout(timeout)
-  }, [loading])
+  }, [loading, isAuthenticated, user, userProfile, requiredRole])
 
   // Show loading while auth state is being determined
   // Show loading if: still loading, or user exists but no profile yet (profile fetching)

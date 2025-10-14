@@ -120,10 +120,8 @@ export default function LoginPage() {
     try {
       await login(email, password)
 
-      // Force redirect immediately after successful login
-      setTimeout(() => {
-        window.location.href = '/erp/dashboard'
-      }, 1000) // Wait 1 second for auth state to update
+      // Don't force immediate redirect, let useEffect handle it
+      console.log('✅ [LOGIN] Login successful, waiting for auth state...')
     } catch (err) {
       console.error('❌ [LOGIN] Login failed:', err)
       console.error('❌ [LOGIN] Error details:', {
