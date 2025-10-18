@@ -1,0 +1,11 @@
+node_modules/
+dist/
+build/
+.next/
+out/
+coverage/
+*.min.js
+*.config.js
+*.config.ts
+next-env.d.ts
+public/

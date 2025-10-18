@@ -58,8 +58,35 @@ Follow **YAGNI (You Aren't Gonna Need It)** — only build what's necessary. Ens
 - Hierarchical account creation without email verification
 - Category-based module organization (system/company/erp)
 
+### Module Development Pattern (MANDATORY)
+
+**All ERP modules MUST follow the standardized pattern established from Module 1 (Customers)**:
+
+- **Routing Structure**:
+  - `/erp/{module}` → List page
+  - `/erp/{module}/new` → Create page
+  - `/erp/{module}/[id]` → Detail view (READ-ONLY)
+  - `/erp/{module}/[id]/edit` → Edit page
+  - `/erp/{module}/categories` → Category management (if applicable)
+
+- **Detail View Requirements**:
+  - Header: Edit + Delete buttons (side by side)
+  - Content: 3-4 Cards layout (Basic, Contact, Financial, Record Info)
+  - Bottom: Back to List button ONLY (no duplicate actions)
+  - NEVER inline editing (always redirect to /edit page)
+
+- **Development Phases**:
+  1. Database schema + RLS policies + **Sample data (5-15 records/company)**
+  2. Types + API + Validation schemas
+  3. List → Detail → Create → Edit pages
+  4. Testing + Build verification
+
+**Reference**: See `.specify/memory/module-pattern.md` for complete pattern documentation
+
 ## Governance
 
 Development must follow these principles without exception. All code reviews must verify compliance with Clean Code, SOLID, and separation of concerns. Any complexity must be justified and documented.
 
-**Version**: 1.0.0 | **Ratified**: October 12, 2025 | **Last Amended**: October 12, 2025
+**Module pattern compliance is mandatory for all 12 ERP modules.**
+
+**Version**: 1.1.0 | **Ratified**: October 12, 2025 | **Last Amended**: October 18, 2025
