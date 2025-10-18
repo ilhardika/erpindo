@@ -12,15 +12,15 @@ import { ERP_MODULES, COMPANY_MODULES, SYSTEM_MODULES } from './definitions'
 export function getModulesByRole(role: UserRole): Module[] {
   switch (role) {
     case 'dev':
-      // Dev sees all: System + Company + ERP (19 modules total)
+      // Dev sees all: System + Company + ERP (21 modules total)
       return [...SYSTEM_MODULES, ...COMPANY_MODULES, ...ERP_MODULES]
 
     case 'owner':
-      // Owner sees: Company + ERP (14 modules total)
+      // Owner sees: Company + ERP (16 modules total)
       return [...COMPANY_MODULES, ...ERP_MODULES]
 
     case 'staff':
-      // Staff sees: ERP only (10 modules total)
+      // Staff sees: ERP only (12 modules total)
       return ERP_MODULES
 
     default:

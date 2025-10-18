@@ -5,6 +5,7 @@ import { Plus } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { SupplierTable } from '@/components/suppliers/supplier-table'
+import { DataTableLayout } from '@/components/layouts'
 import { getSuppliers, getSupplierCategories } from '@/lib/suppliers/api'
 import type { Supplier, SupplierCategory } from '@/lib/suppliers/types'
 
@@ -32,16 +33,11 @@ export default function SuppliersPage() {
   }
 
   return (
-    <div className="flex flex-col gap-4 p-4 md:p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Suppliers</h1>
-          <p className="text-sm text-muted-foreground">
-            Manage your suppliers and vendor relationships
-          </p>
-        </div>
-        <div className="flex gap-2">
+    <DataTableLayout
+      title="Suppliers"
+      description="Manage your suppliers and vendor relationships"
+      actions={
+        <>
           <Button variant="outline" asChild>
             <Link href="/erp/suppliers/categories">Manage Categories</Link>
           </Button>
@@ -51,9 +47,9 @@ export default function SuppliersPage() {
               Add Supplier
             </Link>
           </Button>
-        </div>
-      </div>
-
+        </>
+      }
+    >
       {/* Table */}
       <SupplierTable
         suppliers={suppliers}
@@ -61,6 +57,6 @@ export default function SuppliersPage() {
         loading={isLoading}
         onRefresh={loadData}
       />
-    </div>
+    </DataTableLayout>
   )
 }

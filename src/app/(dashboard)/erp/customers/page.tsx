@@ -5,6 +5,7 @@ import { Plus } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { CustomerTable } from '@/components/customers/customer-table'
+import { DataTableLayout } from '@/components/layouts'
 import { getCustomers, getCustomerCategories } from '@/lib/customers/api'
 import type {
   Customer,
@@ -80,23 +81,18 @@ export default function CustomersPage() {
   }
 
   return (
-    <div className="flex flex-col gap-4 p-4 md:p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Customers</h1>
-          <p className="text-sm text-muted-foreground">
-            Manage your customer database
-          </p>
-        </div>
+    <DataTableLayout
+      title="Customers"
+      description="Manage your customer database"
+      actions={
         <Button asChild>
           <Link href="/erp/customers/new">
             <Plus className="mr-2 h-4 w-4" />
             Add Customer
           </Link>
         </Button>
-      </div>
-
+      }
+    >
       {/* Table */}
       <CustomerTable
         customers={customers}
@@ -111,6 +107,6 @@ export default function CustomersPage() {
         onPageChange={handlePageChange}
         onRefresh={fetchCustomers}
       />
-    </div>
+    </DataTableLayout>
   )
 }

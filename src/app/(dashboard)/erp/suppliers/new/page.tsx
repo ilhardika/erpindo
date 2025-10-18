@@ -2,11 +2,10 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft } from 'lucide-react'
 import { toast } from 'sonner'
 
-import { Button } from '@/components/ui/button'
 import { SupplierForm } from '@/components/suppliers/supplier-form'
+import { FormLayout } from '@/components/layouts'
 import { createSupplier } from '@/lib/suppliers/api'
 import type { SupplierFormData } from '@/lib/suppliers/validation'
 
@@ -59,33 +58,16 @@ export default function CreateSupplierPage() {
   }
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => router.back()}
-          className="h-8 w-8"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            Create New Supplier
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Add a new supplier to your database
-          </p>
-        </div>
-      </div>
-
+    <FormLayout
+      title="Create New Supplier"
+      description="Add a new supplier to your database"
+    >
       {/* Form */}
       <SupplierForm
         onSubmit={handleSubmit}
         onCancel={handleCancel}
         isLoading={isSubmitting}
       />
-    </div>
+    </FormLayout>
   )
 }

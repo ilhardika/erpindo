@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import { ArrowLeft, Edit, Trash2, Loader2 } from 'lucide-react'
+import { Edit, Trash2, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
+import { DetailLayout } from '@/components/layouts'
 
 import { getSupplierById, deleteSupplier } from '@/lib/suppliers/api'
 import type { Supplier } from '@/lib/suppliers/types'
@@ -119,26 +120,11 @@ export default function SupplierDetailPage() {
   }
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => router.back()}
-            className="h-8 w-8"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">
-              {supplier.name}
-            </h1>
-            <p className="text-sm text-muted-foreground">Supplier Details</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
+    <DetailLayout
+      title={supplier.name}
+      subtitle="Supplier Details"
+      actions={
+        <>
           <Button
             variant="outline"
             onClick={() => router.push(`/erp/suppliers/${supplier.id}/edit`)}
@@ -150,9 +136,9 @@ export default function SupplierDetailPage() {
             <Trash2 className="mr-2 h-4 w-4" />
             Delete
           </Button>
-        </div>
-      </div>
-
+        </>
+      }
+    >
       <div className="grid gap-6 md:grid-cols-2">
         {/* Basic Information */}
         <Card>
@@ -317,6 +303,6 @@ export default function SupplierDetailPage() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </DetailLayout>
   )
 }

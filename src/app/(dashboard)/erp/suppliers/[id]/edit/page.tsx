@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import { ArrowLeft, Loader2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
 import { SupplierForm } from '@/components/suppliers/supplier-form'
+import { FormLayout } from '@/components/layouts'
 import { getSupplierById, updateSupplier } from '@/lib/suppliers/api'
 import type { Supplier } from '@/lib/suppliers/types'
 import type { SupplierFormData } from '@/lib/suppliers/validation'
@@ -119,25 +120,7 @@ export default function EditSupplierPage() {
   }
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => router.back()}
-          className="h-8 w-8"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Edit Supplier</h1>
-          <p className="text-sm text-muted-foreground">
-            Update supplier information
-          </p>
-        </div>
-      </div>
-
+    <FormLayout title="Edit Supplier" description="Update supplier information">
       {/* Form */}
       <SupplierForm
         supplier={supplier}
@@ -145,6 +128,6 @@ export default function EditSupplierPage() {
         onCancel={handleCancel}
         isLoading={isSubmitting}
       />
-    </div>
+    </FormLayout>
   )
 }

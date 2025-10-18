@@ -23,6 +23,10 @@ import {
   UserCog,
   BarChart3,
   LogOut,
+  DollarSign,
+  Wallet,
+  Tag,
+  Settings,
 } from 'lucide-react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase/client'
@@ -49,10 +53,14 @@ const iconMap = {
   Package: Package,
   Users2: Users2,
   Percent: Percent,
+  Tag: Tag,
   UserCheck: UserCheck,
   Calculator: Calculator,
+  DollarSign: DollarSign,
+  Wallet: Wallet,
   Truck: Truck,
   User: User,
+  Settings: Settings,
 }
 
 export function Sidebar({ className, modules }: SidebarProps) {

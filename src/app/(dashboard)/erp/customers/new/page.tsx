@@ -2,11 +2,10 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft } from 'lucide-react'
 import { toast } from 'sonner'
 
-import { Button } from '@/components/ui/button'
 import { CustomerForm } from '@/components/customers/customer-form'
+import { FormLayout } from '@/components/layouts'
 import { createCustomer } from '@/lib/customers/api'
 import type { CustomerFormData } from '@/lib/customers/validation'
 
@@ -57,33 +56,16 @@ export default function NewCustomerPage() {
   }
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => router.back()}
-          className="h-8 w-8"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            Create New Customer
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Add a new customer to your database
-          </p>
-        </div>
-      </div>
-
+    <FormLayout
+      title="Create New Customer"
+      description="Add a new customer to your database"
+    >
       {/* Form */}
       <CustomerForm
         onSubmit={handleSubmit}
         onCancel={handleCancel}
         isLoading={isSubmitting}
       />
-    </div>
+    </FormLayout>
   )
 }

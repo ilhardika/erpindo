@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import {
-  ArrowLeft,
   Edit,
   Loader2,
   Mail,
@@ -24,6 +23,7 @@ import {
 } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
+import { DetailLayout } from '@/components/layouts'
 
 import { getCustomerById, deleteCustomer } from '@/lib/customers/api'
 import type { Customer } from '@/types/customers'
@@ -141,26 +141,11 @@ export default function CustomerDetailPage() {
   }
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => router.back()}
-            className="h-8 w-8"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">
-              {customer.name}
-            </h1>
-            <p className="text-sm text-muted-foreground">Customer Details</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
+    <DetailLayout
+      title={customer.name}
+      subtitle="Customer Details"
+      actions={
+        <>
           <Button
             variant="outline"
             onClick={() => router.push(`/erp/customers/${customerId}/edit`)}
@@ -172,9 +157,9 @@ export default function CustomerDetailPage() {
             <Trash2 className="mr-2 h-4 w-4" />
             Delete
           </Button>
-        </div>
-      </div>
-
+        </>
+      }
+    >
       <div className="grid gap-6 md:grid-cols-2">
         {/* Basic Information */}
         <Card>
@@ -330,6 +315,6 @@ export default function CustomerDetailPage() {
           Back to List
         </Button>
       </div>
-    </div>
+    </DetailLayout>
   )
 }

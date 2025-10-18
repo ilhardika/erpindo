@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import { ArrowLeft, Loader2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
 import { CustomerForm } from '@/components/customers/customer-form'
+import { FormLayout } from '@/components/layouts'
 import { getCustomerById, updateCustomer } from '@/lib/customers/api'
 import type { Customer } from '@/types/customers'
 import type { CustomerFormData } from '@/lib/customers/validation'
@@ -119,25 +120,7 @@ export default function EditCustomerPage() {
   }
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => router.back()}
-          className="h-8 w-8"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Edit Customer</h1>
-          <p className="text-sm text-muted-foreground">
-            Update customer information
-          </p>
-        </div>
-      </div>
-
+    <FormLayout title="Edit Customer" description="Update customer information">
       {/* Form */}
       <CustomerForm
         customer={customer}
@@ -145,6 +128,6 @@ export default function EditCustomerPage() {
         onCancel={handleCancel}
         isLoading={isSubmitting}
       />
-    </div>
+    </FormLayout>
   )
 }
