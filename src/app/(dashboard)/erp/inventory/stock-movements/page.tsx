@@ -21,12 +21,15 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import { Card, CardContent } from '@/components/ui/card'
 import {
   Search,
   ArrowUpCircle,
   ArrowDownCircle,
   ArrowLeftRight,
   Settings,
+  RefreshCw,
+  Loader2,
 } from 'lucide-react'
 import {
   getStockMovements,
@@ -134,10 +137,6 @@ export default function StockMovementsPage() {
     return warehouse ? warehouse.name : 'Unknown Warehouse'
   }
 
-  if (loading) {
-    return <div className="p-6">Loading...</div>
-  }
-
   return (
     <DataTableLayout
       title="Stock Movements"
@@ -156,157 +155,195 @@ export default function StockMovementsPage() {
         </div>
       }
     >
-      {/* Filters */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="flex flex-1 gap-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by reference or notes..."
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              className="pl-8"
-            />
+      <Card>
+        <CardContent className="p-6">
+          {/* Filters */}
+          <div className="mb-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-1 gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Search by reference or notes..."
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Select
+                value={filterType}
+                onValueChange={value =>
+                  setFilterType(value as MovementType | 'all')
+                }
+              >
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue placeholder="Movement Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="IN">Stock IN</SelectItem>
+                  <SelectItem value="OUT">Stock OUT</SelectItem>
+                  <SelectItem value="TRANSFER">Transfer</SelectItem>
+                  <SelectItem value="ADJUSTMENT">Adjustment</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={filterProduct} onValueChange={setFilterProduct}>
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="All Products" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Products</SelectItem>
+                  {products.map(product => (
+                    <SelectItem key={product.id} value={product.id}>
+                      {product.name} ({product.sku})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={filterWarehouse}
+                onValueChange={setFilterWarehouse}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="All Warehouses" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Warehouses</SelectItem>
+                  {warehouses.map(warehouse => (
+                    <SelectItem key={warehouse.id} value={warehouse.id}>
+                      {warehouse.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={loadData}
+                disabled={loading}
+                title="Refresh"
+              >
+                <RefreshCw
+                  className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`}
+                />
+              </Button>
+            </div>
           </div>
-        </div>
-        <div className="flex gap-2">
-          <Select
-            value={filterType}
-            onValueChange={value =>
-              setFilterType(value as MovementType | 'all')
-            }
-          >
-            <SelectTrigger className="w-[150px]">
-              <SelectValue placeholder="Movement Type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Types</SelectItem>
-              <SelectItem value="IN">Stock IN</SelectItem>
-              <SelectItem value="OUT">Stock OUT</SelectItem>
-              <SelectItem value="TRANSFER">Transfer</SelectItem>
-              <SelectItem value="ADJUSTMENT">Adjustment</SelectItem>
-            </SelectContent>
-          </Select>
 
-          <Select value={filterProduct} onValueChange={setFilterProduct}>
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="All Products" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Products</SelectItem>
-              {products.map(product => (
-                <SelectItem key={product.id} value={product.id}>
-                  {product.name} ({product.sku})
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {/* Loading State */}
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <Loader2 className="mx-auto h-8 w-8 animate-spin text-muted-foreground" />
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Loading stock movements...
+                </p>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Movements Table */}
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Product</TableHead>
+                      <TableHead>Warehouse</TableHead>
+                      <TableHead className="text-right">Quantity</TableHead>
+                      <TableHead>Reference</TableHead>
+                      <TableHead>Notes</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredMovements.length > 0 ? (
+                      filteredMovements.map(movement => (
+                        <TableRow key={movement.id}>
+                          <TableCell>
+                            {movement.created_at
+                              ? new Date(movement.created_at).toLocaleString(
+                                  'id-ID',
+                                  {
+                                    year: 'numeric',
+                                    month: 'short',
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                  }
+                                )
+                              : '-'}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              {getMovementIcon(movement.movement_type)}
+                              {getMovementBadge(movement.movement_type)}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {getProductName(movement.product_id)}
+                          </TableCell>
+                          <TableCell>
+                            {getWarehouseName(movement.warehouse_id)}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <span
+                              className={
+                                movement.movement_type === 'IN'
+                                  ? 'text-green-600 font-medium'
+                                  : movement.movement_type === 'OUT'
+                                    ? 'text-red-600 font-medium'
+                                    : 'font-medium'
+                              }
+                            >
+                              {movement.movement_type === 'IN' && '+'}
+                              {movement.movement_type === 'OUT' && '-'}
+                              {movement.quantity}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <code className="text-xs bg-muted px-2 py-1 rounded">
+                              {movement.reference_type && movement.reference_id
+                                ? `${movement.reference_type}: ${movement.reference_id}`
+                                : '-'}
+                            </code>
+                          </TableCell>
+                          <TableCell className="max-w-[200px] truncate">
+                            {movement.notes || '-'}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell
+                          colSpan={7}
+                          className="text-center text-muted-foreground"
+                        >
+                          {movements.length === 0
+                            ? 'No stock movements found. Movements will appear when you create purchase orders, sales orders, or adjustments.'
+                            : 'No movements match your filters.'}
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
 
-          <Select value={filterWarehouse} onValueChange={setFilterWarehouse}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="All Warehouses" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Warehouses</SelectItem>
-              {warehouses.map(warehouse => (
-                <SelectItem key={warehouse.id} value={warehouse.id}>
-                  {warehouse.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      {/* Movements Table */}
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Date</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Product</TableHead>
-              <TableHead>Warehouse</TableHead>
-              <TableHead className="text-right">Quantity</TableHead>
-              <TableHead>Reference</TableHead>
-              <TableHead>Notes</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredMovements.length > 0 ? (
-              filteredMovements.map(movement => (
-                <TableRow key={movement.id}>
-                  <TableCell>
-                    {movement.created_at
-                      ? new Date(movement.created_at).toLocaleString('id-ID', {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })
-                      : '-'}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      {getMovementIcon(movement.movement_type)}
-                      {getMovementBadge(movement.movement_type)}
-                    </div>
-                  </TableCell>
-                  <TableCell>{getProductName(movement.product_id)}</TableCell>
-                  <TableCell>
-                    {getWarehouseName(movement.warehouse_id)}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <span
-                      className={
-                        movement.movement_type === 'IN'
-                          ? 'text-green-600 font-medium'
-                          : movement.movement_type === 'OUT'
-                            ? 'text-red-600 font-medium'
-                            : 'font-medium'
-                      }
-                    >
-                      {movement.movement_type === 'IN' && '+'}
-                      {movement.movement_type === 'OUT' && '-'}
-                      {movement.quantity}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <code className="text-xs bg-muted px-2 py-1 rounded">
-                      {movement.reference_type && movement.reference_id
-                        ? `${movement.reference_type}: ${movement.reference_id}`
-                        : '-'}
-                    </code>
-                  </TableCell>
-                  <TableCell className="max-w-[200px] truncate">
-                    {movement.notes || '-'}
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={7}
-                  className="text-center text-muted-foreground"
-                >
-                  {movements.length === 0
-                    ? 'No stock movements found. Movements will appear when you create purchase orders, sales orders, or adjustments.'
-                    : 'No movements match your filters.'}
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-
-      {/* Summary */}
-      {filteredMovements.length > 0 && (
-        <div className="text-sm text-muted-foreground">
-          Showing {filteredMovements.length} of {movements.length} total
-          movements
-        </div>
-      )}
+              {/* Summary */}
+              {filteredMovements.length > 0 && (
+                <div className="mt-4 text-sm text-muted-foreground">
+                  Showing {filteredMovements.length} of {movements.length} total
+                  movements
+                </div>
+              )}
+            </>
+          )}
+        </CardContent>
+      </Card>
     </DataTableLayout>
   )
 }

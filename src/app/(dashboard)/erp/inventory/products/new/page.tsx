@@ -77,7 +77,8 @@ export default function NewProductPage() {
         units={units}
         suppliers={suppliers}
         onSubmit={handleSubmit}
-        isSubmitting={isSubmitting}
+        isLoading={isSubmitting}
+        onCancel={() => router.push('/erp/inventory')}
       />
     </FormLayout>
   )

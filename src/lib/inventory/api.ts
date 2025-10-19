@@ -4,6 +4,7 @@
 import { supabase } from '@/lib/supabase/client'
 import type {
   Product,
+  ProductWithRelations,
   CreateProductInput,
   UpdateProductInput,
   ProductCategory,
@@ -217,15 +218,24 @@ export async function getProducts(): Promise<Product[]> {
   return data || []
 }
 
-export async function getProductById(id: string): Promise<Product | null> {
+export async function getProductById(
+  id: string
+): Promise<ProductWithRelations | null> {
   const { data, error } = await supabase
     .from('products')
-    .select('*')
+    .select(
+      `
+      *,
+      category:product_categories(id, name),
+      unit:product_units(id, name, symbol),
+      supplier:suppliers(id, name, code)
+    `
+    )
     .eq('id', id)
     .single()
 
   if (error) throw error
-  return data
+  return data as ProductWithRelations
 }
 
 export async function createProduct(

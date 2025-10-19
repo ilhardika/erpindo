@@ -21,6 +21,7 @@ import type {
 export default function EditProductPage() {
   const params = useParams()
   const router = useRouter()
+  const productId = params.id as string
   const [product, setProduct] = useState<Product | null>(null)
   const [categories, setCategories] = useState<ProductCategory[]>([])
   const [units, setUnits] = useState<ProductUnit[]>([])
@@ -31,17 +32,17 @@ export default function EditProductPage() {
   const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
-    if (params.id) {
+    if (productId) {
       loadData()
     }
-  }, [params.id])
+  }, [productId])
 
   async function loadData() {
     try {
       setLoading(true)
       const [productData, categoriesData, unitsData, suppliersData] =
         await Promise.all([
-          getProductById(params.id as string),
+          getProductById(productId),
           getProductCategories(),
           getProductUnits(),
           getSuppliers(),
@@ -70,7 +71,7 @@ export default function EditProductPage() {
   async function handleSubmit(data: UpdateProductInput) {
     try {
       setSubmitting(true)
-      await updateProduct(params.id as string, data)
+      await updateProduct(productId, data)
       alert('Product updated successfully')
       router.push('/erp/inventory')
     } catch (error) {
@@ -100,7 +101,8 @@ export default function EditProductPage() {
         units={units}
         suppliers={suppliers}
         onSubmit={handleSubmit}
-        isSubmitting={submitting}
+        isLoading={submitting}
+        onCancel={() => router.push(`/erp/inventory/products/${productId}`)}
       />
     </FormLayout>
   )

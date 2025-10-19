@@ -3,16 +3,10 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
+import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
@@ -21,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Checkbox } from '@/components/ui/checkbox'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import type { Product, ProductCategory, ProductUnit } from '@/types/inventory'
 
 const productSchema = z.object({
@@ -48,18 +42,38 @@ interface ProductFormProps {
   units: ProductUnit[]
   suppliers: Array<{ id: string; name: string; code: string | null }>
   onSubmit: (data: ProductFormValues) => Promise<void>
-  isSubmitting?: boolean
+  onCancel?: () => void
+  isLoading?: boolean
 }
 
+/**
+ * Product Form Component
+ * Reusable form for creating and editing products
+ *
+ * Clean Code Principles:
+ * - Single Responsibility: Only handles product form UI and validation
+ * - DRY: Reusable for both create and edit operations
+ * - KISS: Simple, straightforward form structure
+ * - Separation of Concerns: Validation logic in schema, API calls handled by parent
+ */
 export function ProductForm({
   product,
   categories,
   units,
   suppliers,
   onSubmit,
-  isSubmitting,
+  onCancel,
+  isLoading = false,
 }: ProductFormProps) {
-  const form = useForm<ProductFormValues>({
+  const isEditMode = !!product
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setValue,
+    watch,
+  } = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
     defaultValues: {
       sku: product?.sku || '',
@@ -78,269 +92,306 @@ export function ProductForm({
     },
   })
 
+  const selectedCategoryId = watch('category_id')
+  const selectedUnitId = watch('unit_id')
+  const selectedSupplierId = watch('supplier_id')
+  const selectedStatus = watch('is_active')
+
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div className="grid gap-6 md:grid-cols-2">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      {/* Basic Information Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Basic Information</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
           {/* SKU */}
-          <FormField
-            control={form.control}
-            name="sku"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>SKU *</FormLabel>
-                <FormControl>
-                  <Input placeholder="PRD-001" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
+          <div className="grid gap-2">
+            <Label htmlFor="sku">
+              SKU <span className="text-red-500">*</span>
+            </Label>
+            <Input
+              id="sku"
+              placeholder="e.g., PRD-001"
+              {...register('sku')}
+              disabled={isLoading}
+            />
+            {errors.sku && (
+              <p className="text-sm text-red-500">{errors.sku.message}</p>
             )}
-          />
+          </div>
 
           {/* Barcode */}
-          <FormField
-            control={form.control}
-            name="barcode"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Barcode</FormLabel>
-                <FormControl>
-                  <Input placeholder="123456789012" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
+          <div className="grid gap-2">
+            <Label htmlFor="barcode">Barcode</Label>
+            <Input
+              id="barcode"
+              placeholder="e.g., 123456789012"
+              {...register('barcode')}
+              disabled={isLoading}
+            />
+            {errors.barcode && (
+              <p className="text-sm text-red-500">{errors.barcode.message}</p>
             )}
-          />
+          </div>
 
           {/* Product Name */}
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem className="md:col-span-2">
-                <FormLabel>Product Name *</FormLabel>
-                <FormControl>
-                  <Input placeholder="Enter product name" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
+          <div className="grid gap-2">
+            <Label htmlFor="name">
+              Product Name <span className="text-red-500">*</span>
+            </Label>
+            <Input
+              id="name"
+              placeholder="e.g., Samsung Galaxy S24"
+              {...register('name')}
+              disabled={isLoading}
+            />
+            {errors.name && (
+              <p className="text-sm text-red-500">{errors.name.message}</p>
             )}
-          />
+          </div>
 
           {/* Description */}
-          <FormField
-            control={form.control}
-            name="description"
-            render={({ field }) => (
-              <FormItem className="md:col-span-2">
-                <FormLabel>Description</FormLabel>
-                <FormControl>
-                  <Textarea
-                    placeholder="Enter product description"
-                    {...field}
-                    rows={3}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
+          <div className="grid gap-2">
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              placeholder="Enter product description..."
+              rows={3}
+              {...register('description')}
+              disabled={isLoading}
+            />
+            {errors.description && (
+              <p className="text-sm text-red-500">
+                {errors.description.message}
+              </p>
             )}
-          />
+          </div>
 
           {/* Category */}
-          <FormField
-            control={form.control}
-            name="category_id"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Category</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  value={field.value || undefined}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {categories.map(category => (
-                      <SelectItem key={category.id} value={category.id}>
-                        {category.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
+          <div className="grid gap-2">
+            <Label htmlFor="category">Category</Label>
+            <Select
+              value={selectedCategoryId}
+              onValueChange={value => setValue('category_id', value)}
+              disabled={isLoading}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select a category" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map(category => (
+                  <SelectItem key={category.id} value={category.id}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.category_id && (
+              <p className="text-sm text-red-500">
+                {errors.category_id.message}
+              </p>
             )}
-          />
+          </div>
 
           {/* Unit */}
-          <FormField
-            control={form.control}
-            name="unit_id"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Unit</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  value={field.value || undefined}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select unit" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {units.map(unit => (
-                      <SelectItem key={unit.id} value={unit.id}>
-                        {unit.name} ({unit.symbol})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
+          <div className="grid gap-2">
+            <Label htmlFor="unit">Unit</Label>
+            <Select
+              value={selectedUnitId}
+              onValueChange={value => setValue('unit_id', value)}
+              disabled={isLoading}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select a unit" />
+              </SelectTrigger>
+              <SelectContent>
+                {units.map(unit => (
+                  <SelectItem key={unit.id} value={unit.id}>
+                    {unit.name} ({unit.symbol})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.unit_id && (
+              <p className="text-sm text-red-500">{errors.unit_id.message}</p>
             )}
-          />
+          </div>
 
           {/* Supplier */}
-          <FormField
-            control={form.control}
-            name="supplier_id"
-            render={({ field }) => (
-              <FormItem className="md:col-span-2">
-                <FormLabel>Supplier</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  value={field.value || undefined}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select supplier" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {suppliers.map(supplier => (
-                      <SelectItem key={supplier.id} value={supplier.id}>
-                        {supplier.name} {supplier.code && `(${supplier.code})`}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
+          <div className="grid gap-2">
+            <Label htmlFor="supplier">Supplier</Label>
+            <Select
+              value={selectedSupplierId}
+              onValueChange={value => setValue('supplier_id', value)}
+              disabled={isLoading}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select a supplier" />
+              </SelectTrigger>
+              <SelectContent>
+                {suppliers.map(supplier => (
+                  <SelectItem key={supplier.id} value={supplier.id}>
+                    {supplier.name} {supplier.code && `(${supplier.code})`}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.supplier_id && (
+              <p className="text-sm text-red-500">
+                {errors.supplier_id.message}
+              </p>
             )}
-          />
+          </div>
 
-          {/* Cost Price */}
-          <FormField
-            control={form.control}
-            name="cost_price"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Cost Price *</FormLabel>
-                <FormControl>
-                  <Input type="number" placeholder="0" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
+          {/* Status */}
+          <div className="grid gap-2">
+            <Label htmlFor="status">Status</Label>
+            <Select
+              value={selectedStatus ? 'active' : 'inactive'}
+              onValueChange={value => setValue('is_active', value === 'active')}
+              disabled={isLoading}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
+            {errors.is_active && (
+              <p className="text-sm text-red-500">{errors.is_active.message}</p>
             )}
-          />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Pricing Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Pricing Information</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Cost Price */}
+          <div className="grid gap-2">
+            <Label htmlFor="cost_price">
+              Cost Price (Rp) <span className="text-red-500">*</span>
+            </Label>
+            <Input
+              id="cost_price"
+              type="number"
+              min="0"
+              step="100"
+              placeholder="0"
+              {...register('cost_price', { valueAsNumber: true })}
+              disabled={isLoading}
+            />
+            {errors.cost_price && (
+              <p className="text-sm text-red-500">
+                {errors.cost_price.message}
+              </p>
+            )}
+          </div>
 
           {/* Selling Price */}
-          <FormField
-            control={form.control}
-            name="selling_price"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Selling Price *</FormLabel>
-                <FormControl>
-                  <Input type="number" placeholder="0" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
+          <div className="grid gap-2">
+            <Label htmlFor="selling_price">
+              Selling Price (Rp) <span className="text-red-500">*</span>
+            </Label>
+            <Input
+              id="selling_price"
+              type="number"
+              min="0"
+              step="100"
+              placeholder="0"
+              {...register('selling_price', { valueAsNumber: true })}
+              disabled={isLoading}
+            />
+            {errors.selling_price && (
+              <p className="text-sm text-red-500">
+                {errors.selling_price.message}
+              </p>
             )}
-          />
+          </div>
+        </CardContent>
+      </Card>
 
+      {/* Stock Management Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Stock Management</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
           {/* Min Stock */}
-          <FormField
-            control={form.control}
-            name="min_stock"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Min Stock</FormLabel>
-                <FormControl>
-                  <Input type="number" placeholder="0" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
+          <div className="grid gap-2">
+            <Label htmlFor="min_stock">Minimum Stock</Label>
+            <Input
+              id="min_stock"
+              type="number"
+              min="0"
+              placeholder="0"
+              {...register('min_stock', { valueAsNumber: true })}
+              disabled={isLoading}
+            />
+            {errors.min_stock && (
+              <p className="text-sm text-red-500">{errors.min_stock.message}</p>
             )}
-          />
+          </div>
 
           {/* Max Stock */}
-          <FormField
-            control={form.control}
-            name="max_stock"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Max Stock</FormLabel>
-                <FormControl>
-                  <Input type="number" placeholder="0" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
+          <div className="grid gap-2">
+            <Label htmlFor="max_stock">Maximum Stock</Label>
+            <Input
+              id="max_stock"
+              type="number"
+              min="0"
+              placeholder="0"
+              {...register('max_stock', { valueAsNumber: true })}
+              disabled={isLoading}
+            />
+            {errors.max_stock && (
+              <p className="text-sm text-red-500">{errors.max_stock.message}</p>
             )}
-          />
+          </div>
 
           {/* Reorder Point */}
-          <FormField
-            control={form.control}
-            name="reorder_point"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Reorder Point</FormLabel>
-                <FormControl>
-                  <Input type="number" placeholder="0" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
+          <div className="grid gap-2">
+            <Label htmlFor="reorder_point">Reorder Point</Label>
+            <Input
+              id="reorder_point"
+              type="number"
+              min="0"
+              placeholder="0"
+              {...register('reorder_point', { valueAsNumber: true })}
+              disabled={isLoading}
+            />
+            {errors.reorder_point && (
+              <p className="text-sm text-red-500">
+                {errors.reorder_point.message}
+              </p>
             )}
-          />
+          </div>
+        </CardContent>
+      </Card>
 
-          {/* Is Active */}
-          <FormField
-            control={form.control}
-            name="is_active"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                <FormControl>
-                  <Checkbox
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <div className="space-y-1 leading-none">
-                  <FormLabel>Active</FormLabel>
-                  <p className="text-sm text-muted-foreground">
-                    This product is available for sale
-                  </p>
-                </div>
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <div className="flex justify-end gap-4">
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting
-              ? 'Saving...'
-              : product
-                ? 'Update Product'
-                : 'Create Product'}
+      {/* Form Actions */}
+      <div className="flex justify-end gap-4">
+        {onCancel && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onCancel}
+            disabled={isLoading}
+          >
+            Cancel
           </Button>
-        </div>
-      </form>
-    </Form>
+        )}
+        <Button type="submit" disabled={isLoading}>
+          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {isEditMode ? 'Update Product' : 'Create Product'}
+        </Button>
+      </div>
+    </form>
   )
 }
