@@ -40,6 +40,103 @@ Phase 2 implements the core ERP functionality through 12 separate modules organi
 
 ---
 
+## 🎨 UI CONSISTENCY STANDARDS
+
+**Established Patterns**: Based on completed Customers, Suppliers, Inventory, and Stock Movements modules
+
+### Pattern A: Full CRUD Modules (Separate Pages)
+
+**Use for**: Main entities with complex forms and detailed views
+**Examples**: Customers, Suppliers, Products, Sales Orders, Purchase Orders, Employees
+
+**Required Components**:
+
+1. **{Entity}Table Component** (`src/components/{module}/{entity}-table.tsx`)
+   - Card wrapper with CardContent
+   - Search bar with icon (left-3, top-1/2, -translate-y-1/2)
+   - Filter dropdowns (category, status, etc.)
+   - Refresh button with spin animation
+   - Table with rounded-md border
+   - DropdownMenu for row actions (View/Edit/Delete)
+   - Debounced search with useDebounce hook
+   - Loading and empty states
+
+2. **{Entity}Form Component** (`src/components/{module}/{entity}-form.tsx`)
+   - Reusable for both create and edit
+   - Card sections for logical grouping (e.g., Basic Info, Additional Details)
+   - Label + Input pattern (NOT FormField pattern)
+   - `register()` for inputs, `watch()` + `setValue()` for Selects
+   - Error messages as `<p className="text-sm text-red-500">`
+   - Form Actions section with Cancel (outline) + Submit buttons
+   - Loading spinner on submit button
+
+3. **Pages Structure**:
+   - `/erp/{module}/page.tsx` - List page using {Entity}Table component
+   - `/erp/{module}/new/page.tsx` - Create page using FormLayout + {Entity}Form
+   - `/erp/{module}/[id]/page.tsx` - Detail view (read-only) with Card layout
+   - `/erp/{module}/[id]/edit/page.tsx` - Edit page using FormLayout + {Entity}Form
+
+**Key Features**:
+
+- DataTableLayout for list pages
+- FormLayout for create/edit pages
+- DetailLayout for detail pages (read-only)
+- Card wrappers with CardHeader/CardContent
+- Consistent spacing (space-y-4, space-y-6)
+- Icons from Lucide React
+- Toast notifications for all actions
+
+### Pattern B: Inline CRUD (Single Page)
+
+**Use for**: Reference data, configuration, simple entities
+**Examples**: Product Categories, Product Units, Warehouses, Customer Categories, Supplier Categories
+
+**Required Structure**:
+
+1. **Single Page** (`/erp/{module}/{entity-plural}/page.tsx`)
+   - Card wrapper with CardContent
+   - Add New button with Dialog/Modal
+   - Table with inline Edit/Delete actions
+   - Search bar (optional, if many records)
+   - No separate routes needed
+
+2. **Dialog Component** (optional, if complex)
+   - `{Entity}Dialog` component for create/edit form
+   - Reusable for both create and edit modes
+   - Form inside DialogContent
+   - DialogFooter with Cancel + Save buttons
+
+**Key Features**:
+
+- All operations on single page
+- Quick add/edit with dialogs
+- Immediate feedback with toast
+- No navigation required
+- Simpler than Pattern A
+
+### Pattern C: Read-Only Display
+
+**Use for**: History, logs, reports, view-only data
+**Examples**: Stock Movements, Transaction History, Audit Logs
+
+**Required Structure**:
+
+1. **Single Page** with Card wrapper
+   - Search and filter controls
+   - Read-only table (no edit/delete actions)
+   - Optional detail view modal/dialog
+   - Refresh functionality
+   - Date range filters (if applicable)
+
+**Key Features**:
+
+- No edit capabilities
+- Focus on filtering and searching
+- Export functionality (optional)
+- Detailed view in modal (optional)
+
+---
+
 ## 📦 TIER 1: FOUNDATION MODULES
 
 ### Module 1: Customers Module (3-4 days) ✅ COMPLETE
@@ -322,14 +419,6 @@ Phase 2 implements the core ERP functionality through 12 separate modules organi
 
 ---
 
-### ✅ Module 3: Inventory - **COMPLETE & PRODUCTION READY** 🚀
-
-**Status:** All tasks completed, tested, and verified  
-**Quality:** 100% test coverage with full regression testing  
-**Deployment:** Ready for staging/production
-
----
-
 ## 💰 TIER 3: REVENUE OPERATIONS MODULES
 
 ### Module 4: Promotions Module (4-5 days)
@@ -348,24 +437,50 @@ Phase 2 implements the core ERP functionality through 12 separate modules organi
 
 #### T2.4.2 - Promotion List & Management
 
-- [ ] Create `/erp/promotions/page.tsx`
-- [ ] Promotion table with status badges
-- [ ] Filter by status, date range
-- [ ] Auto status update (active/expired based on dates)
+- [ ] Create `PromotionTable` component (`src/components/promotions/promotion-table.tsx`)
+  - [ ] **Follow Pattern A**: Card wrapper, search, filters, DropdownMenu actions
+  - [ ] Search by name, code
+  - [ ] Filter by status (active, scheduled, expired), type
+  - [ ] Date range filter
+  - [ ] Status badges with colors
+  - [ ] Refresh button with animation
+- [ ] Create `/erp/promotions/page.tsx` - List page using PromotionTable
+- [ ] Auto status update logic (active/expired based on dates)
 
-#### T2.4.3 - Promotion Form
+#### T2.4.3 - Promotion Form Component
+
+- [ ] Create `PromotionForm` component (`src/components/promotions/promotion-form.tsx`)
+  - [ ] **Follow Pattern A**: Card sections, Label + Input, register()/watch()
+  - [ ] Section 1: Basic Information
+    - [ ] Name*, Code*, Type\* (percentage, fixed, buy_x_get_y)
+    - [ ] Description
+  - [ ] Section 2: Discount Configuration
+    - [ ] Discount value (percentage or amount)
+    - [ ] Buy X Get Y configuration (conditional)
+  - [ ] Section 3: Validity & Rules
+    - [ ] Start date*, End date*
+    - [ ] Minimum purchase amount
+    - [ ] Maximum discount cap
+  - [ ] Section 4: Targeting
+    - [ ] Product selection (multi-select)
+    - [ ] Category selection (multi-select)
+    - [ ] Customer segment selection
+  - [ ] Form Actions: Cancel + Submit buttons
+
+#### T2.4.4 - Promotion Pages
 
 - [ ] Create `/erp/promotions/new/page.tsx`
-- [ ] Create `/erp/promotions/[id]/page.tsx`
-- [ ] Promotion form with:
-  - [ ] Basic info (name, code, type)
-  - [ ] Discount configuration (%, fixed amount, buy X get Y)
-  - [ ] Validity period (start/end date)
-  - [ ] Product/category selection
-  - [ ] Customer segment targeting
-  - [ ] Minimum purchase requirement
+  - [ ] **Follow Pattern A**: FormLayout + PromotionForm
+  - [ ] Pass onCancel callback
+- [ ] Create `/erp/promotions/[id]/page.tsx` - Detail view (read-only)
+  - [ ] **Follow Pattern A**: Card layout with sections
+  - [ ] Display all promotion info with icons
+  - [ ] Edit + Delete buttons in header
+  - [ ] Back button at bottom
+- [ ] Create `/erp/promotions/[id]/edit/page.tsx`
+  - [ ] **Follow Pattern A**: FormLayout + PromotionForm with existing data
 
-#### T2.4.4 - Promotion Application Logic
+#### T2.4.5 - Promotion Application Logic
 
 - [ ] Create promotion validation utility
 - [ ] Create promotion calculation utility
@@ -427,10 +542,18 @@ Phase 2 implements the core ERP functionality through 12 separate modules organi
 
 #### T2.5.6 - Transaction History
 
-- [ ] Create `/erp/pos/transactions/page.tsx`
-- [ ] Transaction list with filters
-- [ ] Create `/erp/pos/transactions/[id]/page.tsx` - Detail view
-- [ ] Reprint functionality
+- [ ] Create `PosTransactionTable` component
+  - [ ] **Follow Pattern C**: Read-only table with Card wrapper
+  - [ ] Search by transaction ID, customer
+  - [ ] Filter by date range, payment method, cashier
+  - [ ] Display total, payment method, status
+  - [ ] Actions: View Detail, Reprint Receipt
+- [ ] Create `/erp/pos/transactions/page.tsx` - Transaction history
+- [ ] Create `/erp/pos/transactions/[id]/page.tsx` - Detail view (read-only)
+  - [ ] **Follow Pattern A**: Card layout displaying transaction details
+  - [ ] Transaction items table
+  - [ ] Payment information
+  - [ ] Reprint button
 
 #### T2.5.7 - Testing & Polish
 
@@ -467,33 +590,63 @@ Phase 2 implements the core ERP functionality through 12 separate modules organi
 
 #### T2.6.3 - Sales Order Management
 
-- [ ] Create `/erp/sales/orders/page.tsx` - Order list
-- [ ] Create `/erp/sales/orders/new/page.tsx` - New order
-- [ ] Create `/erp/sales/orders/[id]/page.tsx` - Order detail
-- [ ] Order form with:
-  - [ ] Customer selection
-  - [ ] Product line items
-  - [ ] Quantity, price, discount per item
-  - [ ] Promotion application
-  - [ ] Total calculation
-  - [ ] Salesman assignment
-- [ ] Order status workflow (draft, confirmed, processing, completed, cancelled)
+- [ ] Create `SalesOrderTable` component
+  - [ ] **Follow Pattern A**: Card wrapper, search, filters, DropdownMenu actions
+  - [ ] Search by order number, customer name
+  - [ ] Filter by status, date range, salesman
+  - [ ] Status badges (draft, confirmed, processing, completed, cancelled)
+  - [ ] Display customer, total, status, date
+- [ ] Create `SalesOrderForm` component
+  - [ ] **Follow Pattern A**: Card sections, Label + Input
+  - [ ] Section 1: Order Information
+    - [ ] Order number (auto-generated), Order date
+    - [ ] Customer selection\*, Salesman assignment
+  - [ ] Section 2: Line Items
+    - [ ] Product selection with search
+    - [ ] Quantity, Price, Discount per item
+    - [ ] Auto promotion application
+    - [ ] Line total calculation
+    - [ ] Add/remove item rows
+  - [ ] Section 3: Order Summary
+    - [ ] Subtotal, Tax, Discount, Grand Total
+    - [ ] Notes, Terms
+  - [ ] Form Actions: Save as Draft / Confirm Order / Cancel
+- [ ] Create `/erp/sales/orders/page.tsx` - List page using SalesOrderTable
+- [ ] Create `/erp/sales/orders/new/page.tsx` - Create page using SalesOrderForm
+- [ ] Create `/erp/sales/orders/[id]/page.tsx` - Detail view (read-only)
+  - [ ] **Follow Pattern A**: Card layout with order details
+  - [ ] Line items table
+  - [ ] Status timeline/history
+  - [ ] Actions: Edit (if draft), Cancel Order, Convert to Invoice
+- [ ] Create `/erp/sales/orders/[id]/edit/page.tsx` - Edit page (draft only)
+- [ ] Order status workflow implementation
 
 #### T2.6.4 - Invoice Management
 
+- [ ] Create `InvoiceTable` component
+  - [ ] **Follow Pattern A**: Card wrapper with filters
+  - [ ] Filter by status (unpaid, partial, paid), date range
+  - [ ] Display invoice number, customer, amount, due date, status
 - [ ] Create `/erp/sales/invoices/page.tsx` - Invoice list
-- [ ] Create `/erp/sales/invoices/[id]/page.tsx` - Invoice detail
-- [ ] Convert order to invoice
-- [ ] Invoice generation (PDF)
-- [ ] Invoice status (unpaid, partial, paid)
+- [ ] Create `/erp/sales/invoices/[id]/page.tsx` - Invoice detail (read-only)
+  - [ ] **Follow Pattern A**: Card layout
+  - [ ] Invoice items, payment history
+  - [ ] Actions: Record Payment, Download PDF, Send Email
+- [ ] Invoice PDF generation utility
+- [ ] Convert order to invoice function
 
 #### T2.6.5 - Payment Tracking
 
-- [ ] Create `/erp/sales/payments/page.tsx`
-- [ ] Record payment against invoice
-- [ ] Partial payment support
-- [ ] Payment method tracking
-- [ ] Payment history per invoice
+- [ ] Create `PaymentTable` component
+  - [ ] **Follow Pattern C**: Read-only table
+  - [ ] Display payment history
+  - [ ] Filter by date range, payment method
+- [ ] Create payment recording dialog
+  - [ ] Invoice selection
+  - [ ] Payment amount, method, date
+  - [ ] Reference number, notes
+- [ ] Create `/erp/sales/payments/page.tsx` - Payment history
+- [ ] Partial payment calculation logic
 
 #### T2.6.6 - Delivery Orders
 
@@ -531,34 +684,64 @@ Phase 2 implements the core ERP functionality through 12 separate modules organi
 
 #### T2.7.2 - Purchase Request (PR)
 
+- [ ] Create `PurchaseRequestTable` component
+  - [ ] **Follow Pattern A**: Card wrapper, search, filters, actions
+  - [ ] Filter by status (pending, approved, rejected), date range
+  - [ ] Status badges with colors
+- [ ] Create `PurchaseRequestForm` component
+  - [ ] **Follow Pattern A**: Card sections
+  - [ ] Section 1: Request Information (date, requester, department)
+  - [ ] Section 2: Item List (product, quantity, notes)
+  - [ ] Form Actions: Submit for Approval / Save as Draft
 - [ ] Create `/erp/purchasing/requests/page.tsx` - PR list
-- [ ] Create `/erp/purchasing/requests/new/page.tsx` - New PR
-- [ ] PR form with product items and quantities
-- [ ] PR approval workflow
+- [ ] Create `/erp/purchasing/requests/new/page.tsx` - Create PR
+- [ ] Create `/erp/purchasing/requests/[id]/page.tsx` - PR detail with approval actions
+- [ ] PR approval workflow UI
 
 #### T2.7.3 - Purchase Order (PO)
 
+- [ ] Create `PurchaseOrderTable` component
+  - [ ] **Follow Pattern A**: Card wrapper with filters
+  - [ ] Filter by status, supplier, date range
+  - [ ] Display PO number, supplier, total, status
+- [ ] Create `PurchaseOrderForm` component
+  - [ ] **Follow Pattern A**: Card sections
+  - [ ] Section 1: Order Information (PO number, supplier\*, date, payment terms)
+  - [ ] Section 2: Line Items (product, quantity, unit price, subtotal)
+  - [ ] Section 3: Order Summary (subtotal, tax, total)
+  - [ ] Form Actions: Confirm / Save as Draft / Cancel
 - [ ] Create `/erp/purchasing/orders/page.tsx` - PO list
-- [ ] Create `/erp/purchasing/orders/new/page.tsx` - New PO
-- [ ] Create `/erp/purchasing/orders/[id]/page.tsx` - PO detail
-- [ ] Convert PR to PO
-- [ ] Direct PO creation
+- [ ] Create `/erp/purchasing/orders/new/page.tsx` - Create PO
+- [ ] Create `/erp/purchasing/orders/[id]/page.tsx` - PO detail (read-only)
+- [ ] Create `/erp/purchasing/orders/[id]/edit/page.tsx` - Edit PO (draft only)
+- [ ] Convert PR to PO function
 - [ ] PO status workflow
 
 #### T2.7.4 - Good Receipt (GR)
 
+- [ ] Create `GoodReceiptTable` component
+  - [ ] **Follow Pattern C**: Read-only table with Card wrapper
+  - [ ] Filter by date range, supplier, PO number
+  - [ ] Display GR number, PO number, supplier, date, status
+- [ ] Create Good Receipt dialog/form
+  - [ ] PO selection
+  - [ ] Item list with expected vs received quantities
+  - [ ] Partial receipt support
+  - [ ] Notes for discrepancies
 - [ ] Create `/erp/purchasing/receipts/page.tsx` - GR list
-- [ ] Create good receipt from PO
-- [ ] Record received quantities
-- [ ] Partial receipt support
+- [ ] Create `/erp/purchasing/receipts/[id]/page.tsx` - GR detail
 - [ ] Auto stock increase on GR confirmation
 
 #### T2.7.5 - Purchase Invoice & Payment
 
-- [ ] Create `/erp/purchasing/invoices/page.tsx`
+- [ ] Create `PurchaseInvoiceTable` component
+  - [ ] **Follow Pattern A**: Card wrapper with filters
+  - [ ] Filter by status (unpaid, partial, paid), date range
+- [ ] Create `/erp/purchasing/invoices/page.tsx` - Invoice list
+- [ ] Create `/erp/purchasing/invoices/[id]/page.tsx` - Invoice detail
 - [ ] Link invoice to PO
-- [ ] Payment tracking
-- [ ] Payment terms management
+- [ ] Payment recording dialog
+- [ ] Payment terms tracking
 
 #### T2.7.6 - Testing & Polish
 
@@ -589,34 +772,73 @@ Phase 2 implements the core ERP functionality through 12 separate modules organi
 
 #### T2.8.2 - Employee Management
 
-- [ ] Create `/erp/hr/page.tsx` - HR dashboard
-- [ ] Create `/erp/hr/employees/page.tsx` - Employee list
-- [ ] Create `/erp/hr/employees/new/page.tsx` - Add employee
-- [ ] Create `/erp/hr/employees/[id]/page.tsx` - Employee detail
-- [ ] Employee form with all fields
-- [ ] Department management
+- [ ] Create `EmployeeTable` component
+  - [ ] **Follow Pattern A**: Card wrapper, search, filters, actions
+  - [ ] Search by name, employee ID, email
+  - [ ] Filter by department, status (active, inactive)
+  - [ ] Display photo, name, position, department, status
+- [ ] Create `EmployeeForm` component
+  - [ ] **Follow Pattern A**: Card sections
+  - [ ] Section 1: Personal Information (name*, ID*, photo, email, phone, address)
+  - [ ] Section 2: Employment Details (department*, position*, join date, status)
+  - [ ] Section 3: Compensation (salary, allowances)
+  - [ ] Form Actions: Cancel + Save
+- [ ] Create `/erp/hr/page.tsx` - HR dashboard with stats
+- [ ] Create `/erp/hr/employees/page.tsx` - Employee list using EmployeeTable
+- [ ] Create `/erp/hr/employees/new/page.tsx` - Add employee using EmployeeForm
+- [ ] Create `/erp/hr/employees/[id]/page.tsx` - Employee detail (read-only)
+- [ ] Create `/erp/hr/employees/[id]/edit/page.tsx` - Edit employee
+- [ ] Create `/erp/hr/departments/page.tsx` - Department management
+  - [ ] **Follow Pattern B**: Inline CRUD with dialog
 
 #### T2.8.3 - Attendance Tracking
 
-- [ ] Create `/erp/hr/attendance/page.tsx`
-- [ ] Clock in/out interface
-- [ ] Attendance calendar view
-- [ ] Attendance reports
+- [ ] Create `AttendanceTable` component
+  - [ ] **Follow Pattern C**: Read-only table
+  - [ ] Filter by employee, date range
+  - [ ] Display clock in/out times, duration, status
+- [ ] Create clock in/out dialog
+  - [ ] Employee selection
+  - [ ] Manual time entry (for corrections)
+  - [ ] Notes field
+- [ ] Create `/erp/hr/attendance/page.tsx` - Attendance tracking
+- [ ] Attendance calendar view component
+- [ ] Attendance summary reports
 
 #### T2.8.4 - Leave Management
 
-- [ ] Create `/erp/hr/leaves/page.tsx`
-- [ ] Leave request form
+- [ ] Create `LeaveTable` component
+  - [ ] **Follow Pattern A**: Card wrapper with filters
+  - [ ] Filter by employee, status (pending, approved, rejected), type
+  - [ ] Display employee, leave type, dates, duration, status
+- [ ] Create `LeaveForm` component
+  - [ ] **Follow Pattern A**: Simple form in Card
+  - [ ] Leave type selection, Start date*, End date*
+  - [ ] Reason/notes\*
+  - [ ] Duration calculation (auto)
+- [ ] Create `/erp/hr/leaves/page.tsx` - Leave list using LeaveTable
+- [ ] Create `/erp/hr/leaves/new/page.tsx` - Leave request form
+- [ ] Create `/erp/hr/leaves/[id]/page.tsx` - Leave detail with approval actions
 - [ ] Leave approval workflow
-- [ ] Leave balance tracking
-- [ ] Leave types configuration
+- [ ] Leave balance tracking per employee
+- [ ] Create `/erp/hr/leave-types/page.tsx` - Leave types management
+  - [ ] **Follow Pattern B**: Inline CRUD
 
 #### T2.8.5 - Salary Management
 
-- [ ] Create `/erp/hr/salaries/page.tsx`
-- [ ] Salary record entry
-- [ ] Salary slip generation
-- [ ] Allowances and deductions
+- [ ] Create `SalaryTable` component
+  - [ ] **Follow Pattern C**: Read-only table
+  - [ ] Filter by employee, month, year
+  - [ ] Display employee, base salary, allowances, deductions, net salary
+- [ ] Create salary slip dialog/form
+  - [ ] Employee selection, Period (month, year)
+  - [ ] Base salary (from employee data)
+  - [ ] Allowances (itemized)
+  - [ ] Deductions (itemized)
+  - [ ] Net salary calculation
+- [ ] Create `/erp/hr/salaries/page.tsx` - Salary records
+- [ ] Salary slip PDF generation
+- [ ] Bulk salary processing for all employees
 
 #### T2.8.6 - Testing & Polish
 
@@ -643,30 +865,58 @@ Phase 2 implements the core ERP functionality through 12 separate modules organi
 
 #### T2.9.2 - Salesman Management
 
-- [ ] Create `/erp/salesman/page.tsx` - Dashboard
-- [ ] Create `/erp/salesman/list/page.tsx` - Salesman list
-- [ ] Salesman profile with commission settings
-- [ ] Commission calculation rules
+- [ ] Create `SalesmanTable` component
+  - [ ] **Follow Pattern A**: Card wrapper, search, filters, actions
+  - [ ] Search by name, code
+  - [ ] Filter by status (active, inactive), region
+  - [ ] Display name, code, assigned customers count, total sales, commission earned
+- [ ] Create `SalesmanForm` component
+  - [ ] **Follow Pattern A**: Card sections
+  - [ ] Section 1: Basic Information (name*, code*, email, phone)
+  - [ ] Section 2: Employment (join date, status, region/territory)
+  - [ ] Section 3: Commission Settings (commission rule, rate)
+  - [ ] Form Actions: Cancel + Save
+- [ ] Create `/erp/salesman/page.tsx` - Dashboard with salesman performance overview
+- [ ] Create `/erp/salesman/list/page.tsx` - Salesman list using SalesmanTable
+- [ ] Create `/erp/salesman/new/page.tsx` - Add salesman using SalesmanForm
+- [ ] Create `/erp/salesman/[id]/page.tsx` - Salesman detail/performance dashboard
+- [ ] Create `/erp/salesman/[id]/edit/page.tsx` - Edit salesman
+- [ ] Create `/erp/salesman/commission-rules/page.tsx` - Commission rules management
+  - [ ] **Follow Pattern B**: Inline CRUD with dialog
 
 #### T2.9.3 - Customer Assignment
 
-- [ ] Create `/erp/salesman/[id]/customers/page.tsx`
-- [ ] Assign customers to salesman
-- [ ] Transfer customers between salesman
+- [ ] Create customer assignment component
+  - [ ] Available customers list (unassigned or reassignable)
+  - [ ] Assigned customers list
+  - [ ] Drag-and-drop or checkbox assignment
+  - [ ] Bulk assign/unassign
+- [ ] Create `/erp/salesman/[id]/customers/page.tsx` - Customer assignment page
+- [ ] Transfer customers dialog (from one salesman to another)
 
 #### T2.9.4 - Performance Tracking
 
-- [ ] Create `/erp/salesman/[id]/page.tsx` - Performance dashboard
-- [ ] Sales by salesman report
-- [ ] Top products per salesman
-- [ ] Target vs actual tracking
+- [ ] Create performance metrics cards
+  - [ ] Total sales (today, week, month, year)
+  - [ ] Number of orders
+  - [ ] Average order value
+  - [ ] Commission earned
+- [ ] Create sales trend chart (recharts)
+- [ ] Create top products table
+- [ ] Create target vs actual comparison
+- [ ] Performance tracking integrated in `/erp/salesman/[id]/page.tsx`
 
 #### T2.9.5 - Commission Management
 
-- [ ] Create `/erp/salesman/[id]/commissions/page.tsx`
-- [ ] Auto commission calculation based on sales
-- [ ] Commission payment tracking
-- [ ] Commission reports
+- [ ] Create `CommissionTable` component
+  - [ ] **Follow Pattern C**: Read-only table
+  - [ ] Filter by salesman, date range, status (pending, paid)
+  - [ ] Display order number, customer, amount, commission rate, commission amount
+- [ ] Create `/erp/salesman/commissions/page.tsx` - All commissions (admin view)
+- [ ] Create `/erp/salesman/[id]/commissions/page.tsx` - Individual salesman commissions
+- [ ] Commission calculation utility (auto-calculate on order completion)
+- [ ] Commission payment recording dialog
+- [ ] Commission reports (summary by period)
 
 #### T2.9.6 - Testing & Polish
 
@@ -693,36 +943,81 @@ Phase 2 implements the core ERP functionality through 12 separate modules organi
 
 #### T2.10.2 - Vehicle Management
 
-- [ ] Create `/erp/vehicles/page.tsx` - Vehicle list
-- [ ] Create `/erp/vehicles/new/page.tsx` - Add vehicle
-- [ ] Create `/erp/vehicles/[id]/page.tsx` - Vehicle detail
-- [ ] Vehicle registration details
+- [ ] Create `VehicleTable` component
+  - [ ] **Follow Pattern A**: Card wrapper, search, filters, actions
+  - [ ] Search by plate number, name
+  - [ ] Filter by status (active, maintenance, inactive), type
+  - [ ] Display plate number, name, type, driver, status, mileage
+- [ ] Create `VehicleForm` component
+  - [ ] **Follow Pattern A**: Card sections
+  - [ ] Section 1: Vehicle Information (plate number\*, name, brand, model, year, color)
+  - [ ] Section 2: Registration Details (registration number, expiry date, insurance)
+  - [ ] Section 3: Operational Details (fuel type, capacity, current mileage, status)
+  - [ ] Form Actions: Cancel + Save
+- [ ] Create `/erp/vehicles/page.tsx` - Vehicle list using VehicleTable
+- [ ] Create `/erp/vehicles/new/page.tsx` - Add vehicle using VehicleForm
+- [ ] Create `/erp/vehicles/[id]/page.tsx` - Vehicle detail (read-only)
+- [ ] Create `/erp/vehicles/[id]/edit/page.tsx` - Edit vehicle
 
 #### T2.10.3 - Driver Management
 
-- [ ] Create `/erp/vehicles/drivers/page.tsx`
-- [ ] Driver CRUD operations
-- [ ] License tracking
-- [ ] Driver assignment to vehicles
+- [ ] Create `DriverTable` component
+  - [ ] **Follow Pattern A**: Card wrapper, search, filters
+  - [ ] Filter by status (active, inactive), license type
+  - [ ] Display name, license number, license expiry, assigned vehicle, status
+- [ ] Create `DriverForm` component
+  - [ ] **Follow Pattern A**: Card sections
+  - [ ] Section 1: Personal Information (name\*, phone, address)
+  - [ ] Section 2: License Details (license number\*, type, expiry date)
+  - [ ] Section 3: Employment (join date, status)
+- [ ] Create `/erp/vehicles/drivers/page.tsx` - Driver list using DriverTable
+- [ ] Create `/erp/vehicles/drivers/new/page.tsx` - Add driver
+- [ ] Create `/erp/vehicles/drivers/[id]/page.tsx` - Driver detail
+- [ ] Create `/erp/vehicles/drivers/[id]/edit/page.tsx` - Edit driver
+- [ ] License expiry reminder/notification
 
 #### T2.10.4 - Maintenance Tracking
 
-- [ ] Create `/erp/vehicles/[id]/maintenance/page.tsx`
-- [ ] Maintenance record entry
-- [ ] Maintenance schedule
+- [ ] Create `MaintenanceTable` component
+  - [ ] **Follow Pattern C**: Read-only table
+  - [ ] Filter by vehicle, date range, type (routine, repair, emergency)
+  - [ ] Display vehicle, date, type, description, cost, mileage
+- [ ] Create maintenance entry dialog/form
+  - [ ] Vehicle selection, Date*, Type*
+  - [ ] Description/notes, Cost, Current mileage
+  - [ ] Next maintenance due (date/mileage)
+- [ ] Create `/erp/vehicles/maintenance/page.tsx` - All maintenance records
+- [ ] Create `/erp/vehicles/[id]/maintenance/page.tsx` - Vehicle-specific maintenance
+- [ ] Maintenance schedule/calendar view
 - [ ] Maintenance reminders
 
 #### T2.10.5 - Delivery Assignments
 
-- [ ] Create `/erp/vehicles/assignments/page.tsx`
-- [ ] Assign vehicle to delivery orders
-- [ ] Track delivery status
+- [ ] Create `DeliveryAssignmentTable` component
+  - [ ] **Follow Pattern C**: Read-only table with action buttons
+  - [ ] Filter by date, vehicle, driver, status
+  - [ ] Display delivery order, vehicle, driver, route, status
+- [ ] Create delivery assignment dialog
+  - [ ] Delivery order selection (from sales)
+  - [ ] Vehicle selection*, Driver selection*
+  - [ ] Estimated departure/arrival time
+- [ ] Create `/erp/vehicles/assignments/page.tsx` - Delivery assignments
+- [ ] Update delivery status workflow (scheduled, in-transit, delivered, returned)
+- [ ] Integration with Sales delivery orders
 
 #### T2.10.6 - Fuel Tracking
 
-- [ ] Create `/erp/vehicles/fuel/page.tsx`
-- [ ] Fuel log entry
-- [ ] Fuel consumption reports
+- [ ] Create `FuelLogTable` component
+  - [ ] **Follow Pattern C**: Read-only table
+  - [ ] Filter by vehicle, date range
+  - [ ] Display vehicle, date, liters, cost, mileage, driver
+  - [ ] Fuel consumption calculations (liters per 100km)
+- [ ] Create fuel log entry dialog
+  - [ ] Vehicle selection*, Date*, Liters*, Cost*
+  - [ ] Current mileage\*, Driver, Station, Notes
+- [ ] Create `/erp/vehicles/fuel/page.tsx` - Fuel logs
+- [ ] Fuel consumption reports and analytics
+- [ ] Cost per vehicle analysis
 
 #### T2.10.7 - Testing & Polish
 
@@ -754,40 +1049,85 @@ Phase 2 implements the core ERP functionality through 12 separate modules organi
 
 #### T2.11.2 - Chart of Accounts
 
-- [ ] Create `/erp/finance/accounts/page.tsx`
-- [ ] Account hierarchy tree view
-- [ ] Account CRUD operations
-- [ ] Account types (Asset, Liability, Equity, Revenue, Expense)
-- [ ] Parent-child relationships
+- [ ] Create `AccountTable` component
+  - [ ] **Follow Pattern A**: Card wrapper with tree/hierarchy view
+  - [ ] Search by account code, name
+  - [ ] Filter by account type (Asset, Liability, Equity, Revenue, Expense)
+  - [ ] Display code, name, type, parent, balance
+  - [ ] Expand/collapse for parent-child relationships
+- [ ] Create `AccountForm` component
+  - [ ] **Follow Pattern A**: Card with form fields
+  - [ ] Account code*, Name*, Type\*
+  - [ ] Parent account selection (for sub-accounts)
+  - [ ] Description, Opening balance
+- [ ] Create `/erp/finance/accounts/page.tsx` - Chart of Accounts
+- [ ] Create `/erp/finance/accounts/new/page.tsx` - Add account
+- [ ] Create `/erp/finance/accounts/[id]/edit/page.tsx` - Edit account
+- [ ] Account hierarchy visualization
 
 #### T2.11.3 - Journal Entries
 
-- [ ] Create `/erp/finance/journals/page.tsx`
-- [ ] Manual journal entry form
-- [ ] Double-entry validation (debit = credit)
-- [ ] Journal approval workflow
-- [ ] Auto journal from sales/purchase transactions
+- [ ] Create `JournalTable` component
+  - [ ] **Follow Pattern A**: Card wrapper with filters
+  - [ ] Filter by date range, status (draft, posted), journal type
+  - [ ] Display journal number, date, description, debit total, credit total, status
+- [ ] Create `JournalForm` component
+  - [ ] **Follow Pattern A**: Card sections
+  - [ ] Section 1: Journal Information (date\*, reference, description)
+  - [ ] Section 2: Journal Lines (debit/credit entries)
+    - [ ] Account selection, Description, Debit amount, Credit amount
+    - [ ] Add/remove lines dynamically
+    - [ ] Real-time balance validation (total debit = total credit)
+  - [ ] Form Actions: Save as Draft / Post / Cancel
+- [ ] Create `/erp/finance/journals/page.tsx` - Journal list
+- [ ] Create `/erp/finance/journals/new/page.tsx` - Manual journal entry
+- [ ] Create `/erp/finance/journals/[id]/page.tsx` - Journal detail (read-only)
+- [ ] Double-entry validation logic
+- [ ] Auto journal creation from sales/purchase transactions
 
 #### T2.11.4 - Cash & Bank Management
 
-- [ ] Create `/erp/finance/cash-bank/page.tsx`
-- [ ] Cash/bank account CRUD
-- [ ] Transaction recording
-- [ ] Balance tracking
+- [ ] Create `CashBankTable` component
+  - [ ] **Follow Pattern B**: Inline CRUD with Card wrapper
+  - [ ] Display account name, type (cash/bank), currency, balance
+  - [ ] Quick add with dialog
+- [ ] Create `TransactionTable` component
+  - [ ] **Follow Pattern C**: Read-only table
+  - [ ] Filter by account, date range, type (deposit, withdrawal)
+  - [ ] Display date, type, description, amount, balance
+- [ ] Create `/erp/finance/cash-bank/page.tsx` - Cash & Bank accounts management
+- [ ] Create `/erp/finance/cash-bank/[id]/transactions/page.tsx` - Transaction history
+- [ ] Transaction recording dialog (deposit/withdrawal)
+- [ ] Running balance calculation
 
 #### T2.11.5 - Expense Tracking
 
-- [ ] Create `/erp/finance/expenses/page.tsx`
-- [ ] Expense entry form
-- [ ] Expense categories
-- [ ] Expense approval
-- [ ] Link to journal entries
+- [ ] Create `ExpenseTable` component
+  - [ ] **Follow Pattern A**: Card wrapper with filters
+  - [ ] Filter by category, date range, status (pending, approved, paid)
+  - [ ] Display date, category, vendor, amount, status
+- [ ] Create `ExpenseForm` component
+  - [ ] **Follow Pattern A**: Card with form fields
+  - [ ] Date*, Category*, Vendor
+  - [ ] Amount*, Description*, Receipt upload
+  - [ ] Payment method, Status
+- [ ] Create `/erp/finance/expenses/page.tsx` - Expense list
+- [ ] Create `/erp/finance/expenses/new/page.tsx` - Add expense
+- [ ] Create `/erp/finance/expenses/[id]/page.tsx` - Expense detail
+- [ ] Create `/erp/finance/expense-categories/page.tsx` - Category management
+  - [ ] **Follow Pattern B**: Inline CRUD
+- [ ] Expense approval workflow
+- [ ] Auto journal entry creation on approval
 
 #### T2.11.6 - Bank Reconciliation
 
-- [ ] Create `/erp/finance/reconciliation/page.tsx`
-- [ ] Match transactions
-- [ ] Reconciliation reports
+- [ ] Create reconciliation component
+  - [ ] Bank statement upload/entry
+  - [ ] Transaction matching (auto + manual)
+  - [ ] Mark as reconciled
+  - [ ] Discrepancy highlighting
+- [ ] Create `/erp/finance/reconciliation/page.tsx` - Bank reconciliation
+- [ ] Reconciliation reports (matched, unmatched, discrepancies)
 
 #### T2.11.7 - Financial Reports
 
@@ -896,11 +1236,63 @@ Each module must pass before moving to next:
 - [ ] TypeScript types defined
 - [ ] API utilities implemented
 - [ ] All UI pages functional
+- [ ] **UI Pattern consistency verified** (Pattern A/B/C followed)
 - [ ] Search/filter/pagination working
 - [ ] Form validation complete
 - [ ] Manual QA passed
 - [ ] Build succeeds without errors
 - [ ] Mobile responsive verified
+
+### UI Pattern Implementation Checklist
+
+For each module, verify:
+
+**Pattern A (Full CRUD) Modules**:
+
+- [ ] `{Entity}Table` component created with Card wrapper
+- [ ] Search bar with correct icon positioning
+- [ ] Filter dropdowns functional
+- [ ] Refresh button with animation
+- [ ] DropdownMenu actions (View/Edit/Delete)
+- [ ] `{Entity}Form` component with Card sections
+- [ ] Label + Input pattern (NOT FormField)
+- [ ] Form Actions section (Cancel + Submit)
+- [ ] All 4 pages created (list, new, detail, edit)
+- [ ] onCancel callbacks implemented
+- [ ] Loading states with Loader2
+
+**Pattern B (Inline CRUD) Modules**:
+
+- [ ] Single page with Card wrapper
+- [ ] Add New button with Dialog
+- [ ] Inline Edit/Delete actions
+- [ ] Toast notifications
+
+**Pattern C (Read-Only) Modules**:
+
+- [ ] Card wrapper with filters
+- [ ] Read-only table (no edit actions)
+- [ ] Refresh functionality
+- [ ] Optional detail view modal
+
+---
+
+## 📋 UI PATTERN USAGE BY MODULE
+
+| Module     | Main Entities (Pattern A)        | Reference Data (Pattern B)             | Read-Only (Pattern C)           |
+| ---------- | -------------------------------- | -------------------------------------- | ------------------------------- |
+| Customers  | Customer                         | Customer Categories                    | -                               |
+| Suppliers  | Supplier                         | Supplier Categories                    | -                               |
+| Inventory  | Product                          | Categories, Units, Warehouses          | Stock Movements                 |
+| Promotions | Promotion                        | -                                      | -                               |
+| POS        | -                                | -                                      | POS Transactions, Shift Summary |
+| Sales      | Sales Order, Invoice             | -                                      | Payments                        |
+| Purchasing | Purchase Request, Purchase Order | -                                      | Good Receipts                   |
+| HR         | Employee, Leave                  | Departments, Leave Types               | Attendance, Salary              |
+| Salesman   | Salesman                         | Commission Rules                       | Commissions                     |
+| Vehicles   | Vehicle, Driver                  | -                                      | Maintenance, Fuel, Assignments  |
+| Finance    | Account, Journal, Expense        | Cash/Bank Accounts, Expense Categories | Transactions, Reconciliation    |
+| Dashboard  | -                                | -                                      | Widgets, Notifications          |
 
 ---
 
