@@ -35,8 +35,10 @@ async function getCurrentCompanyId(): Promise<string> {
     .eq('id', userData.user.id)
     .single()
 
-  if (!user || !user.company_id) throw new Error('User company not found')
-  return user.company_id
+  // Type assertion for Supabase response
+  const userRecord = user as { company_id?: string } | null
+  if (!userRecord?.company_id) throw new Error('User company not found')
+  return userRecord.company_id
 }
 
 // ============================================
