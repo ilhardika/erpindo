@@ -106,7 +106,7 @@ export async function openShift(input: CreateShiftInput): Promise<PosShift> {
   }
 
   // Get user's company_id
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const { data: userData, error: userError } = (await supabase
     .from('users')
     .select('company_id')
@@ -124,7 +124,7 @@ export async function openShift(input: CreateShiftInput): Promise<PosShift> {
   }
 
   // Create new shift
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const { data, error } = await supabase
     .from('pos_shifts')
     .insert({
@@ -188,7 +188,7 @@ export async function closeShift(
  */
 export async function getShiftSummary(shift_id: string): Promise<ShiftSummary> {
   // Get shift details
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const { data: shift, error: shiftError } = (await supabase
     .from('pos_shifts')
     .select('*')
@@ -200,7 +200,7 @@ export async function getShiftSummary(shift_id: string): Promise<ShiftSummary> {
   }
 
   // Get transactions for this shift
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const { data: transactions, error: transError } = (await supabase
     .from('pos_transactions')
     .select('*')
@@ -392,7 +392,7 @@ export async function getTransactionById(
   id: string
 ): Promise<PosTransactionWithRelations | null> {
   // Get transaction with relations
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const { data: transaction, error: transError } = (await supabase
     .from('pos_transactions')
     .select(
@@ -415,7 +415,7 @@ export async function getTransactionById(
   }
 
   // Get transaction items with product details
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const { data: items, error: itemsError } = (await supabase
     .from('pos_transaction_items')
     .select(
@@ -466,7 +466,7 @@ export async function createTransaction(
   }
 
   // Get user's company_id
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const { data: userData, error: userError } = (await supabase
     .from('users')
     .select('company_id')
@@ -495,7 +495,7 @@ export async function createTransaction(
   )
 
   // Create transaction
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const { data: transaction, error: transError } = await supabase
     .from('pos_transactions')
     .insert({
@@ -521,7 +521,7 @@ export async function createTransaction(
   }
 
   // Create transaction items
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const itemsToInsert = input.items.map(item => ({
     transaction_id: (transaction as any).id,
     product_id: item.product_id,
@@ -532,7 +532,7 @@ export async function createTransaction(
     subtotal: item.unit_price * item.quantity - (item.discount_amount || 0),
   }))
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const { error: itemsError } = await supabase
     .from('pos_transaction_items')
     .insert(itemsToInsert as any)
@@ -544,7 +544,7 @@ export async function createTransaction(
 
   // Create payments if split payment
   if (input.payment_method === 'split' && input.payments) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const paymentsToInsert = input.payments.map(payment => ({
       transaction_id: (transaction as any).id,
       payment_method: payment.payment_method,
@@ -553,7 +553,7 @@ export async function createTransaction(
       notes: payment.notes || null,
     }))
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const { error: paymentsError } = await supabase
       .from('pos_payments')
       .insert(paymentsToInsert as any)
