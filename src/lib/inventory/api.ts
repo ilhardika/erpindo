@@ -211,9 +211,13 @@ export async function deleteWarehouse(id: string): Promise<void> {
 // ============================================
 
 export async function getProducts(): Promise<Product[]> {
+  const company_id = await getCurrentCompanyId()
+
   const { data, error } = await supabase
     .from('products')
     .select('*')
+    .eq('company_id', company_id)
+    .eq('is_active', true)
     .order('name')
 
   if (error) throw error

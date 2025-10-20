@@ -15,15 +15,35 @@ import type {
 
 const supabase = createClientSupabase()
 
+// Helper function to get current user's company_id
+async function getCurrentCompanyId(): Promise<string> {
+  const { data: userData } = await supabase.auth.getUser()
+  if (!userData.user) throw new Error('Not authenticated')
+
+  const { data: user } = await supabase
+    .from('users')
+    .select('company_id')
+    .eq('id', userData.user.id)
+    .single()
+
+  // Type assertion for Supabase response
+  const userRecord = user as { company_id?: string } | null
+  if (!userRecord?.company_id) throw new Error('User company not found')
+  return userRecord.company_id
+}
+
 /**
  * Get all promotions with optional filters
  */
 export async function getPromotions(
   filters?: PromotionFilters
 ): Promise<Promotion[]> {
+  const company_id = await getCurrentCompanyId()
+
   let query = supabase
     .from('promotions')
     .select('*')
+    .eq('company_id', company_id)
     .order('created_at', { ascending: false })
 
   // Apply search filter
